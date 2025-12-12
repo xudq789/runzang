@@ -278,22 +278,22 @@
             display: none;
         }
         
-        /* 优化后的动态伸缩跳动按钮 */
+        /* 优化后的动态伸缩跳动按钮 - 更平顺的动画 */
         .dynamic-pulse-btn {
             display: block;
             width: 100%;
-            max-width: 500px; /* 增加按钮宽度 */
+            max-width: 500px;
             margin: 40px auto 0;
-            padding: 22px 40px; /* 增加按钮内边距 */
+            padding: 22px 40px;
             background: linear-gradient(135deg, #8b0000, #c0392b, #8b0000);
             background-size: 200% 200%;
             color: #ffd700;
             border: none;
             border-radius: 50px;
             cursor: pointer;
-            font-size: 24px; /* 增大字体 */
+            font-size: 24px;
             font-weight: bold;
-            transition: var(--transition);
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             text-decoration: none;
             text-align: center;
             box-shadow: 0 8px 20px rgba(139, 0, 0, 0.3);
@@ -304,74 +304,65 @@
             letter-spacing: 2px;
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
             animation: 
-                gradient-shift 3s ease infinite,
-                pulse-scale-stretch 1.8s ease-in-out infinite alternate,
-                glow-effect 2s ease-in-out infinite;
+                gradient-shift 4s ease-in-out infinite,
+                gentle-pulse 3s ease-in-out infinite,
+                glow-effect 3s ease-in-out infinite;
             transform-origin: center;
         }
         
         @keyframes gradient-shift {
-            0% {
+            0%, 100% {
                 background-position: 0% 50%;
             }
             50% {
                 background-position: 100% 50%;
             }
-            100% {
-                background-position: 0% 50%;
-            }
         }
         
-        @keyframes pulse-scale-stretch {
-            0% {
-                transform: scaleX(1) scaleY(1);
+        @keyframes gentle-pulse {
+            0%, 100% {
+                transform: scale(1);
                 box-shadow: 0 8px 20px rgba(139, 0, 0, 0.3);
-                border-radius: 50px;
-            }
-            25% {
-                transform: scaleX(1.08) scaleY(1.02);
-                box-shadow: 0 12px 25px rgba(139, 0, 0, 0.4);
-                border-radius: 45px;
             }
             50% {
-                transform: scaleX(1.12) scaleY(0.98);
-                box-shadow: 0 15px 30px rgba(139, 0, 0, 0.5);
-                border-radius: 55px;
-            }
-            75% {
-                transform: scaleX(1.08) scaleY(1.02);
-                box-shadow: 0 12px 25px rgba(139, 0, 0, 0.4);
-                border-radius: 45px;
-            }
-            100% {
-                transform: scaleX(1) scaleY(1);
-                box-shadow: 0 8px 20px rgba(139, 0, 0, 0.3);
-                border-radius: 50px;
+                transform: scale(1.05);
+                box-shadow: 0 12px 30px rgba(139, 0, 0, 0.4);
             }
         }
         
         @keyframes glow-effect {
             0%, 100% {
                 border-color: #ffd700;
-                box-shadow: 0 0 15px rgba(255, 215, 0, 0.4), 0 8px 20px rgba(139, 0, 0, 0.3);
+                box-shadow: 0 8px 20px rgba(139, 0, 0, 0.3), 0 0 15px rgba(255, 215, 0, 0.3);
             }
             50% {
                 border-color: #ffed4e;
-                box-shadow: 0 0 25px rgba(255, 237, 78, 0.7), 0 15px 30px rgba(139, 0, 0, 0.5);
+                box-shadow: 0 8px 20px rgba(139, 0, 0, 0.3), 0 0 25px rgba(255, 237, 78, 0.6);
             }
         }
         
         .dynamic-pulse-btn::before {
             content: '';
             position: absolute;
-            top: -8px;
-            left: -8px;
-            right: -8px;
-            bottom: -8px;
-            background: linear-gradient(45deg, transparent, rgba(255, 215, 0, 0.2), transparent);
-            z-index: -1;
-            border-radius: 60px;
-            /* 移除了旋转动画 */
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: none;
+        }
+        
+        .dynamic-pulse-btn:hover::before {
+            animation: shine 1.5s ease;
+        }
+        
+        @keyframes shine {
+            0% {
+                left: -100%;
+            }
+            100% {
+                left: 100%;
+            }
         }
         
         .dynamic-pulse-btn::after {
@@ -384,7 +375,7 @@
             border: 2px solid rgba(255, 215, 0, 0.3);
             border-radius: 55px;
             z-index: -1;
-            animation: border-pulse 2s ease-in-out infinite;
+            animation: border-pulse 3s ease-in-out infinite;
         }
         
         @keyframes border-pulse {
@@ -400,27 +391,19 @@
         
         .dynamic-pulse-btn:hover {
             animation: 
-                gradient-shift 1.5s ease infinite,
-                pulse-scale-stretch-fast 0.9s ease-in-out infinite alternate,
-                glow-effect 1s ease-in-out infinite;
+                gradient-shift 2s ease-in-out infinite,
+                hover-pulse 1s ease-in-out infinite alternate,
+                glow-effect 2s ease-in-out infinite;
             color: #fff;
+            transform: translateY(-3px);
         }
         
-        @keyframes pulse-scale-stretch-fast {
+        @keyframes hover-pulse {
             0% {
-                transform: scaleX(1) scaleY(1);
-            }
-            25% {
-                transform: scaleX(1.1) scaleY(1.03);
-            }
-            50% {
-                transform: scaleX(1.15) scaleY(0.97);
-            }
-            75% {
-                transform: scaleX(1.1) scaleY(1.03);
+                transform: scale(1) translateY(-3px);
             }
             100% {
-                transform: scaleX(1) scaleY(1);
+                transform: scale(1.08) translateY(-3px);
             }
         }
         
@@ -944,123 +927,338 @@
             margin-bottom: 20px;
         }
         
-        /* 响应式设计 */
+        /* 手机端优化 - 重新设计响应式布局 */
         @media (max-width: 768px) {
+            /* 导航栏优化 */
             .service-nav {
-                flex-direction: column;
-                gap: 8px;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                justify-content: flex-start;
+                scrollbar-width: none;
+                padding: 0 10px;
+            }
+            
+            .service-nav::-webkit-scrollbar {
+                display: none;
             }
             
             .service-nav li {
-                width: 100%;
+                flex: 0 0 auto;
+                min-width: 120px;
             }
             
             .service-nav a {
-                padding: 12px;
-                font-size: 16px;
+                padding: 10px 15px;
+                font-size: 15px;
+                white-space: nowrap;
+                border-radius: 6px;
             }
             
+            /* 表单容器优化 */
             .form-container {
-                padding: 25px 20px;
+                padding: 25px 15px;
+                border-radius: 12px;
+                margin: 0 10px;
             }
             
             .info-form-section {
-                padding: 30px 20px 15px;
+                padding: 25px 15px 15px;
             }
             
+            /* 表单行优化 */
             .form-row {
                 flex-direction: column;
                 gap: 0;
             }
             
-            .qr-codes {
-                flex-direction: column;
-                gap: 20px;
-            }
-            
-            .result-actions {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .main-image, .detail-image {
-                max-width: 100%;
-            }
-            
+            /* 按钮优化 */
             .dynamic-pulse-btn {
-                padding: 18px 30px;
-                font-size: 20px;
+                padding: 18px 25px;
+                font-size: 19px;
                 max-width: 90%;
+                border-radius: 40px;
+                margin: 30px auto 0;
+                letter-spacing: 1px;
             }
             
-            .long-layout-container {
-                margin-top: 15px;
-                margin-bottom: 15px;
-                border-radius: 8px;
+            /* 结果区域优化 */
+            .result-container {
+                padding: 25px 15px;
+                margin: 0 10px;
             }
             
-            .locked-overlay {
-                height: 100px;
-                padding-top: 15px;
+            /* 卡片内边距优化 */
+            .predictor-info-card,
+            .bazi-pan-card,
+            .dayun-pan-card,
+            .free-content,
+            .locked-content {
+                padding: 20px 15px;
             }
             
-            .locked-items {
-                margin-top: 120px;
-            }
-            
-            .predictor-info-grid {
-                grid-template-columns: 1fr;
-            }
-            
+            /* 八字网格优化 */
             .bazi-grid {
                 grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
             }
             
+            .bazi-column {
+                padding: 12px 8px;
+            }
+            
+            .bazi-value {
+                font-size: 18px;
+            }
+            
+            /* 预测者信息网格优化 */
+            .predictor-info-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            /* 大运信息优化 */
             .dayun-info {
                 grid-template-columns: 1fr;
             }
             
             .dayun-table {
-                font-size: 14px;
+                font-size: 13px;
+                display: block;
+                overflow-x: auto;
             }
             
-            .dayun-table th, .dayun-table td {
-                padding: 8px;
+            .dayun-table th,
+            .dayun-table td {
+                padding: 8px 5px;
+                min-width: 60px;
             }
-        }
-        
-        @media (max-width: 480px) {
+            
+            /* 锁定区域优化 */
+            .locked-overlay {
+                height: 110px;
+                padding-top: 15px;
+            }
+            
+            .locked-items {
+                margin-top: 120px;
+                padding: 15px;
+            }
+            
+            /* 支付弹窗优化 */
+            .modal-content {
+                padding: 25px 15px;
+                width: 95%;
+                margin: 10% auto;
+            }
+            
+            .qr-codes {
+                flex-direction: column;
+                gap: 20px;
+                align-items: center;
+            }
+            
+            .qr-code img {
+                width: 180px;
+                height: 180px;
+            }
+            
+            /* 结果操作按钮优化 */
+            .result-actions {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+            
+            .result-actions .dynamic-pulse-btn {
+                max-width: 280px;
+                width: 100%;
+            }
+            
+            /* 标题优化 */
             .section-title h2 {
                 font-size: 24px;
+                padding-bottom: 10px;
             }
             
-            .dynamic-pulse-btn {
-                font-size: 18px;
-                padding: 16px 25px;
+            .section-title h2::after {
+                width: 80px;
             }
             
-            .modal-content {
-                padding: 25px 20px;
+            /* 长图容器优化 */
+            .long-layout-container {
+                margin-top: 15px;
+                margin-bottom: 15px;
+                border-radius: 10px;
+                overflow: hidden;
             }
             
-            .disclaimer-content {
+            /* 免责声明优化 */
+            .disclaimer-bar {
+                height: 40px;
                 font-size: 12px;
             }
             
+            .disclaimer-wrapper {
+                height: 18px;
+            }
+            
+            /* 主图优化 */
+            .main-image, .detail-image {
+                width: 100%;
+                height: auto;
+                min-height: 150px;
+                object-fit: cover;
+            }
+            
+            /* 分析内容字体优化 */
+            .analysis-section h5 {
+                font-size: 16px;
+            }
+            
+            .analysis-content {
+                font-size: 14px;
+            }
+        }
+        
+        /* 小屏幕手机优化 */
+        @media (max-width: 480px) {
+            .service-nav li {
+                min-width: 110px;
+            }
+            
             .service-nav a {
+                font-size: 14px;
+                padding: 8px 12px;
+            }
+            
+            .dynamic-pulse-btn {
+                padding: 16px 20px;
+                font-size: 17px;
+                letter-spacing: 0.5px;
+            }
+            
+            .section-title h2 {
+                font-size: 22px;
+            }
+            
+            .form-container {
+                padding: 20px 12px;
+            }
+            
+            input, select {
+                padding: 10px;
                 font-size: 15px;
             }
             
-            .info-form-section {
-                padding: 20px 15px 10px;
+            label {
+                font-size: 15px;
             }
             
             .bazi-grid {
                 grid-template-columns: 1fr;
             }
             
+            .bazi-column {
+                padding: 15px 10px;
+            }
+            
+            .result-header h3 {
+                font-size: 20px;
+            }
+            
+            .locked-overlay {
+                height: 100px;
+                padding-top: 12px;
+            }
+            
+            .locked-items {
+                margin-top: 110px;
+                padding: 12px;
+            }
+            
+            .lock-icon {
+                font-size: 30px;
+            }
+            
+            .unlock-btn {
+                padding: 10px 25px;
+                font-size: 15px;
+            }
+            
+            .modal-content {
+                padding: 20px 12px;
+                margin: 5% auto;
+            }
+            
+            .qr-code img {
+                width: 160px;
+                height: 160px;
+            }
+            
+            .order-info {
+                padding: 15px;
+                font-size: 14px;
+            }
+        }
+        
+        /* 超小屏幕优化 */
+        @media (max-width: 360px) {
+            .service-nav li {
+                min-width: 100px;
+            }
+            
+            .service-nav a {
+                font-size: 13px;
+                padding: 7px 10px;
+            }
+            
+            .dynamic-pulse-btn {
+                padding: 14px 18px;
+                font-size: 16px;
+            }
+            
+            .section-title h2 {
+                font-size: 20px;
+            }
+            
             .bazi-value {
-                font-size: 18px;
+                font-size: 16px;
+            }
+            
+            .result-actions .dynamic-pulse-btn {
+                max-width: 250px;
+            }
+        }
+        
+        /* 平板设备优化 */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .service-nav a {
+                padding: 12px 15px;
+                font-size: 16px;
+            }
+            
+            .dynamic-pulse-btn {
+                max-width: 80%;
+                padding: 20px 35px;
+                font-size: 22px;
+            }
+            
+            .form-container {
+                padding: 35px 30px;
+            }
+            
+            .bazi-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            
+            .predictor-info-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .modal-content {
+                width: 85%;
+                padding: 35px;
             }
         }
     </style>
@@ -1384,8 +1582,6 @@
                 heroImage: './images/cesuan-hero.jpg',
                 detailImage: './images/cesuan-detail.jpg',
                 price: 19.9,
-                // 免费内容：八字喜用、性格特点、适宜行业职业推荐
-                // 锁定内容：根据服务类型不同
                 lockedItems: [
                     '富贵层次评估',
                     '过往大运营凶分析',
