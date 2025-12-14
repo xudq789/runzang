@@ -630,6 +630,8 @@
             background: linear-gradient(135deg, #fff, #f9f9f9);
             border: 2px solid rgba(212, 175, 55, 0.3);
             box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            min-height: 300px;
+            overflow: visible;
         }
         
         .locked-overlay {
@@ -638,7 +640,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(255, 255, 255, 0.98); /* 增加背景不透明度 */
+            background: rgba(255, 255, 255, 0.95);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -646,7 +648,7 @@
             z-index: 10;
             padding: 30px;
             border-radius: 10px;
-            backdrop-filter: blur(2px); /* 添加轻微模糊效果 */
+            backdrop-filter: blur(2px);
             border: 1px solid rgba(212, 175, 55, 0.2);
         }
         
@@ -684,85 +686,95 @@
             box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4);
         }
         
-        /* 未解锁项目列表 - 优化显示 */
+        /* 未解锁项目列表 - 优化显示效果 */
         .locked-items {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(212, 175, 55, 0.2);
+            margin: 20px 0;
+            padding: 25px;
+            border-radius: 12px;
             position: relative;
-            z-index: 5; /* 确保在覆盖层下方 */
+            z-index: 5;
+            opacity: 1 !important;
+            visibility: visible !important;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(249, 249, 249, 0.95));
+            border: 2px solid rgba(212, 175, 55, 0.4);
+            box-shadow: 0 5px 20px rgba(139, 69, 19, 0.1);
+            backdrop-filter: blur(2px);
         }
         
         .locked-items h4 {
             color: var(--primary-color);
-            font-size: 16px;
-            margin-bottom: 15px;
+            font-size: 20px;
+            margin-bottom: 20px;
             text-align: center;
             position: relative;
+            font-weight: 700;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
         }
         
         .locked-items h4::after {
             content: '';
             position: absolute;
-            bottom: -5px;
+            bottom: -8px;
             left: 50%;
             transform: translateX(-50%);
-            width: 40px;
-            height: 2px;
+            width: 80px;
+            height: 3px;
             background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            border-radius: 2px;
         }
         
         .locked-items ul {
             list-style: none;
             padding: 0;
-            margin: 15px 0;
+            margin: 0;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
         }
         
         .locked-items li {
-            padding: 12px 15px;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, #fff, #f9f9f9);
-            border-radius: 8px;
-            border-left: 4px solid var(--primary-color);
+            padding: 16px 20px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(249, 249, 249, 1));
+            border-radius: 10px;
+            border-left: 5px solid var(--secondary-color);
             position: relative;
-            padding-left: 40px;
-            font-size: 14px;
-            font-weight: 500;
+            padding-left: 50px;
+            font-size: 15px;
+            font-weight: 600;
             color: var(--dark-color);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            border: 1px solid rgba(212, 175, 55, 0.2);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            border: 1px solid rgba(212, 175, 55, 0.3);
             transition: all 0.3s ease;
-            opacity: 1 !important; /* 强制显示，不透明 */
-            visibility: visible !important; /* 确保可见 */
+            display: flex;
+            align-items: center;
         }
         
         .locked-items li:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            border-color: var(--secondary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(245, 241, 232, 1));
         }
         
         .locked-items li::before {
             content: '🔒';
             position: absolute;
-            left: 12px;
-            font-size: 16px;
+            left: 15px;
+            font-size: 20px;
             color: var(--secondary-color);
-            filter: none;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
         }
         
         /* 已解锁项目样式 */
         .locked-items li.unlocked {
-            border-left: 4px solid var(--success-color);
-            background: linear-gradient(135deg, #f0fff4, #e8f5e9);
+            border-left: 5px solid var(--success-color);
+            background: linear-gradient(135deg, rgba(240, 255, 244, 1), rgba(232, 245, 233, 1));
         }
         
         .locked-items li.unlocked::before {
             content: '✅';
             color: var(--success-color);
+            font-size: 18px;
         }
         
         /* 结果操作按钮 */
@@ -791,7 +803,7 @@
             font-size: 16px;
         }
         
-        /* 模态框 */
+        /* 模态框 - 修复手机端滚动问题 */
         .modal {
             display: none;
             position: fixed;
@@ -802,6 +814,8 @@
             height: 100%;
             background-color: rgba(0,0,0,0.7);
             backdrop-filter: blur(5px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         
         .modal-content {
@@ -814,6 +828,9 @@
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             position: relative;
             animation: modalAppear 0.3s ease-out;
+            max-height: 90vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
         
         @keyframes modalAppear {
@@ -836,13 +853,14 @@
             font-weight: bold;
             cursor: pointer;
             transition: color 0.3s;
+            z-index: 10;
         }
         
         .close:hover {
             color: var(--primary-color);
         }
         
-        /* 支付弹窗 */
+        /* 支付弹窗 - 优化手机端显示 */
         .order-info {
             background: #f9f5f0;
             padding: 15px;
@@ -867,11 +885,15 @@
         
         .qr-code {
             text-align: center;
+            flex: 1;
+            min-width: 150px;
         }
         
         .qr-code img {
-            width: 150px;
-            height: 150px;
+            width: 100%;
+            max-width: 150px;
+            height: auto;
+            aspect-ratio: 1/1;
             border: 2px solid var(--border-color);
             border-radius: 8px;
             padding: 8px;
@@ -951,7 +973,7 @@
             /* 移动端图片优化 */
             .hero-image, .detail-image {
                 object-fit: cover;
-                object-position: top center; /* 移动端优先显示顶部内容 */
+                object-position: top center;
             }
             
             .info-section {
@@ -984,15 +1006,35 @@
             .qr-codes {
                 flex-direction: column;
                 align-items: center;
+                gap: 15px;
+            }
+            
+            .qr-code {
+                min-width: 100%;
+                max-width: 200px;
             }
             
             .result-container {
                 padding: 20px;
             }
             
+            /* 支付弹窗移动端优化 */
             .modal-content {
                 padding: 20px 15px;
-                margin: 15% auto;
+                margin: 10% auto;
+                max-height: 85vh;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .order-info {
+                padding: 12px;
+                font-size: 13px;
+            }
+            
+            .order-info p {
+                flex-direction: column;
+                gap: 5px;
             }
             
             /* 移动端字体调整 */
@@ -1022,17 +1064,34 @@
             }
             
             /* 移动端锁定项目优化 */
+            .locked-items {
+                padding: 20px 15px;
+                margin: 15px 0;
+            }
+            
+            .locked-items h4 {
+                font-size: 18px;
+            }
+            
             .locked-items ul {
                 grid-template-columns: 1fr;
+                gap: 10px;
             }
             
             .locked-items li {
-                padding: 10px 12px;
-                padding-left: 35px;
+                padding: 14px 15px;
+                padding-left: 45px;
+                font-size: 14px;
+            }
+            
+            .locked-items li::before {
+                left: 12px;
+                font-size: 18px;
             }
             
             .locked-overlay {
                 padding: 20px 15px;
+                background: rgba(255, 255, 255, 0.95);
             }
             
             /* 优化按钮大小 */
@@ -1063,23 +1122,46 @@
                 object-position: center center;
             }
             
+            .locked-items {
+                padding: 18px 12px;
+            }
+            
+            .locked-items h4 {
+                font-size: 16px;
+            }
+            
             .locked-items li {
                 font-size: 13px;
-                padding: 8px 10px;
-                padding-left: 32px;
+                padding: 12px 12px;
+                padding-left: 40px;
+            }
+            
+            /* 小屏幕支付弹窗优化 */
+            .modal-content {
+                padding: 15px 12px;
+                margin: 5% auto;
+                max-height: 90vh;
+            }
+            
+            .qr-codes {
+                gap: 10px;
+            }
+            
+            .qr-code img {
+                max-width: 130px;
             }
         }
         
         /* 桌面端图片优化 */
         @media (min-width: 769px) {
             .hero-section {
-                height: 55vh; /* 桌面端适当增加高度 */
+                height: 55vh;
                 min-height: 400px;
                 max-height: 600px;
             }
             
             .detail-section {
-                height: 55vh; /* 桌面端适当增加高度 */
+                height: 55vh;
                 min-height: 400px;
                 max-height: 600px;
             }
@@ -1093,6 +1175,11 @@
             /* 桌面端锁定项目网格优化 */
             .locked-items ul {
                 grid-template-columns: repeat(2, 1fr);
+            }
+            
+            /* 桌面端支付弹窗优化 */
+            .modal-content {
+                max-height: 80vh;
             }
         }
         
@@ -2903,6 +2990,7 @@
             const lockedOverlay = document.getElementById('locked-overlay');
             if (lockedOverlay) {
                 lockedOverlay.style.display = 'flex';
+                lockedOverlay.style.background = 'rgba(255, 255, 255, 0.95)';
             }
             
             // 确保锁定内容区域显示
@@ -2914,10 +3002,15 @@
             // 确保未解锁项目列表显示清晰
             const lockedItemsList = document.getElementById('locked-items-list');
             if (lockedItemsList) {
+                lockedItemsList.style.opacity = '1';
+                lockedItemsList.style.visibility = 'visible';
+                
                 const lockedItems = lockedItemsList.querySelectorAll('li');
                 lockedItems.forEach(item => {
                     item.style.opacity = '1';
                     item.style.visibility = 'visible';
+                    item.style.color = 'var(--dark-color)';
+                    item.style.fontWeight = '600';
                 });
             }
             
@@ -3013,6 +3106,7 @@ ${fullAnalysisResult}
             const lockedOverlay = document.getElementById('locked-overlay');
             if (lockedOverlay) {
                 lockedOverlay.style.display = 'flex';
+                lockedOverlay.style.background = 'rgba(255, 255, 255, 0.95)';
             }
             
             const lockedContentDiv = document.getElementById('locked-content');
