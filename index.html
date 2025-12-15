@@ -123,7 +123,7 @@
             max-height: 400px;
             overflow: hidden;
             position: relative;
-            background-color: #f0e6d6; /* 图片加载前的背景色 */
+            background-color: #f0e6d6;
         }
         
         .hero-image {
@@ -133,11 +133,11 @@
             object-position: center;
             display: block;
             transition: opacity 0.5s ease;
-            opacity: 0; /* 初始透明 */
+            opacity: 0;
         }
         
         .hero-image.loaded {
-            opacity: 1; /* 加载完成后显示 */
+            opacity: 1;
         }
         
         /* 图片加载中的占位符 */
@@ -313,7 +313,7 @@
             overflow: hidden;
             margin-top: 0;
             position: relative;
-            background-color: #f0e6d6; /* 图片加载前的背景色 */
+            background-color: #f0e6d6;
         }
         
         .detail-image {
@@ -323,11 +323,11 @@
             object-position: center;
             display: block;
             transition: opacity 0.5s ease;
-            opacity: 0; /* 初始透明 */
+            opacity: 0;
         }
         
         .detail-image.loaded {
-            opacity: 1; /* 加载完成后显示 */
+            opacity: 1;
         }
         
         /* 动态拉伸按钮样式 */
@@ -533,75 +533,7 @@
         
         /* 大运排盘 - 优化为行排列 */
         .dayun-pan-card {
-            display: none; /* 删除大运排盘结果栏 */
-        }
-        
-        .dayun-rows-container {
-            margin-top: 15px;
-        }
-        
-        .dayun-row {
-            display: flex;
-            background: #f8f9fa;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-        }
-        
-        .dayun-row-header {
-            display: flex;
-            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-            color: white;
-            font-weight: 600;
-            border-radius: 8px 8px 0 0;
-            margin-bottom: 8px;
-        }
-        
-        .dayun-col {
-            padding: 12px 10px;
-            flex: 1;
-            text-align: center;
-            border-right: 1px solid var(--border-color);
-        }
-        
-        .dayun-col:last-child {
-            border-right: none;
-        }
-        
-        .dayun-row-header .dayun-col {
-            border-right: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .dayun-row-header .dayun-col:last-child {
-            border-right: none;
-        }
-        
-        /* 大运基本信息 */
-        .dayun-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        
-        .dayun-item {
-            background: #f8f9fa;
-            padding: 12px;
-            border-radius: 8px;
-            border-left: 4px solid var(--secondary-color);
-        }
-        
-        .dayun-label {
-            color: #666;
-            font-size: 12px;
-            margin-bottom: 5px;
-        }
-        
-        .dayun-value {
-            color: var(--dark-color);
-            font-weight: 600;
-            font-size: 14px;
+            display: none;
         }
         
         /* 免费内容区域 */
@@ -624,7 +556,7 @@
             font-size: 14px;
         }
         
-        /* 锁定内容区域 - 优化未解锁项目显示 */
+        /* 锁定内容区域 - 优化布局 */
         .locked-content {
             position: relative;
             background: linear-gradient(135deg, #fff, #f9f9f9);
@@ -632,32 +564,33 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.08);
             min-height: 300px;
             overflow: visible;
+            padding: 25px;
         }
         
+        /* 锁定覆盖层 - 优化布局结构 */
         .locked-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.95);
+            position: relative;
+            background: rgba(255, 255, 255, 0.98);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 10;
-            padding: 30px;
-            border-radius: 10px;
-            backdrop-filter: blur(2px);
-            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(3px);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
         }
         
+        /* 锁图标 */
         .lock-icon {
-            font-size: 50px;
+            font-size: 60px;
             color: var(--secondary-color);
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             animation: pulse 2s infinite;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.15));
+            text-align: center;
         }
         
         @keyframes pulse {
@@ -666,115 +599,142 @@
             100% { transform: scale(1); }
         }
         
-        .unlock-btn {
-            background: linear-gradient(135deg, var(--secondary-color), #e6b800);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 15px;
-            max-width: 200px;
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
-        }
-        
-        .unlock-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4);
-        }
-        
-        /* 未解锁项目列表 - 优化显示效果 */
-        .locked-items {
-            margin: 20px 0;
-            padding: 25px;
-            border-radius: 12px;
-            position: relative;
-            z-index: 5;
-            opacity: 1 !important;
-            visibility: visible !important;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(249, 249, 249, 0.95));
-            border: 2px solid rgba(212, 175, 55, 0.4);
-            box-shadow: 0 5px 20px rgba(139, 69, 19, 0.1);
-            backdrop-filter: blur(2px);
-        }
-        
-        .locked-items h4 {
-            color: var(--primary-color);
-            font-size: 20px;
-            margin-bottom: 20px;
+        /* 解锁按钮上方内容区域 */
+        .unlock-header {
             text-align: center;
-            position: relative;
+            margin-bottom: 25px;
+            width: 100%;
+        }
+        
+        .unlock-header h4 {
+            color: var(--primary-color);
+            font-size: 22px;
+            margin-bottom: 8px;
             font-weight: 700;
             text-shadow: 0 1px 2px rgba(255,255,255,0.8);
         }
         
-        .locked-items h4::after {
+        .unlock-header p {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        /* 解锁项目列表 - 直接显示在解锁界面上方 */
+        .unlock-items {
+            width: 100%;
+            margin: 25px 0;
+            padding: 20px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(249, 249, 249, 0.9));
+            border: 2px solid rgba(212, 175, 55, 0.4);
+            box-shadow: 0 5px 20px rgba(139, 69, 19, 0.1);
+        }
+        
+        .unlock-items h5 {
+            color: var(--primary-color);
+            font-size: 18px;
+            margin-bottom: 15px;
+            text-align: center;
+            position: relative;
+            font-weight: 700;
+        }
+        
+        .unlock-items h5::after {
             content: '';
             position: absolute;
-            bottom: -8px;
+            bottom: -6px;
             left: 50%;
             transform: translateX(-50%);
-            width: 80px;
-            height: 3px;
+            width: 70px;
+            height: 2px;
             background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
             border-radius: 2px;
         }
         
-        .locked-items ul {
+        .unlock-items ul {
             list-style: none;
             padding: 0;
             margin: 0;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
         }
         
-        .locked-items li {
-            padding: 16px 20px;
+        .unlock-items li {
+            padding: 14px 18px;
             background: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(249, 249, 249, 1));
-            border-radius: 10px;
-            border-left: 5px solid var(--secondary-color);
+            border-radius: 8px;
+            border-left: 4px solid var(--secondary-color);
             position: relative;
-            padding-left: 50px;
-            font-size: 15px;
+            padding-left: 45px;
+            font-size: 14px;
             font-weight: 600;
             color: var(--dark-color);
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-            border: 1px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
         }
         
-        .locked-items li:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        .unlock-items li:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             border-color: var(--primary-color);
-            background: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(245, 241, 232, 1));
         }
         
-        .locked-items li::before {
+        .unlock-items li::before {
             content: '🔒';
             position: absolute;
-            left: 15px;
-            font-size: 20px;
-            color: var(--secondary-color);
-            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
-        }
-        
-        /* 已解锁项目样式 */
-        .locked-items li.unlocked {
-            border-left: 5px solid var(--success-color);
-            background: linear-gradient(135deg, rgba(240, 255, 244, 1), rgba(232, 245, 233, 1));
-        }
-        
-        .locked-items li.unlocked::before {
-            content: '✅';
-            color: var(--success-color);
+            left: 12px;
             font-size: 18px;
+            color: var(--secondary-color);
+        }
+        
+        /* 解锁按钮容器 */
+        .unlock-btn-container {
+            margin-top: 20px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .unlock-btn {
+            background: linear-gradient(135deg, var(--secondary-color), #e6b800);
+            color: white;
+            border: none;
+            padding: 14px 35px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+            min-width: 220px;
+        }
+        
+        .unlock-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
+            background: linear-gradient(135deg, #e6b800, var(--secondary-color));
+        }
+        
+        /* 解锁价格显示 */
+        .unlock-price {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin-top: 8px;
+        }
+        
+        /* 已解锁样式 */
+        .unlocked-item {
+            border-left: 4px solid var(--success-color) !important;
+            background: linear-gradient(135deg, rgba(240, 255, 244, 1), rgba(232, 245, 233, 1)) !important;
+        }
+        
+        .unlocked-item::before {
+            content: '✅' !important;
+            color: var(--success-color) !important;
         }
         
         /* 结果操作按钮 */
@@ -970,7 +930,6 @@
                 min-height: 250px;
             }
             
-            /* 移动端图片优化 */
             .hero-image, .detail-image {
                 object-fit: cover;
                 object-position: top center;
@@ -1018,7 +977,6 @@
                 padding: 20px;
             }
             
-            /* 支付弹窗移动端优化 */
             .modal-content {
                 padding: 20px 15px;
                 margin: 10% auto;
@@ -1037,7 +995,6 @@
                 gap: 5px;
             }
             
-            /* 移动端字体调整 */
             .section-title h2 {
                 font-size: 18px;
             }
@@ -1063,38 +1020,37 @@
                 font-size: 18px;
             }
             
-            /* 移动端锁定项目优化 */
-            .locked-items {
+            /* 移动端锁定内容优化 */
+            .locked-content {
                 padding: 20px 15px;
-                margin: 15px 0;
-            }
-            
-            .locked-items h4 {
-                font-size: 18px;
-            }
-            
-            .locked-items ul {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-            
-            .locked-items li {
-                padding: 14px 15px;
-                padding-left: 45px;
-                font-size: 14px;
-            }
-            
-            .locked-items li::before {
-                left: 12px;
-                font-size: 18px;
             }
             
             .locked-overlay {
                 padding: 20px 15px;
-                background: rgba(255, 255, 255, 0.95);
             }
             
-            /* 优化按钮大小 */
+            .unlock-items {
+                padding: 18px 12px;
+                margin: 20px 0;
+            }
+            
+            .unlock-items ul {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .unlock-items li {
+                padding: 12px 15px;
+                padding-left: 40px;
+                font-size: 13px;
+            }
+            
+            .unlock-btn {
+                padding: 12px 30px;
+                font-size: 15px;
+                min-width: 200px;
+            }
+            
             .dynamic-pulse-btn {
                 max-width: 220px;
                 padding: 12px 20px;
@@ -1116,27 +1072,21 @@
                 min-height: 200px;
             }
             
-            /* 小屏幕图片优化 */
             .hero-image, .detail-image {
                 object-fit: cover;
                 object-position: center center;
             }
             
-            .locked-items {
-                padding: 18px 12px;
+            .unlock-items {
+                padding: 16px 10px;
             }
             
-            .locked-items h4 {
-                font-size: 16px;
+            .unlock-items li {
+                font-size: 12px;
+                padding: 10px 12px;
+                padding-left: 35px;
             }
             
-            .locked-items li {
-                font-size: 13px;
-                padding: 12px 12px;
-                padding-left: 40px;
-            }
-            
-            /* 小屏幕支付弹窗优化 */
             .modal-content {
                 padding: 15px 12px;
                 margin: 5% auto;
@@ -1166,18 +1116,15 @@
                 max-height: 600px;
             }
             
-            /* 桌面端图片显示优化 */
             .hero-image, .detail-image {
                 object-fit: cover;
                 object-position: center center;
             }
             
-            /* 桌面端锁定项目网格优化 */
-            .locked-items ul {
+            .unlock-items ul {
                 grid-template-columns: repeat(2, 1fr);
             }
             
-            /* 桌面端支付弹窗优化 */
             .modal-content {
                 max-height: 80vh;
             }
@@ -1197,7 +1144,7 @@
                 max-height: 700px;
             }
             
-            .locked-items ul {
+            .unlock-items ul {
                 grid-template-columns: repeat(3, 1fr);
             }
         }
@@ -1429,26 +1376,36 @@
                     </div>
                 </div>
                 
-                <!-- 锁定内容区域 -->
+                <!-- 锁定内容区域 - 优化版 -->
                 <div class="locked-content" id="locked-content">
                     <div class="locked-overlay" id="locked-overlay">
-                        <div class="lock-icon">🔒</div>
-                        <p style="text-align: center; font-weight: bold; color: var(--primary-color); margin-bottom: 10px; font-size: 16px;">
-                            完整内容已锁定
-                        </p>
-                        <p style="text-align: center; color: var(--text-color); margin-bottom: 15px; font-size: 14px;">
-                            解锁完整分析报告，查看全部命理分析内容
-                        </p>
-                        <button class="unlock-btn" onclick="showPaymentModal()">解锁完整报告 (¥<span id="unlock-price">19.9</span>)</button>
+                        <!-- 解锁标题区域 -->
+                        <div class="unlock-header">
+                            <div class="lock-icon">🔒</div>
+                            <h4>完整内容已锁定</h4>
+                            <p>解锁完整分析报告，查看全部命理分析内容</p>
+                        </div>
+                        
+                        <!-- 待解锁项目列表 - 直接显示在解锁界面上方 -->
+                        <div class="unlock-items">
+                            <h5>解锁后可查看以下分析项目</h5>
+                            <ul id="unlock-items-list">
+                                <!-- 这里将通过JavaScript动态填充 -->
+                            </ul>
+                        </div>
+                        
+                        <!-- 解锁按钮区域 -->
+                        <div class="unlock-btn-container">
+                            <button class="unlock-btn" onclick="showPaymentModal()">
+                                解锁完整报告 (¥<span id="unlock-price">19.9</span>)
+                            </button>
+                            <div class="unlock-price">
+                                共包含 <span id="unlock-count">4</span> 项详细分析
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="locked-items">
-                        <h4>待解锁分析项目</h4>
-                        <ul id="locked-items-list">
-                            <!-- 这里将通过JavaScript动态填充 -->
-                        </ul>
-                    </div>
-                    
+                    <!-- 原始锁定内容（隐藏） -->
                     <div id="locked-analysis-text" style="display: none;">
                         <!-- 这里将通过JavaScript动态填充完整内容 -->
                     </div>
@@ -1818,9 +1775,8 @@
         let currentService = '测算验证';
         // 存储完整分析结果
         let fullAnalysisResult = '';
-        // 存储解析后的八字和大运数据
+        // 存储解析后的八字数据
         let baziData = null;
-        let dayunData = null;
         // 当前订单信息
         let currentOrder = null;
         // 存储用户信息
@@ -1930,8 +1886,8 @@
             // 更新解锁价格
             updateUnlockPrice();
             
-            // 更新未解锁项目列表
-            updateLockedItems();
+            // 更新待解锁项目列表
+            updateUnlockItems();
             
             // 设置下载按钮为锁定状态
             lockDownloadButton();
@@ -2108,8 +2064,8 @@
             // 更新解锁价格
             updateUnlockPrice();
             
-            // 更新未解锁项目列表
-            updateLockedItems();
+            // 更新待解锁项目列表
+            updateUnlockItems();
             
             // 重置下载按钮状态
             if (!isPaymentUnlocked) {
@@ -2133,16 +2089,24 @@
             }
         }
         
-        // 更新未解锁项目列表
-        function updateLockedItems() {
-            const lockedItemsList = document.getElementById('locked-items-list');
-            if (lockedItemsList) {
-                lockedItemsList.innerHTML = '';
+        // 更新待解锁项目列表
+        function updateUnlockItems() {
+            const unlockItemsList = document.getElementById('unlock-items-list');
+            const unlockCountElement = document.getElementById('unlock-count');
+            
+            if (unlockItemsList && unlockCountElement) {
+                unlockItemsList.innerHTML = '';
                 
-                SERVICES[currentService].lockedItems.forEach(item => {
+                const lockedItems = SERVICES[currentService].lockedItems;
+                
+                // 更新项目数量
+                unlockCountElement.textContent = lockedItems.length;
+                
+                // 创建项目列表
+                lockedItems.forEach(item => {
                     const li = document.createElement('li');
                     li.textContent = item;
-                    lockedItemsList.appendChild(li);
+                    unlockItemsList.appendChild(li);
                 });
             }
         }
@@ -2183,13 +2147,50 @@
             currentOrder = {
                 serviceType: currentService,
                 price: SERVICES[currentService].price,
-                orderId: 'ORD' + Date.now() + Math.floor(Math.random() * 1000)
+                orderId: 'ORD' + Date.now() + Math.floor(Math.random() * 1000),
+                unlockItems: SERVICES[currentService].lockedItems
             };
             
             // 更新支付弹窗内容
             document.getElementById('payment-service-type').textContent = currentService + '完整报告解锁';
             document.getElementById('payment-amount').textContent = '¥' + currentOrder.price;
             document.getElementById('payment-order-id').textContent = currentOrder.orderId;
+            
+            // 添加待解锁项目列表到支付弹窗
+            const orderInfo = document.querySelector('.order-info');
+            if (orderInfo) {
+                // 移除旧的解锁项目列表（如果存在）
+                const oldList = orderInfo.querySelector('.unlock-items-list');
+                if (oldList) oldList.remove();
+                
+                // 创建项目列表元素
+                const unlockItemsDiv = document.createElement('div');
+                unlockItemsDiv.className = 'unlock-items-list';
+                unlockItemsDiv.style.marginTop = '15px';
+                unlockItemsDiv.style.paddingTop = '15px';
+                unlockItemsDiv.style.borderTop = '1px dashed var(--border-color)';
+                
+                const itemsTitle = document.createElement('p');
+                itemsTitle.innerHTML = '<strong>解锁内容:</strong>';
+                unlockItemsDiv.appendChild(itemsTitle);
+                
+                const itemsList = document.createElement('ul');
+                itemsList.style.marginLeft = '20px';
+                itemsList.style.marginTop = '8px';
+                
+                currentOrder.unlockItems.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = item;
+                    li.style.fontSize = '13px';
+                    li.style.color = 'var(--text-color)';
+                    li.style.marginBottom = '5px';
+                    li.style.listStyleType = 'disc';
+                    itemsList.appendChild(li);
+                });
+                
+                unlockItemsDiv.appendChild(itemsList);
+                orderInfo.appendChild(unlockItemsDiv);
+            }
             
             // 显示支付弹窗
             const paymentModal = document.getElementById('payment-modal');
@@ -2225,43 +2226,81 @@
                 // 关闭支付弹窗
                 closePaymentModal();
                 
-                // 隐藏锁定覆盖层
-                const lockedOverlay = document.getElementById('locked-overlay');
-                if (lockedOverlay) {
-                    lockedOverlay.style.display = 'none';
-                }
-                
-                // 更新未解锁项目状态为已解锁
-                const lockedItems = document.querySelectorAll('#locked-items-list li');
-                lockedItems.forEach(item => {
-                    item.classList.add('unlocked');
-                    item.innerHTML = '✅ ' + item.textContent;
-                });
+                // 更新解锁界面状态
+                updateUnlockInterface();
                 
                 // 显示完整内容
-                const lockedAnalysisText = document.getElementById('locked-analysis-text');
-                if (lockedAnalysisText && lockedAnalysisText.textContent.trim()) {
-                    // 将锁定内容添加到免费内容中
-                    const freeAnalysisText = document.getElementById('free-analysis-text');
-                    if (freeAnalysisText) {
-                        // 保留原有的免费内容
-                        let currentContent = freeAnalysisText.innerHTML;
-                        // 添加锁定内容
-                        freeAnalysisText.innerHTML = currentContent + lockedAnalysisText.innerHTML;
-                    }
-                } else {
-                    // 如果没有锁定内容，显示完整分析结果
-                    const freeAnalysisText = document.getElementById('free-analysis-text');
-                    if (freeAnalysisText) {
-                        freeAnalysisText.innerHTML = fullAnalysisResult.replace(/\n/g, '<br>');
-                    }
-                }
+                showFullAnalysisContent();
                 
                 // 解锁下载报告按钮
                 unlockDownloadButton();
                 
                 alert('支付成功！完整报告已解锁。');
                 console.log('支付确认完成，内容已解锁，下载按钮已解锁');
+            }
+        }
+        
+        // 更新解锁界面状态
+        function updateUnlockInterface() {
+            const lockedOverlay = document.getElementById('locked-overlay');
+            if (lockedOverlay) {
+                // 更新标题
+                const unlockHeader = lockedOverlay.querySelector('.unlock-header');
+                if (unlockHeader) {
+                    const lockIcon = unlockHeader.querySelector('.lock-icon');
+                    const headerTitle = unlockHeader.querySelector('h4');
+                    const headerDesc = unlockHeader.querySelector('p');
+                    
+                    if (lockIcon) lockIcon.textContent = '✅';
+                    if (headerTitle) headerTitle.textContent = '完整报告已解锁';
+                    if (headerDesc) headerDesc.textContent = '您可以查看全部命理分析内容';
+                }
+                
+                // 更新项目列表为已解锁状态
+                const unlockItems = lockedOverlay.querySelectorAll('.unlock-items li');
+                unlockItems.forEach(item => {
+                    item.classList.add('unlocked-item');
+                    item.innerHTML = '✅ ' + item.textContent.replace('🔒 ', '');
+                });
+                
+                // 更新解锁按钮
+                const unlockBtnContainer = lockedOverlay.querySelector('.unlock-btn-container');
+                if (unlockBtnContainer) {
+                    const unlockBtn = unlockBtnContainer.querySelector('.unlock-btn');
+                    const unlockPrice = unlockBtnContainer.querySelector('.unlock-price');
+                    
+                    if (unlockBtn) {
+                        unlockBtn.innerHTML = '✅ 已解锁完整报告';
+                        unlockBtn.style.background = 'linear-gradient(135deg, var(--success-color), #28c76f)';
+                        unlockBtn.style.cursor = 'default';
+                        unlockBtn.onclick = null;
+                    }
+                    
+                    if (unlockPrice) {
+                        unlockPrice.innerHTML = '<span style="color: var(--success-color);">✅ 已解锁全部内容</span>';
+                    }
+                }
+            }
+        }
+        
+        // 显示完整分析内容
+        function showFullAnalysisContent() {
+            const lockedAnalysisText = document.getElementById('locked-analysis-text');
+            if (lockedAnalysisText && lockedAnalysisText.textContent.trim()) {
+                // 将锁定内容添加到免费内容中
+                const freeAnalysisText = document.getElementById('free-analysis-text');
+                if (freeAnalysisText) {
+                    // 保留原有的免费内容
+                    let currentContent = freeAnalysisText.innerHTML;
+                    // 添加锁定内容
+                    freeAnalysisText.innerHTML = currentContent + lockedAnalysisText.innerHTML;
+                }
+            } else {
+                // 如果没有锁定内容，显示完整分析结果
+                const freeAnalysisText = document.getElementById('free-analysis-text');
+                if (freeAnalysisText) {
+                    freeAnalysisText.innerHTML = fullAnalysisResult.replace(/\n/g, '<br>');
+                }
             }
         }
         
@@ -2679,7 +2718,7 @@
                 // 如果没有找到标准格式，尝试其他格式
                 const baziSections = analysisResult.split('【八字排盘】');
                 if (baziSections.length > 1) {
-                    const baziText = baziSections[1].split('【')[0]; // 获取到下一个【之前的内容
+                    const baziText = baziSections[1].split('【')[0];
                     const lines = baziText.split('\n');
                     
                     lines.forEach(line => {
@@ -2895,7 +2934,7 @@
                     continue;
                 }
                 
-                // 大运排盘也不显示（根据要求删除）
+                // 大运排盘也不显示
                 if (sectionTitle === '【大运排盘】') {
                     continue;
                 }
@@ -2986,34 +3025,6 @@
                 lockedAnalysisText.innerHTML = formattedLockedContent;
             }
             
-            // 确保锁定覆盖层显示
-            const lockedOverlay = document.getElementById('locked-overlay');
-            if (lockedOverlay) {
-                lockedOverlay.style.display = 'flex';
-                lockedOverlay.style.background = 'rgba(255, 255, 255, 0.95)';
-            }
-            
-            // 确保锁定内容区域显示
-            const lockedContentDiv = document.getElementById('locked-content');
-            if (lockedContentDiv) {
-                lockedContentDiv.style.display = 'block';
-            }
-            
-            // 确保未解锁项目列表显示清晰
-            const lockedItemsList = document.getElementById('locked-items-list');
-            if (lockedItemsList) {
-                lockedItemsList.style.opacity = '1';
-                lockedItemsList.style.visibility = 'visible';
-                
-                const lockedItems = lockedItemsList.querySelectorAll('li');
-                lockedItems.forEach(item => {
-                    item.style.opacity = '1';
-                    item.style.visibility = 'visible';
-                    item.style.color = 'var(--dark-color)';
-                    item.style.fontWeight = '600';
-                });
-            }
-            
             console.log('分析结果处理完成');
         }
         
@@ -3102,17 +3113,8 @@ ${fullAnalysisResult}
                 analysisResultSection.style.display = 'none';
             }
             
-            // 重置锁定内容显示
-            const lockedOverlay = document.getElementById('locked-overlay');
-            if (lockedOverlay) {
-                lockedOverlay.style.display = 'flex';
-                lockedOverlay.style.background = 'rgba(255, 255, 255, 0.95)';
-            }
-            
-            const lockedContentDiv = document.getElementById('locked-content');
-            if (lockedContentDiv) {
-                lockedContentDiv.style.display = 'block';
-            }
+            // 重置解锁界面
+            resetUnlockInterface();
             
             // 重置免费内容
             const freeAnalysisText = document.getElementById('free-analysis-text');
@@ -3121,6 +3123,52 @@ ${fullAnalysisResult}
             }
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // 重置解锁界面
+        function resetUnlockInterface() {
+            const lockedOverlay = document.getElementById('locked-overlay');
+            if (lockedOverlay) {
+                // 重置标题
+                const unlockHeader = lockedOverlay.querySelector('.unlock-header');
+                if (unlockHeader) {
+                    const lockIcon = unlockHeader.querySelector('.lock-icon');
+                    const headerTitle = unlockHeader.querySelector('h4');
+                    const headerDesc = unlockHeader.querySelector('p');
+                    
+                    if (lockIcon) lockIcon.textContent = '🔒';
+                    if (headerTitle) headerTitle.textContent = '完整内容已锁定';
+                    if (headerDesc) headerDesc.textContent = '解锁完整分析报告，查看全部命理分析内容';
+                }
+                
+                // 重置项目列表为锁定状态
+                const unlockItems = lockedOverlay.querySelectorAll('.unlock-items li');
+                unlockItems.forEach(item => {
+                    item.classList.remove('unlocked-item');
+                    item.innerHTML = item.textContent.replace('✅ ', '🔒 ');
+                });
+                
+                // 重置解锁按钮
+                const unlockBtnContainer = lockedOverlay.querySelector('.unlock-btn-container');
+                if (unlockBtnContainer) {
+                    const unlockBtn = unlockBtnContainer.querySelector('.unlock-btn');
+                    const unlockPrice = unlockBtnContainer.querySelector('.unlock-price');
+                    
+                    if (unlockBtn) {
+                        unlockBtn.innerHTML = `解锁完整报告 (¥<span id="unlock-price">${SERVICES[currentService].price}</span>)`;
+                        unlockBtn.style.background = 'linear-gradient(135deg, var(--secondary-color), #e6b800)';
+                        unlockBtn.style.cursor = 'pointer';
+                        unlockBtn.onclick = function() { showPaymentModal(); };
+                    }
+                    
+                    if (unlockPrice) {
+                        unlockPrice.innerHTML = `共包含 <span id="unlock-count">${SERVICES[currentService].lockedItems.length}</span> 项详细分析`;
+                    }
+                }
+            }
+            
+            // 更新待解锁项目列表
+            updateUnlockItems();
         }
         
         // 页面加载完成后初始化
