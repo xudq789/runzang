@@ -3,7 +3,7 @@ export const SERVICES = {
     '测算验证': {
         heroImage: 'https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/1-1.jpg',
         detailImage: 'https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/1-2.jpg',
-        price: 19.9,
+        price: 9.9,
         lockedItems: [
             '富贵层次评估',
             '过往大运营凶分析',
@@ -21,10 +21,10 @@ export const SERVICES = {
 请先进行八字排盘，然后用以下格式输出结果：
 
 【八字排盘】
-年柱：[年柱干支] ([五行属性])
-月柱：[月柱干支] ([五行属性])
-日柱：[日柱干支] ([五行属性])
-时柱：[时柱干支] ([五行属性])
+年柱：[年柱干支] 
+月柱：[月柱干支] 
+日柱：[日柱干支] 
+时柱：[时柱干支] 
 
 【大运排盘】
 起运岁数：[起运岁数]
@@ -65,7 +65,7 @@ export const SERVICES = {
     '流年运程': {
         heroImage: 'https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/2-1.jpg',
         detailImage: 'https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/2-2.jpg',
-        price: 38,
+        price: 19.8,
         lockedItems: [
             '富贵层次评估',
             '测算当年及往后5年运势',
@@ -85,10 +85,10 @@ export const SERVICES = {
 请先进行八字排盘，然后用以下格式输出结果：
 
 【八字排盘】
-年柱：[年柱干支] ([五行属性])
-月柱：[月柱干支] ([五行属性])
-日柱：[日柱干支] ([五行属性])
-时柱：[时柱干支] ([五行属性])
+年柱：[年柱干支] 
+月柱：[月柱干支] 
+日柱：[日柱干支] 
+时柱：[时柱干支] 
 
 【大运排盘】
 起运岁数：[起运岁数]
@@ -135,7 +135,7 @@ export const SERVICES = {
     '人生详批': {
         heroImage: 'https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/3-1.jpg',
         detailImage: 'https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/3-2.jpg',
-        price: 68,
+        price: 39.8,
         lockedItems: [
             '富贵层次评估',
             '人生每步大运营凶分析',
@@ -155,10 +155,10 @@ export const SERVICES = {
 请先进行八字排盘，然后用以下格式输出结果：
 
 【八字排盘】
-年柱：[年柱干支] ([五行属性])
-月柱：[月柱干支] ([五行属性])
-日柱：[日柱干支] ([五行属性])
-时柱：[时柱干支] ([五行属性])
+年柱：[年柱干支] 
+月柱：[月柱干支] 
+日柱：[日柱干支] 
+时柱：[时柱干支] 
 
 【大运排盘】
 起运岁数：[起运岁数]
@@ -205,7 +205,7 @@ export const SERVICES = {
     '八字合婚': {
         heroImage: 'https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/4-1.jpg',
         detailImage: 'https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/4-2.jpg',
-        price: 52,
+        price: 39.8,
         lockedItems: [
             '富贵层次评估',
             '双方八字契合度分析',
@@ -231,16 +231,16 @@ export const SERVICES = {
 请先进行八字排盘，然后用以下格式输出结果：
 
 【用户八字排盘】
-年柱：[年柱干支] ([五行属性])
-月柱：[月柱干支] ([五行属性])
-日柱：[日柱干支] ([五行属性])
-时柱：[时柱干支] ([五行属性])
+年柱：[年柱干支] 
+月柱：[月柱干支] 
+日柱：[日柱干支] 
+时柱：[时柱干支] 
 
 【伴侣八字排盘】
-年柱：[年柱干支] ([五行属性])
-月柱：[月柱干支] ([五行属性])
-日柱：[日柱干支] ([五行属性])
-时柱：[年柱干支] ([五行属性])
+年柱：[年柱干支] 
+月柱：[月柱干支] 
+日柱：[日柱干支] 
+时柱：[年柱干支] 
 
 【用户大运排盘】
 起运岁数：[起运岁数]
@@ -305,4 +305,5 @@ export const STATE = {
     apiStatus: null,
     isPaymentUnlocked: false,
     isDownloadLocked: true
+
 };
