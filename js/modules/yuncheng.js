@@ -1,5 +1,5 @@
 // 流年运程模块
-import { calculateBazi } from '../utils.js';
+import { calculateBazi } from '../core/utils.js';
 
 export class YunchengModule {
     static getServiceConfig() {
@@ -85,3 +85,4 @@ export class YunchengModule {
     }
 
 }
+
