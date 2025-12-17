@@ -139,6 +139,7 @@ export const SERVICES = {
         lockedItems: [
             '富贵层次评估',
             '人生每步大运营凶分析',
+            '人生高低点分析',
             '往后关键流年分析',
             '重要人生事项提醒',
             '风水建议',
@@ -210,7 +211,6 @@ export const SERVICES = {
         detailImage: 'https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/4-2.jpg',
         price: 39.8,
         lockedItems: [
-            '富贵层次评估',
             '双方八字契合度分析',
             '感情发展趋势解读',
             '婚姻稳定性分析',
@@ -304,4 +304,5 @@ export const STATE = {
     isDownloadLocked: true
 
 };
+
 
