@@ -1,3 +1,5 @@
+[file name]: api.js
+[file content begin]
 // API通信模块
 import { DOM } from './utils.js';
 
@@ -110,8 +112,17 @@ export function parseBaziData(analysisResult) {
         hourElement: ''
     };
     
-    // 尝试从分析结果中提取八字信息
-    const baziMatch = analysisResult.match(/【八字排盘】\s*年柱：([^\n]+)\s*月柱：([^\n]+)\s*日柱：([^\n]+)\s*时柱：([^\n]+)/);
+    // 尝试从分析结果中提取用户八字信息
+    // 先检查是否有用户八字排盘部分
+    let baziMatch = null;
+    
+    // 尝试匹配用户八字排盘
+    if (analysisResult.includes('【用户八字排盘】')) {
+        baziMatch = analysisResult.match(/【用户八字排盘】\s*年柱：([^\n]+)\s*月柱：([^\n]+)\s*日柱：([^\n]+)\s*时柱：([^\n]+)/);
+    } else if (analysisResult.includes('【八字排盘】')) {
+        // 如果是其他服务，使用通用格式
+        baziMatch = analysisResult.match(/【八字排盘】\s*年柱：([^\n]+)\s*月柱：([^\n]+)\s*日柱：([^\n]+)\s*时柱：([^\n]+)/);
+    }
     
     if (baziMatch && baziMatch.length >= 5) {
         // 解析年柱
@@ -143,9 +154,20 @@ export function parseBaziData(analysisResult) {
         }
     } else {
         // 如果没有找到标准格式，尝试其他格式
-        const baziSections = analysisResult.split('【八字排盘】');
-        if (baziSections.length > 1) {
-            const baziText = baziSections[1].split('【')[0];
+        let baziText = '';
+        if (analysisResult.includes('【用户八字排盘】')) {
+            const baziSections = analysisResult.split('【用户八字排盘】');
+            if (baziSections.length > 1) {
+                baziText = baziSections[1].split('【')[0];
+            }
+        } else if (analysisResult.includes('【八字排盘】')) {
+            const baziSections = analysisResult.split('【八字排盘】');
+            if (baziSections.length > 1) {
+                baziText = baziSections[1].split('【')[0];
+            }
+        }
+        
+        if (baziText) {
             const lines = baziText.split('\n');
             
             lines.forEach(line => {
@@ -182,3 +204,4 @@ export function parseBaziData(analysisResult) {
     console.log('解析到的八字数据:', baziData);
     return baziData;
 }
+[file content end]
