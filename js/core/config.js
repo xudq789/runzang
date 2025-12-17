@@ -139,6 +139,7 @@ export const SERVICES = {
         lockedItems: [
             '富贵层次评估',
             '人生每步大运营凶分析',
+            '人生高低点分析',
             '往后关键流年分析',
             '重要人生事项提醒',
             '风水建议',
@@ -182,6 +183,9 @@ export const SERVICES = {
 
 【人生每步大运营凶分析】
 详细分析用户人生每一步大运的吉凶情况，指出关键时期和转折点。
+
+【人生高低点分析】
+分析用户一生高点在哪里，低点在哪里，提醒防范和把握。
 
 【往后关键流年分析】
 分析用户未来关键流年的运势，指出重要年份和机遇挑战。
@@ -306,3 +310,4 @@ export const STATE = {
     isPaymentUnlocked: false,
     isDownloadLocked: true
 };
+
