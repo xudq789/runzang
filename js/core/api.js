@@ -1,3 +1,5 @@
+[file name]: api.js
+[file content begin]
 // API通信模块
 import { DOM } from './utils.js';
 
@@ -94,7 +96,7 @@ export async function checkAPIStatus() {
     }
 }
 
-// 解析八字数据从AI回复中
+// 解析八字数据从AI回复中 - 增强版：支持双方八字
 export function parseBaziData(analysisResult) {
     console.log('解析八字数据...');
     
@@ -107,78 +109,162 @@ export function parseBaziData(analysisResult) {
         dayColumn: '',
         dayElement: '',
         hourColumn: '',
-        hourElement: ''
+        hourElement: '',
+        // 八字合婚专用字段
+        partnerYearColumn: '',
+        partnerYearElement: '',
+        partnerMonthColumn: '',
+        partnerMonthElement: '',
+        partnerDayColumn: '',
+        partnerDayElement: '',
+        partnerHourColumn: '',
+        partnerHourElement: '',
+        partnerData: false // 标记是否有伴侣数据
     };
     
-    // 尝试从分析结果中提取八字信息
-    const baziMatch = analysisResult.match(/【八字排盘】\s*年柱：([^\n]+)\s*月柱：([^\n]+)\s*日柱：([^\n]+)\s*时柱：([^\n]+)/);
+    // 检查是否是八字合婚回复
+    const isHehun = analysisResult.includes('【用户八字排盘】') && analysisResult.includes('【伴侣八字排盘】');
     
-    if (baziMatch && baziMatch.length >= 5) {
-        // 解析年柱
-        const yearMatch = baziMatch[1].match(/([^\s]+)\s*\(([^)]+)\)/);
-        if (yearMatch) {
-            baziData.yearColumn = yearMatch[1];
-            baziData.yearElement = yearMatch[2];
+    if (isHehun) {
+        // 解析用户八字
+        const userBaziMatch = analysisResult.match(/【用户八字排盘】\s*年柱[：:]\s*([^\n]+)\s*月柱[：:]\s*([^\n]+)\s*日柱[：:]\s*([^\n]+)\s*时柱[：:]\s*([^\n]+)/);
+        
+        if (userBaziMatch && userBaziMatch.length >= 5) {
+            // 解析用户年柱
+            const yearMatch = userBaziMatch[1].match(/([^\s(]+)(?:\s*\(([^)]+)\))?/);
+            if (yearMatch) {
+                baziData.yearColumn = yearMatch[1] || '';
+                baziData.yearElement = yearMatch[2] || '';
+            }
+            
+            // 解析用户月柱
+            const monthMatch = userBaziMatch[2].match(/([^\s(]+)(?:\s*\(([^)]+)\))?/);
+            if (monthMatch) {
+                baziData.monthColumn = monthMatch[1] || '';
+                baziData.monthElement = monthMatch[2] || '';
+            }
+            
+            // 解析用户日柱
+            const dayMatch = userBaziMatch[3].match(/([^\s(]+)(?:\s*\(([^)]+)\))?/);
+            if (dayMatch) {
+                baziData.dayColumn = dayMatch[1] || '';
+                baziData.dayElement = dayMatch[2] || '';
+            }
+            
+            // 解析用户时柱
+            const hourMatch = userBaziMatch[4].match(/([^\s(]+)(?:\s*\(([^)]+)\))?/);
+            if (hourMatch) {
+                baziData.hourColumn = hourMatch[1] || '';
+                baziData.hourElement = hourMatch[2] || '';
+            }
         }
         
-        // 解析月柱
-        const monthMatch = baziMatch[2].match(/([^\s]+)\s*\(([^)]+)\)/);
-        if (monthMatch) {
-            baziData.monthColumn = monthMatch[1];
-            baziData.monthElement = monthMatch[2];
-        }
+        // 解析伴侣八字
+        const partnerBaziMatch = analysisResult.match(/【伴侣八字排盘】\s*年柱[：:]\s*([^\n]+)\s*月柱[：:]\s*([^\n]+)\s*日柱[：:]\s*([^\n]+)\s*时柱[：:]\s*([^\n]+)/);
         
-        // 解析日柱
-        const dayMatch = baziMatch[3].match(/([^\s]+)\s*\(([^)]+)\)/);
-        if (dayMatch) {
-            baziData.dayColumn = dayMatch[1];
-            baziData.dayElement = dayMatch[2];
-        }
-        
-        // 解析时柱
-        const hourMatch = baziMatch[4].match(/([^\s]+)\s*\(([^)]+)\)/);
-        if (hourMatch) {
-            baziData.hourColumn = hourMatch[1];
-            baziData.hourElement = hourMatch[2];
+        if (partnerBaziMatch && partnerBaziMatch.length >= 5) {
+            baziData.partnerData = true;
+            
+            // 解析伴侣年柱
+            const partnerYearMatch = partnerBaziMatch[1].match(/([^\s(]+)(?:\s*\(([^)]+)\))?/);
+            if (partnerYearMatch) {
+                baziData.partnerYearColumn = partnerYearMatch[1] || '';
+                baziData.partnerYearElement = partnerYearMatch[2] || '';
+            }
+            
+            // 解析伴侣月柱
+            const partnerMonthMatch = partnerBaziMatch[2].match(/([^\s(]+)(?:\s*\(([^)]+)\))?/);
+            if (partnerMonthMatch) {
+                baziData.partnerMonthColumn = partnerMonthMatch[1] || '';
+                baziData.partnerMonthElement = partnerMonthMatch[2] || '';
+            }
+            
+            // 解析伴侣日柱
+            const partnerDayMatch = partnerBaziMatch[3].match(/([^\s(]+)(?:\s*\(([^)]+)\))?/);
+            if (partnerDayMatch) {
+                baziData.partnerDayColumn = partnerDayMatch[1] || '';
+                baziData.partnerDayElement = partnerDayMatch[2] || '';
+            }
+            
+            // 解析伴侣时柱
+            const partnerHourMatch = partnerBaziMatch[4].match(/([^\s(]+)(?:\s*\(([^)]+)\))?/);
+            if (partnerHourMatch) {
+                baziData.partnerHourColumn = partnerHourMatch[1] || '';
+                baziData.partnerHourElement = partnerHourMatch[2] || '';
+            }
         }
     } else {
-        // 如果没有找到标准格式，尝试其他格式
-        const baziSections = analysisResult.split('【八字排盘】');
-        if (baziSections.length > 1) {
-            const baziText = baziSections[1].split('【')[0];
-            const lines = baziText.split('\n');
+        // 普通服务八字解析
+        const baziMatch = analysisResult.match(/【八字排盘】\s*年柱[：:]\s*([^\n]+)\s*月柱[：:]\s*([^\n]+)\s*日柱[：:]\s*([^\n]+)\s*时柱[：:]\s*([^\n]+)/);
+        
+        if (baziMatch && baziMatch.length >= 5) {
+            // 解析年柱
+            const yearMatch = baziMatch[1].match(/([^\s(]+)(?:\s*\(([^)]+)\))?/);
+            if (yearMatch) {
+                baziData.yearColumn = yearMatch[1] || '';
+                baziData.yearElement = yearMatch[2] || '';
+            }
             
-            lines.forEach(line => {
-                const trimmedLine = line.trim();
-                if (trimmedLine.includes('年柱')) {
-                    const match = trimmedLine.match(/年柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
-                    if (match) {
-                        baziData.yearColumn = match[1] || '';
-                        baziData.yearElement = match[2] || '';
+            // 解析月柱
+            const monthMatch = baziMatch[2].match(/([^\s(]+)(?:\s*\(([^)]+)\))?/);
+            if (monthMatch) {
+                baziData.monthColumn = monthMatch[1] || '';
+                baziData.monthElement = monthMatch[2] || '';
+            }
+            
+            // 解析日柱
+            const dayMatch = baziMatch[3].match(/([^\s(]+)(?:\s*\(([^)]+)\))?/);
+            if (dayMatch) {
+                baziData.dayColumn = dayMatch[1] || '';
+                baziData.dayElement = dayMatch[2] || '';
+            }
+            
+            // 解析时柱
+            const hourMatch = baziMatch[4].match(/([^\s(]+)(?:\s*\(([^)]+)\))?/);
+            if (hourMatch) {
+                baziData.hourColumn = hourMatch[1] || '';
+                baziData.hourElement = hourMatch[2] || '';
+            }
+        } else {
+            // 如果没有找到标准格式，尝试其他格式
+            const baziSections = analysisResult.split('【八字排盘】');
+            if (baziSections.length > 1) {
+                const baziText = baziSections[1].split('【')[0];
+                const lines = baziText.split('\n');
+                
+                lines.forEach(line => {
+                    const trimmedLine = line.trim();
+                    if (trimmedLine.includes('年柱')) {
+                        const match = trimmedLine.match(/年柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
+                        if (match) {
+                            baziData.yearColumn = match[1] || '';
+                            baziData.yearElement = match[2] || '';
+                        }
+                    } else if (trimmedLine.includes('月柱')) {
+                        const match = trimmedLine.match(/月柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
+                        if (match) {
+                            baziData.monthColumn = match[1] || '';
+                            baziData.monthElement = match[2] || '';
+                        }
+                    } else if (trimmedLine.includes('日柱')) {
+                        const match = trimmedLine.match(/日柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
+                        if (match) {
+                            baziData.dayColumn = match[1] || '';
+                            baziData.dayElement = match[2] || '';
+                        }
+                    } else if (trimmedLine.includes('时柱')) {
+                        const match = trimmedLine.match(/时柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
+                        if (match) {
+                            baziData.hourColumn = match[1] || '';
+                            baziData.hourElement = match[2] || '';
+                        }
                     }
-                } else if (trimmedLine.includes('月柱')) {
-                    const match = trimmedLine.match(/月柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
-                    if (match) {
-                        baziData.monthColumn = match[1] || '';
-                        baziData.monthElement = match[2] || '';
-                    }
-                } else if (trimmedLine.includes('日柱')) {
-                    const match = trimmedLine.match(/日柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
-                    if (match) {
-                        baziData.dayColumn = match[1] || '';
-                        baziData.dayElement = match[2] || '';
-                    }
-                } else if (trimmedLine.includes('时柱')) {
-                    const match = trimmedLine.match(/时柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
-                    if (match) {
-                        baziData.hourColumn = match[1] || '';
-                        baziData.hourElement = match[2] || '';
-                    }
-                }
-            });
+                });
+            }
         }
     }
     
     console.log('解析到的八字数据:', baziData);
     return baziData;
 }
+[file content end]
