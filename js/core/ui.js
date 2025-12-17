@@ -1,3 +1,5 @@
+[file name]: ui.js
+[file content begin]
 // UI控制模块
 import { DOM, formatDate, hideElement, showElement, generateOrderId } from './utils.js';
 import { SERVICES, STATE } from './config.js';
@@ -263,55 +265,260 @@ export function displayBaziPan() {
     
     baziGrid.innerHTML = '';
     
-    // 使用解析到的八字数据或计算数据
-    const baziDataToDisplay = STATE.baziData;
-    
-    if (!baziDataToDisplay) return;
-    
-    // 四柱：年柱、月柱、日柱、时柱
-    const columns = [
-        { label: '年柱', value: baziDataToDisplay.yearColumn, element: baziDataToDisplay.yearElement },
-        { label: '月柱', value: baziDataToDisplay.monthColumn, element: baziDataToDisplay.monthElement },
-        { label: '日柱', value: baziDataToDisplay.dayColumn, element: baziDataToDisplay.dayElement },
-        { label: '时柱', value: baziDataToDisplay.hourColumn, element: baziDataToDisplay.hourElement }
-    ];
-    
-    // 创建八字排盘展示
-    columns.forEach(col => {
-        const div = document.createElement('div');
-        div.className = 'bazi-column';
+    // 对于八字合婚，需要显示双方八字排盘
+    if (STATE.currentService === '八字合婚') {
+        // 首先尝试从分析结果中解析伴侣的八字数据
+        const userBaziData = STATE.baziData;
+        let partnerBaziData = {};
         
-        const labelDiv = document.createElement('div');
-        labelDiv.className = 'bazi-label';
-        labelDiv.textContent = col.label;
+        // 尝试从分析结果中提取伴侣的八字信息
+        if (STATE.fullAnalysisResult) {
+            const baziMatch = STATE.fullAnalysisResult.match(/【伴侣八字排盘】\s*年柱：([^\n]+)\s*月柱：([^\n]+)\s*日柱：([^\n]+)\s*时柱：([^\n]+)/);
+            
+            if (baziMatch && baziMatch.length >= 5) {
+                // 解析伴侣年柱
+                const yearMatch = baziMatch[1].match(/([^\s]+)\s*\(([^)]+)\)/);
+                if (yearMatch) {
+                    partnerBaziData.yearColumn = yearMatch[1];
+                    partnerBaziData.yearElement = yearMatch[2];
+                }
+                
+                // 解析伴侣月柱
+                const monthMatch = baziMatch[2].match(/([^\s]+)\s*\(([^)]+)\)/);
+                if (monthMatch) {
+                    partnerBaziData.monthColumn = monthMatch[1];
+                    partnerBaziData.monthElement = monthMatch[2];
+                }
+                
+                // 解析伴侣日柱
+                const dayMatch = baziMatch[3].match(/([^\s]+)\s*\(([^)]+)\)/);
+                if (dayMatch) {
+                    partnerBaziData.dayColumn = dayMatch[1];
+                    partnerBaziData.dayElement = dayMatch[2];
+                }
+                
+                // 解析伴侣时柱
+                const hourMatch = baziMatch[4].match(/([^\s]+)\s*\(([^)]+)\)/);
+                if (hourMatch) {
+                    partnerBaziData.hourColumn = hourMatch[1];
+                    partnerBaziData.hourElement = hourMatch[2];
+                }
+            }
+        }
         
-        const valueDiv = document.createElement('div');
-        valueDiv.className = 'bazi-value';
-        valueDiv.textContent = col.value;
+        // 如果没有解析到伴侣八字数据，使用计算数据
+        if (!partnerBaziData.yearColumn && STATE.partnerData) {
+            // 计算伴侣八字数据
+            const calculateBazi = (userData) => {
+                const year = parseInt(userData.birthYear);
+                const month = parseInt(userData.birthMonth);
+                const day = parseInt(userData.birthDay);
+                const hour = parseInt(userData.birthHour);
+                
+                const heavenlyStems = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+                const earthlyBranches = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+                const elements = ['木', '木', '火', '火', '土', '土', '金', '金', '水', '水'];
+                
+                const yearIndex = (year - 4) % 60;
+                const yearHeavenly = heavenlyStems[yearIndex % 10];
+                const yearEarthly = earthlyBranches[yearIndex % 12];
+                const yearColumn = yearHeavenly + yearEarthly;
+                const yearElement = elements[yearIndex % 10];
+                
+                const monthIndex = (month + 1) % 12;
+                const monthHeavenly = heavenlyStems[(yearIndex % 10 * 2 + monthIndex) % 10];
+                const monthEarthly = earthlyBranches[monthIndex];
+                const monthColumn = monthHeavenly + monthEarthly;
+                const monthElement = elements[(yearIndex % 10 * 2 + monthIndex) % 10];
+                
+                const dayIndex = (year + month + day) % 60;
+                const dayHeavenly = heavenlyStems[dayIndex % 10];
+                const dayEarthly = earthlyBranches[dayIndex % 12];
+                const dayColumn = dayHeavenly + dayEarthly;
+                const dayElement = elements[dayIndex % 10];
+                
+                const hourIndex = Math.floor(hour / 2) % 12;
+                const hourHeavenly = heavenlyStems[(dayIndex % 10 * 2 + hourIndex) % 10];
+                const hourEarthly = earthlyBranches[hourIndex];
+                const hourColumn = hourHeavenly + hourEarthly;
+                const hourElement = elements[(dayIndex % 10 * 2 + hourIndex) % 10];
+                
+                return {
+                    yearColumn,
+                    yearElement,
+                    monthColumn,
+                    monthElement,
+                    dayColumn,
+                    dayElement,
+                    hourColumn,
+                    hourElement
+                };
+            };
+            
+            partnerBaziData = calculateBazi(STATE.partnerData);
+        }
         
-        const elementDiv = document.createElement('div');
-        elementDiv.className = 'bazi-element';
-        elementDiv.textContent = col.element || '';
+        // 创建用户和伴侣的八字排盘容器
+        const container = document.createElement('div');
+        container.className = 'dual-bazi-container';
         
-        div.appendChild(labelDiv);
-        div.appendChild(valueDiv);
-        div.appendChild(elementDiv);
-        baziGrid.appendChild(div);
-    });
+        // 用户八字标题
+        const userTitle = document.createElement('div');
+        userTitle.className = 'bazi-section-title';
+        userTitle.textContent = '用户八字排盘';
+        userTitle.style.cssText = 'text-align: center; font-size: 18px; font-weight: bold; color: var(--primary-color); margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid var(--light-color);';
+        container.appendChild(userTitle);
+        
+        // 用户八字网格
+        const userGrid = document.createElement('div');
+        userGrid.className = 'bazi-grid';
+        userGrid.style.cssText = 'margin-bottom: 30px;';
+        
+        // 用户四柱数据
+        const userColumns = [
+            { label: '年柱', value: userBaziData.yearColumn, element: userBaziData.yearElement },
+            { label: '月柱', value: userBaziData.monthColumn, element: userBaziData.monthElement },
+            { label: '日柱', value: userBaziData.dayColumn, element: userBaziData.dayElement },
+            { label: '时柱', value: userBaziData.hourColumn, element: userBaziData.hourElement }
+        ];
+        
+        // 创建用户八字排盘展示
+        userColumns.forEach(col => {
+            const div = document.createElement('div');
+            div.className = 'bazi-column';
+            
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'bazi-label';
+            labelDiv.textContent = col.label;
+            
+            const valueDiv = document.createElement('div');
+            valueDiv.className = 'bazi-value';
+            valueDiv.textContent = col.value;
+            
+            const elementDiv = document.createElement('div');
+            elementDiv.className = 'bazi-element';
+            elementDiv.textContent = col.element || '';
+            
+            div.appendChild(labelDiv);
+            div.appendChild(valueDiv);
+            div.appendChild(elementDiv);
+            userGrid.appendChild(div);
+        });
+        
+        container.appendChild(userGrid);
+        
+        // 伴侣八字标题
+        const partnerTitle = document.createElement('div');
+        partnerTitle.className = 'bazi-section-title';
+        partnerTitle.textContent = '伴侣八字排盘';
+        partnerTitle.style.cssText = 'text-align: center; font-size: 18px; font-weight: bold; color: var(--primary-color); margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid var(--light-color);';
+        container.appendChild(partnerTitle);
+        
+        // 伴侣八字网格
+        const partnerGrid = document.createElement('div');
+        partnerGrid.className = 'bazi-grid';
+        
+        // 伴侣四柱数据
+        const partnerColumns = [
+            { label: '年柱', value: partnerBaziData.yearColumn || '--', element: partnerBaziData.yearElement || '' },
+            { label: '月柱', value: partnerBaziData.monthColumn || '--', element: partnerBaziData.monthElement || '' },
+            { label: '日柱', value: partnerBaziData.dayColumn || '--', element: partnerBaziData.dayElement || '' },
+            { label: '时柱', value: partnerBaziData.hourColumn || '--', element: partnerBaziData.hourElement || '' }
+        ];
+        
+        // 创建伴侣八字排盘展示
+        partnerColumns.forEach(col => {
+            const div = document.createElement('div');
+            div.className = 'bazi-column';
+            
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'bazi-label';
+            labelDiv.textContent = col.label;
+            
+            const valueDiv = document.createElement('div');
+            valueDiv.className = 'bazi-value';
+            valueDiv.textContent = col.value;
+            
+            const elementDiv = document.createElement('div');
+            elementDiv.className = 'bazi-element';
+            elementDiv.textContent = col.element || '';
+            
+            div.appendChild(labelDiv);
+            div.appendChild(valueDiv);
+            div.appendChild(elementDiv);
+            partnerGrid.appendChild(div);
+        });
+        
+        container.appendChild(partnerGrid);
+        baziGrid.appendChild(container);
+        
+    } else {
+        // 其他服务的八字排盘显示
+        const baziDataToDisplay = STATE.baziData;
+        
+        if (!baziDataToDisplay) return;
+        
+        // 四柱：年柱、月柱、日柱、时柱
+        const columns = [
+            { label: '年柱', value: baziDataToDisplay.yearColumn, element: baziDataToDisplay.yearElement },
+            { label: '月柱', value: baziDataToDisplay.monthColumn, element: baziDataToDisplay.monthElement },
+            { label: '日柱', value: baziDataToDisplay.dayColumn, element: baziDataToDisplay.dayElement },
+            { label: '时柱', value: baziDataToDisplay.hourColumn, element: baziDataToDisplay.hourElement }
+        ];
+        
+        // 创建八字排盘展示
+        columns.forEach(col => {
+            const div = document.createElement('div');
+            div.className = 'bazi-column';
+            
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'bazi-label';
+            labelDiv.textContent = col.label;
+            
+            const valueDiv = document.createElement('div');
+            valueDiv.className = 'bazi-value';
+            valueDiv.textContent = col.value;
+            
+            const elementDiv = document.createElement('div');
+            elementDiv.className = 'bazi-element';
+            elementDiv.textContent = col.element || '';
+            
+            div.appendChild(labelDiv);
+            div.appendChild(valueDiv);
+            div.appendChild(elementDiv);
+            baziGrid.appendChild(div);
+        });
+    }
 }
 
 // 处理并显示分析结果
 export function processAndDisplayAnalysis(result) {
     console.log('处理分析结果...');
     
-    // 免费部分：八字排盘、大运排盘、八字喜用分析、性格特点、适宜行业职业推荐
-    const freeSections = [
-        '【八字排盘】',
-        '【大运排盘】',
-        '【八字喜用分析】',
-        '【性格特点】',
-        '【适宜行业职业推荐】'
-    ];
+    // 根据服务类型定义不同的免费部分
+    let freeSections = [];
+    
+    if (STATE.currentService === '八字合婚') {
+        // 八字合婚的免费部分
+        freeSections = [
+            '【用户八字排盘】',
+            '【伴侣八字排盘】',
+            '【用户大运排盘】',
+            '【伴侣大运排盘】',
+            '【八字喜用分析】',
+            '【性格特点】',
+            '【适宜行业职业推荐】'
+        ];
+    } else {
+        // 其他服务的免费部分
+        freeSections = [
+            '【八字排盘】',
+            '【大运排盘】',
+            '【八字喜用分析】',
+            '【性格特点】',
+            '【适宜行业职业推荐】'
+        ];
+    }
     
     let freeContent = '';
     let lockedContent = '';
@@ -324,14 +531,20 @@ export function processAndDisplayAnalysis(result) {
         const section = '【' + sections[i];
         const sectionTitle = section.split('】')[0] + '】';
         
-        // 八字排盘已经单独显示，不在这里显示
-        if (sectionTitle === '【八字排盘】') {
-            continue;
-        }
-        
-        // 大运排盘也不显示
-        if (sectionTitle === '【大运排盘】') {
-            continue;
+        // 对于八字合婚，八字和大运排盘已经单独显示，不在这里显示
+        if (STATE.currentService === '八字合婚') {
+            if (sectionTitle === '【用户八字排盘】' || 
+                sectionTitle === '【伴侣八字排盘】' ||
+                sectionTitle === '【用户大运排盘】' ||
+                sectionTitle === '【伴侣大运排盘】') {
+                continue;
+            }
+        } else {
+            // 对于其他服务，八字和大运排盘已经单独显示
+            if (sectionTitle === '【八字排盘】' || 
+                sectionTitle === '【大运排盘】') {
+                continue;
+            }
         }
         
         if (freeSections.includes(sectionTitle)) {
@@ -728,3 +941,4 @@ export function collectUserData() {
         };
     }
 }
+[file content end]
