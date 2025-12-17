@@ -1140,6 +1140,8 @@ input:focus, select:focus {
     .unlock-items ul {
         grid-template-columns: repeat(3, 1fr);
     }
+} /* 这里缺少了闭合大括号，已添加 */
+
 /* 八字合婚专用样式 */
 .dual-bazi-container {
     background: linear-gradient(135deg, #f9f5f0, #f0e6d6);
