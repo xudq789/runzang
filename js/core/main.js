@@ -26,10 +26,10 @@ import {
     collectUserData
 } from './ui.js';
 
-import { CesuanModule } from '../modules/cesuan.js';
-import { YunchengModule } from '../modules/yuncheng.js';
-import { XiangpiModule } from '../modules/xiangpi.js';
-import { HehunModule } from '../modules/hehun.js';
+import { CesuanModule } from './modules/cesuan.js';
+import { YunchengModule } from './modules/yuncheng.js';
+import { XiangpiModule } from './modules/xiangpi.js';
+import { HehunModule } from './modules/hehun.js';
 
 // 服务模块映射
 const SERVICE_MODULES = {
@@ -419,4 +419,5 @@ window.showPaymentModal = showPaymentModal;
 window.closePaymentModal = closePaymentModal;
 window.confirmPayment = confirmPayment;
 window.downloadReport = downloadReport;
+
 window.newAnalysis = newAnalysis;
