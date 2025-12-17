@@ -1,3 +1,5 @@
+[file name]: config.js
+[file content begin]
 // 服务配置数据
 export const SERVICES = {
     '测算验证': {
@@ -184,7 +186,7 @@ export const SERVICES = {
 【人生每步大运营凶分析】
 详细分析用户人生每一步大运的吉凶情况，指出关键时期和转折点。
 
-【人生高点低分析】
+【人生高低点分析】
 分析用户人生运程的高点在哪里，人生的低点在哪里，提醒用户防范和把握。
 
 【往后关键流年分析】
@@ -243,7 +245,7 @@ export const SERVICES = {
 年柱：[年柱干支] ([五行属性])
 月柱：[月柱干支] ([五行属性])
 日柱：[日柱干支] ([五行属性])
-时柱：[年柱干支] ([五行属性])
+时柱：[时柱干支] ([五行属性])
 
 【用户大运排盘】
 起运岁数：[起运岁数]
@@ -304,6 +306,4 @@ export const STATE = {
     isDownloadLocked: true
 
 };
-
-
-
+[file content end]
