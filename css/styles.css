@@ -1140,4 +1140,32 @@ input:focus, select:focus {
     .unlock-items ul {
         grid-template-columns: repeat(3, 1fr);
     }
+/* 八字合婚专用样式 */
+.dual-bazi-container {
+    background: linear-gradient(135deg, #f9f5f0, #f0e6d6);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 2px solid var(--secondary-color);
+}
+
+.bazi-section-title {
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--light-color);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .dual-bazi-container {
+        padding: 15px;
+    }
+    
+    .bazi-section-title {
+        font-size: 16px;
+    }
 }
