@@ -1141,3 +1141,91 @@ input:focus, select:focus {
         grid-template-columns: repeat(3, 1fr);
     }
 }
+
+/* 八字合婚容器 */
+.bazi-hehun-container {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.bazi-section {
+    margin-bottom: 20px;
+}
+
+.bazi-section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+    text-align: center;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--light-color);
+}
+
+/* 八字排盘网格 */
+.bazi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.bazi-column {
+    text-align: center;
+    padding: 15px;
+    background: linear-gradient(135deg, #f9f5f0, #f0e6d6);
+    border-radius: 8px;
+    border: 2px solid var(--secondary-color);
+}
+
+.bazi-label {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.bazi-value {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--dark-color);
+    margin-bottom: 5px;
+}
+
+.bazi-element {
+    color: #7d6e63;
+    font-size: 12px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .bazi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .bazi-column {
+        padding: 10px;
+    }
+    
+    .bazi-value {
+        font-size: 18px;
+    }
+    
+    .bazi-section-title {
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .bazi-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .bazi-value {
+        font-size: 16px;
+    }
+    
+    .bazi-section-title {
+        font-size: 14px;
+    }
+}
