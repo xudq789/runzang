@@ -211,7 +211,6 @@ export const SERVICES = {
         detailImage: 'https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/4-2.jpg',
         price: 39.8,
         lockedItems: [
-            '富贵层次评估',
             '双方八字契合度分析',
             '感情发展趋势解读',
             '婚姻稳定性分析',
@@ -304,6 +303,7 @@ export const STATE = {
     isPaymentUnlocked: false,
     isDownloadLocked: true
 };
+
 
 
 
