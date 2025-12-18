@@ -249,7 +249,9 @@ async function startAnalysis() {
         STATE.fullAnalysisResult = analysisResult;
         
         // 处理分析结果，提取八字数据
-        STATE.baziData = parseBaziData(analysisResult);
+        const parsedBaziData = parseBaziData(analysisResult);
+        STATE.baziData = parsedBaziData.userBazi;
+        STATE.partnerBaziData = parsedBaziData.partnerBazi;
         
         // 显示八字排盘
         displayBaziPan();
@@ -437,4 +439,5 @@ window.closePaymentModal = closePaymentModal;
 window.confirmPayment = confirmPayment;
 window.downloadReport = downloadReport;
 window.newAnalysis = newAnalysis;
+
 
