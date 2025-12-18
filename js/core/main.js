@@ -351,13 +351,30 @@ function downloadReport() {
     }
 
     // 获取八字排盘信息
-    const baziDataToDisplay = STATE.baziData;
-    const baziInfo = `八字排盘：
+    let baziInfo = '';
+    
+    if (STATE.currentService === '八字合婚' && STATE.partnerData && STATE.partnerBaziData) {
+        // 八字合婚：显示用户和伴侣的八字
+        baziInfo = `${STATE.userData.name} 八字排盘：
+年柱：${STATE.baziData.yearColumn} (${STATE.baziData.yearElement})
+月柱：${STATE.baziData.monthColumn} (${STATE.baziData.monthElement})
+日柱：${STATE.baziData.dayColumn} (${STATE.baziData.dayElement})
+时柱：${STATE.baziData.hourColumn} (${STATE.baziData.hourElement})
+
+${STATE.partnerData.partnerName} 八字排盘：
+年柱：${STATE.partnerBaziData.yearColumn} (${STATE.partnerBaziData.yearElement})
+月柱：${STATE.partnerBaziData.monthColumn} (${STATE.partnerBaziData.monthElement})
+日柱：${STATE.partnerBaziData.dayColumn} (${STATE.partnerBaziData.dayElement})
+时柱：${STATE.partnerBaziData.hourColumn} (${STATE.partnerBaziData.hourElement})`;
+    } else {
+        // 其他服务：只显示用户的八字
+        const baziDataToDisplay = STATE.baziData;
+        baziInfo = `八字排盘：
 年柱：${baziDataToDisplay.yearColumn} (${baziDataToDisplay.yearElement})
 月柱：${baziDataToDisplay.monthColumn} (${baziDataToDisplay.monthElement})
 日柱：${baziDataToDisplay.dayColumn} (${baziDataToDisplay.dayElement})
 时柱：${baziDataToDisplay.hourColumn} (${baziDataToDisplay.hourElement})`;
-
+    }
     const reportContent = `命理分析报告 - ${STATE.currentService}
 
 ${predictorInfo}
@@ -420,3 +437,4 @@ window.closePaymentModal = closePaymentModal;
 window.confirmPayment = confirmPayment;
 window.downloadReport = downloadReport;
 window.newAnalysis = newAnalysis;
+
