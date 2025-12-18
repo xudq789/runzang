@@ -3,7 +3,7 @@ export const SERVICES = {
     '测算验证': {
         heroImage: 'https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/1-1.jpg',
         detailImage: 'https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/1-2.jpg',
-        price: 19.9,
+        price: 9.8,
         lockedItems: [
             '富贵层次评估',
             '过往大运营凶分析',
@@ -65,7 +65,7 @@ export const SERVICES = {
     '流年运程': {
         heroImage: 'https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/2-1.jpg',
         detailImage: 'https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/2-2.jpg',
-        price: 38,
+        price: 19.8,
         lockedItems: [
             '富贵层次评估',
             '测算当年及往后5年运势',
@@ -135,7 +135,7 @@ export const SERVICES = {
     '人生详批': {
         heroImage: 'https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/3-1.jpg',
         detailImage: 'https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/3-2.jpg',
-        price: 68,
+        price: 39.8,
         lockedItems: [
             '富贵层次评估',
             '人生每步大运营凶分析',
@@ -209,7 +209,7 @@ export const SERVICES = {
     '八字合婚': {
         heroImage: 'https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/4-1.jpg',
         detailImage: 'https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/4-2.jpg',
-        price: 52,
+        price: 39.8,
         lockedItems: [
             '富贵层次评估',
             '双方八字契合度分析',
@@ -310,5 +310,6 @@ export const STATE = {
     isPaymentUnlocked: false,
     isDownloadLocked: true
 };
+
 
 
