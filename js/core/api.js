@@ -98,6 +98,27 @@ export async function checkAPIStatus() {
 export function parseBaziData(analysisResult) {
     console.log('解析八字数据...');
     
+    const result = {
+        userBazi: null,
+        partnerBazi: null
+    };
+    
+    // 如果是八字合婚，需要解析两个八字
+    if (analysisResult.includes('【用户八字排盘】') && analysisResult.includes('【伴侣八字排盘】')) {
+        // 解析用户八字
+        const userBaziText = analysisResult.match(/【用户八字排盘】([\s\S]*?)【/);
+        if (userBaziText && userBaziText[1]) {
+            result.userBazi = parseSingleBazi(userBaziText[1]);
+        }
+        
+        // 解析伴侣八字
+        const partnerBaziText = analysisResult.match(/【伴侣八字排盘】([\s\S]*?)【/);
+        if (partnerBaziText && partnerBaziText[1]) {
+            result.partnerBazi = parseSingleBazi(partnerBaziText[1]);
+        }
+    } else {
+    console.log('解析八字数据...');
+    
     // 重置八字数据
     const baziData = {
         yearColumn: '',
@@ -182,3 +203,4 @@ export function parseBaziData(analysisResult) {
     console.log('解析到的八字数据:', baziData);
     return baziData;
 }
+
