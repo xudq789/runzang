@@ -1141,3 +1141,29 @@ input:focus, select:focus {
         grid-template-columns: repeat(3, 1fr);
     }
 }
+
+/* 八字排盘区域样式优化 */
+.bazi-section {
+    margin-bottom: 25px;
+    padding: 15px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #f9f5f0, #f0e6d6);
+}
+
+.bazi-section-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+@media (max-width: 768px) {
+    .bazi-section-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .bazi-section-grid {
+        grid-template-columns: 1fr;
+    }
+}
