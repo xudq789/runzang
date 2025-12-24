@@ -1,5 +1,5 @@
 // 人生详批模块
-import { calculateBazi } from '../core/utils.js';
+import { calculateBazi } from './core/utils.js';
 
 export class XiangpiModule {
     static getServiceConfig() {
@@ -88,5 +88,6 @@ export class XiangpiModule {
         return calculateBazi(userData);
     }
 }
+
 
 
