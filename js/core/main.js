@@ -26,6 +26,7 @@ import {
     collectUserData
 } from './ui.js';
 
+// 修正这里的导入路径 - 使用相对于当前文件的路径
 import { CesuanModule } from '../modules/cesuan.js';
 import { YunchengModule } from '../modules/yuncheng.js';
 import { XiangpiModule } from '../modules/xiangpi.js';
@@ -298,5 +299,6 @@ window.closePaymentModal = closePaymentModal;
 window.confirmPayment = confirmPayment;
 window.downloadReport = downloadReport;
 window.newAnalysis = newAnalysis;
+
 
 
