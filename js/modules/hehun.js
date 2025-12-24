@@ -1,5 +1,5 @@
 // 八字合婚模块
-import { calculateBazi } from '../core/utils.js';
+import { calculateBazi } from './core/utils.js';
 
 export class HehunModule {
     static getServiceConfig() {
@@ -100,4 +100,5 @@ export class HehunModule {
         return calculateBazi(userData);
     }
 }
+
 
