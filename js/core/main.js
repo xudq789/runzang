@@ -67,7 +67,7 @@ async function initApp() {
         STATE.apiStatus = await checkAPIStatus();
         
         // 预加载图片
-        preloadImages();
+        // preloadImages(); // 注释掉或删除
         
         console.log('应用初始化完成');
     } catch (error) {
@@ -308,6 +308,7 @@ window.closePaymentModal = closePaymentModal;
 window.confirmPayment = confirmPayment;
 window.downloadReport = downloadReport;
 window.newAnalysis = newAnalysis;
+
 
 
 
