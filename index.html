@@ -340,29 +340,11 @@
         };
     </script>
 
-    <!-- 模块化JavaScript文件 -->
-    <!-- 修改：添加 base 路径设置 -->
-    <script>
-        // 设置模块的基础路径
-        const basePath = window.location.pathname.includes('/js/') 
-            ? window.location.pathname.split('/js/')[0] + '/js/'
-            : 'js/';
-        
-        // 动态创建脚本标签，添加正确的 importmap
-        const importmap = document.createElement('script');
-        importmap.type = 'importmap';
-        importmap.textContent = JSON.stringify({
-            "imports": {
-                "./core/": basePath + "core/",
-                "../modules/": basePath + "../modules/"
-            }
-        });
-        document.head.appendChild(importmap);
-    </script>
-    
+     <!-- 模块化JavaScript文件 -->
     <script src="js/core/main.js" type="module"></script>
 </body>
 </html>
+
 
 
 
