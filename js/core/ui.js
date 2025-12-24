@@ -31,7 +31,7 @@ export const UI = {
     recalculateBtn: () => DOM.id('recalculate-btn'),
     confirmPaymentBtn: () => DOM.id('confirm-payment-btn'),
     cancelPaymentBtn: () => DOM.id('cancel-payment-btn'),
-    closePaymentBtn: () => DOM.id('close-payment'),
+    closePaymentBtn: () => DOM.id('close-payment-btn'),
     
     // 图片
     heroImage: () => DOM.id('hero-image'),
@@ -61,6 +61,8 @@ export const UI = {
 
 // 初始化表单选项
 export function initFormOptions() {
+    console.log('初始化表单选项...');
+    
     // 年份选项 (1900-2024)
     const years = [];
     for (let i = 1900; i <= 2024; i++) years.push(i);
@@ -103,211 +105,358 @@ export function initFormOptions() {
     fillSelect('partner-birth-day', days, '日');
     fillSelect('partner-birth-hour', hours, '时');
     fillSelect('partner-birth-minute', minutes, '分');
+    
+    console.log('表单选项初始化完成');
 }
 
 // 设置默认表单值
 export function setDefaultValues() {
-    // 用户默认值
-    UI.name().value = '张三';
-    UI.gender().value = 'male';
-    UI.birthCity().value = '北京';
-    UI.birthYear().value = 1990;
-    UI.birthMonth().value = 1;
-    UI.birthDay().value = 1;
-    UI.birthHour().value = 12;
-    UI.birthMinute().value = 0;
+    console.log('设置默认表单值...');
     
-    // 伴侣默认值
-    UI.partnerName().value = '李四';
-    UI.partnerGender().value = 'female';
-    UI.partnerBirthCity().value = '上海';
-    UI.partnerBirthYear().value = 1992;
-    UI.partnerBirthMonth().value = 6;
-    UI.partnerBirthDay().value = 15;
-    UI.partnerBirthHour().value = 15;
-    UI.partnerBirthMinute().value = 30;
+    try {
+        // 用户默认值
+        if (UI.name()) UI.name().value = '张三';
+        if (UI.gender()) UI.gender().value = 'male';
+        if (UI.birthCity()) UI.birthCity().value = '北京';
+        if (UI.birthYear()) UI.birthYear().value = 1990;
+        if (UI.birthMonth()) UI.birthMonth().value = 1;
+        if (UI.birthDay()) UI.birthDay().value = 1;
+        if (UI.birthHour()) UI.birthHour().value = 12;
+        if (UI.birthMinute()) UI.birthMinute().value = 0;
+        
+        // 伴侣默认值
+        if (UI.partnerName()) UI.partnerName().value = '李四';
+        if (UI.partnerGender()) UI.partnerGender().value = 'female';
+        if (UI.partnerBirthCity()) UI.partnerBirthCity().value = '上海';
+        if (UI.partnerBirthYear()) UI.partnerBirthYear().value = 1992;
+        if (UI.partnerBirthMonth()) UI.partnerBirthMonth().value = 6;
+        if (UI.partnerBirthDay()) UI.partnerBirthDay().value = 15;
+        if (UI.partnerBirthHour()) UI.partnerBirthHour().value = 15;
+        if (UI.partnerBirthMinute()) UI.partnerBirthMinute().value = 30;
+        
+        console.log('默认值设置完成');
+    } catch (error) {
+        console.error('设置默认值失败:', error);
+    }
 }
 
 // 更新服务显示
 export function updateServiceDisplay(serviceName) {
-    // 更新导航激活状态
-    DOM.getAll('.service-nav a').forEach(link => {
-        link.classList.remove('active');
-        if (link.dataset.service === serviceName) {
-            link.classList.add('active');
+    console.log('更新服务显示:', serviceName);
+    
+    try {
+        // 更新导航激活状态
+        DOM.getAll('.service-nav a').forEach(link => {
+            link.classList.remove('active');
+            if (link.dataset.service === serviceName) {
+                link.classList.add('active');
+            }
+        });
+        
+        // 更新表单标题
+        const formTitle = DOM.id('form-title');
+        if (formTitle) formTitle.textContent = serviceName + '信息填写';
+        
+        // 更新结果区域标题
+        const resultServiceName = UI.resultServiceName();
+        if (resultServiceName) resultServiceName.textContent = serviceName + '分析报告';
+        
+        // 显示/隐藏伴侣信息区域
+        const partnerInfoSection = DOM.id('partner-info-section');
+        if (partnerInfoSection) {
+            if (serviceName === '八字合婚') {
+                showElement(partnerInfoSection);
+            } else {
+                hideElement(partnerInfoSection);
+            }
         }
-    });
-    
-    // 更新表单标题
-    DOM.id('form-title').textContent = serviceName + '信息填写';
-    
-    // 更新结果区域标题
-    UI.resultServiceName().textContent = serviceName + '分析报告';
-    
-    // 显示/隐藏伴侣信息区域
-    const partnerInfoSection = DOM.id('partner-info-section');
-    if (serviceName === '八字合婚') {
-        showElement(partnerInfoSection);
-    } else {
-        hideElement(partnerInfoSection);
-    }
-    
-    // 更新图片
-    const serviceConfig = SERVICES[serviceName];
-    if (serviceConfig) {
-        const heroImage = UI.heroImage();
-        const detailImage = UI.detailImage();
         
-        // 显示加载占位符
-        const heroPlaceholder = heroImage.previousElementSibling;
-        const detailPlaceholder = detailImage.previousElementSibling;
+        // 更新图片
+        const serviceConfig = SERVICES[serviceName];
+        if (serviceConfig) {
+            const heroImage = UI.heroImage();
+            const detailImage = UI.detailImage();
+            
+            if (heroImage) {
+                // 显示加载占位符
+                const heroPlaceholder = heroImage.previousElementSibling;
+                if (heroPlaceholder) showElement(heroPlaceholder);
+                
+                // 移除已加载类
+                heroImage.classList.remove('loaded');
+                
+                // 更新图片源
+                heroImage.src = serviceConfig.heroImage;
+                heroImage.alt = serviceName + '英雄区';
+            }
+            
+            if (detailImage) {
+                // 显示加载占位符
+                const detailPlaceholder = detailImage.previousElementSibling;
+                if (detailPlaceholder) showElement(detailPlaceholder);
+                
+                // 移除已加载类
+                detailImage.classList.remove('loaded');
+                
+                // 更新图片源
+                detailImage.src = serviceConfig.detailImage;
+                detailImage.alt = serviceName + '明细图';
+            }
+        }
         
-        showElement(heroPlaceholder);
-        showElement(detailPlaceholder);
-        
-        // 移除已加载类
-        heroImage.classList.remove('loaded');
-        detailImage.classList.remove('loaded');
-        
-        // 更新图片源 - 直接使用完整URL
-        heroImage.src = serviceConfig.heroImage;
-        heroImage.alt = serviceName + '英雄区';
-        
-        detailImage.src = serviceConfig.detailImage;
-        detailImage.alt = serviceName + '明细图';
+        console.log('服务显示更新完成');
+    } catch (error) {
+        console.error('更新服务显示失败:', error);
     }
 }
 
-// 更新解锁价格和项目 - 修改这个函数
+// 更新解锁价格和项目
 export function updateUnlockInfo() {
-    const serviceConfig = SERVICES[STATE.currentService];
-    if (!serviceConfig) return;
+    console.log('更新解锁信息...');
     
-    // 重要：先检查当前服务是否已解锁
-    const currentServiceUnlocked = STATE.servicesUnlocked[STATE.currentService] || false;
-    
-    // 根据检查结果设置全局状态
-    STATE.isPaymentUnlocked = currentServiceUnlocked;
-    STATE.isDownloadLocked = !currentServiceUnlocked;
-    
-    // 更新价格
-    const unlockPriceElement = UI.unlockPrice();
-    if (unlockPriceElement) {
-        unlockPriceElement.textContent = serviceConfig.price;
-    }
-    
-    // 更新项目列表
-    const unlockItemsList = UI.unlockItemsList();
-    const unlockCountElement = UI.unlockCount();
-    
-    if (unlockItemsList && unlockCountElement) {
-        unlockItemsList.innerHTML = '';
+    try {
+        const serviceConfig = SERVICES[STATE.currentService];
+        if (!serviceConfig) return;
         
-        const lockedItems = serviceConfig.lockedItems;
+        // 检查当前服务是否已解锁
+        const currentServiceUnlocked = STATE.servicesUnlocked[STATE.currentService] || false;
         
-        // 更新项目数量
-        unlockCountElement.textContent = lockedItems.length;
+        // 根据检查结果设置全局状态
+        STATE.isPaymentUnlocked = currentServiceUnlocked;
+        STATE.isDownloadLocked = !currentServiceUnlocked;
         
-        // 创建项目列表
-        lockedItems.forEach(item => {
-            const li = document.createElement('li');
-            li.textContent = item;
-            unlockItemsList.appendChild(li);
-        });
-    }
-    
-    // 根据解锁状态更新界面
-    if (currentServiceUnlocked) {
-        updateUnlockInterface();
-        unlockDownloadButton();
-    } else {
-        resetUnlockInterface();
-        lockDownloadButton();
+        // 更新价格
+        const unlockPriceElement = UI.unlockPrice();
+        if (unlockPriceElement) {
+            unlockPriceElement.textContent = serviceConfig.price;
+        }
+        
+        // 更新项目列表
+        const unlockItemsList = UI.unlockItemsList();
+        const unlockCountElement = UI.unlockCount();
+        
+        if (unlockItemsList && unlockCountElement) {
+            unlockItemsList.innerHTML = '';
+            
+            const lockedItems = serviceConfig.lockedItems;
+            
+            // 更新项目数量
+            unlockCountElement.textContent = lockedItems.length;
+            
+            // 创建项目列表
+            lockedItems.forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = '<span>🔒 ' + item + '</span>';
+                unlockItemsList.appendChild(li);
+            });
+        }
+        
+        // 根据解锁状态更新界面
+        if (currentServiceUnlocked) {
+            updateUnlockInterface();
+            unlockDownloadButton();
+        } else {
+            resetUnlockInterface();
+            lockDownloadButton();
+        }
+        
+        console.log('解锁信息更新完成');
+    } catch (error) {
+        console.error('更新解锁信息失败:', error);
     }
 }
 
 // 显示预测者信息
 export function displayPredictorInfo() {
-    const predictorInfoGrid = UI.predictorInfoGrid();
-    if (!predictorInfoGrid || !STATE.userData) return;
+    console.log('显示预测者信息...');
     
-    predictorInfoGrid.innerHTML = '';
-    
-    // 添加预测者信息
-    const infoItems = [
-        { label: '姓名', value: STATE.userData.name },
-        { label: '性别', value: STATE.userData.gender },
-        { label: '出生时间', value: `${STATE.userData.birthYear}年${STATE.userData.birthMonth}月${STATE.userData.birthDay}日 ${STATE.userData.birthHour}时${STATE.userData.birthMinute}分` },
-        { label: '出生城市', value: STATE.userData.birthCity },
-        { label: '测算服务', value: STATE.currentService },
-        { label: '测算时间', value: formatDate() }
-    ];
-    
-    // 如果是八字合婚，添加伴侣信息
-    if (STATE.currentService === '八字合婚' && STATE.partnerData) {
-        infoItems.push(
-            { label: '伴侣姓名', value: STATE.partnerData.partnerName },
-            { label: '伴侣性别', value: STATE.partnerData.partnerGender },
-            { label: '伴侣出生时间', value: `${STATE.partnerData.partnerBirthYear}年${STATE.partnerData.partnerBirthMonth}月${STATE.partnerData.partnerBirthDay}日 ${STATE.partnerData.partnerBirthHour}时${STATE.partnerData.partnerBirthMinute}分` },
-            { label: '伴侣出生城市', value: STATE.partnerData.partnerBirthCity }
-        );
+    try {
+        const predictorInfoGrid = UI.predictorInfoGrid();
+        if (!predictorInfoGrid || !STATE.userData) return;
+        
+        predictorInfoGrid.innerHTML = '';
+        
+        // 添加预测者信息
+        const infoItems = [
+            { label: '姓名', value: STATE.userData.name },
+            { label: '性别', value: STATE.userData.gender },
+            { label: '出生时间', value: `${STATE.userData.birthYear}年${STATE.userData.birthMonth}月${STATE.userData.birthDay}日 ${STATE.userData.birthHour}时${STATE.userData.birthMinute}分` },
+            { label: '出生城市', value: STATE.userData.birthCity },
+            { label: '测算服务', value: STATE.currentService },
+            { label: '测算时间', value: formatDate() }
+        ];
+        
+        // 如果是八字合婚，添加伴侣信息
+        if (STATE.currentService === '八字合婚' && STATE.partnerData) {
+            infoItems.push(
+                { label: '伴侣姓名', value: STATE.partnerData.partnerName },
+                { label: '伴侣性别', value: STATE.partnerData.partnerGender },
+                { label: '伴侣出生时间', value: `${STATE.partnerData.partnerBirthYear}年${STATE.partnerData.partnerBirthMonth}月${STATE.partnerData.partnerBirthDay}日 ${STATE.partnerData.partnerBirthHour}时${STATE.partnerData.partnerBirthMinute}分` },
+                { label: '伴侣出生城市', value: STATE.partnerData.partnerBirthCity }
+            );
+        }
+        
+        // 创建信息项
+        infoItems.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'predictor-info-item';
+            
+            const labelSpan = document.createElement('span');
+            labelSpan.className = 'predictor-info-label';
+            labelSpan.textContent = item.label;
+            
+            const valueSpan = document.createElement('span');
+            valueSpan.className = 'predictor-info-value';
+            valueSpan.textContent = item.value;
+            
+            div.appendChild(labelSpan);
+            div.appendChild(valueSpan);
+            predictorInfoGrid.appendChild(div);
+        });
+        
+        console.log('预测者信息显示完成');
+    } catch (error) {
+        console.error('显示预测者信息失败:', error);
     }
-    
-    // 创建信息项
-    infoItems.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'predictor-info-item';
-        
-        const labelSpan = document.createElement('span');
-        labelSpan.className = 'predictor-info-label';
-        labelSpan.textContent = item.label;
-        
-        const valueSpan = document.createElement('span');
-        valueSpan.className = 'predictor-info-value';
-        valueSpan.textContent = item.value;
-        
-        div.appendChild(labelSpan);
-        div.appendChild(valueSpan);
-        predictorInfoGrid.appendChild(div);
-    });
 }
 
 // 显示八字排盘结果
 export function displayBaziPan() {
-    const baziGrid = UI.baziGrid();
-    if (!baziGrid) return;
+    console.log('显示八字排盘...');
     
-    baziGrid.innerHTML = '';
-    
-    // 如果是八字合婚服务，需要显示用户和伴侣的八字
-    if (STATE.currentService === '八字合婚' && STATE.partnerData) {
-        // 创建用户八字区域
-        const userSection = document.createElement('div');
-        userSection.className = 'bazi-section';
+    try {
+        const baziGrid = UI.baziGrid();
+        if (!baziGrid) return;
         
-        const userTitle = document.createElement('h5');
-        userTitle.textContent = `${STATE.userData.name} 的八字排盘`;
-        userTitle.style.color = 'var(--primary-color)';
-        userTitle.style.marginBottom = '15px';
-        userTitle.style.textAlign = 'center';
-        userSection.appendChild(userTitle);
+        baziGrid.innerHTML = '';
         
-        const userGrid = document.createElement('div');
-        userGrid.className = 'bazi-section-grid';
-        
-        // 使用解析到的八字数据或计算数据
-        const userBaziData = STATE.baziData || STATE.userBaziData;
-        
-        if (userBaziData) {
-            const userColumns = [
-                { label: '年柱', value: userBaziData.yearColumn, element: userBaziData.yearElement },
-                { label: '月柱', value: userBaziData.monthColumn, element: userBaziData.monthElement },
-                { label: '日柱', value: userBaziData.dayColumn, element: userBaziData.dayElement },
-                { label: '时柱', value: userBaziData.hourColumn, element: userBaziData.hourElement }
+        // 如果是八字合婚服务，需要显示用户和伴侣的八字
+        if (STATE.currentService === '八字合婚' && STATE.partnerData) {
+            // 创建用户八字区域
+            const userSection = document.createElement('div');
+            userSection.className = 'bazi-section';
+            
+            const userTitle = document.createElement('h5');
+            userTitle.textContent = `${STATE.userData.name} 的八字排盘`;
+            userTitle.style.color = 'var(--primary-color)';
+            userTitle.style.marginBottom = '15px';
+            userTitle.style.textAlign = 'center';
+            userSection.appendChild(userTitle);
+            
+            const userGrid = document.createElement('div');
+            userGrid.className = 'bazi-section-grid';
+            
+            // 使用解析到的八字数据或计算数据
+            const userBaziData = STATE.baziData || STATE.userBaziData;
+            
+            if (userBaziData) {
+                const userColumns = [
+                    { label: '年柱', value: userBaziData.yearColumn, element: userBaziData.yearElement },
+                    { label: '月柱', value: userBaziData.monthColumn, element: userBaziData.monthElement },
+                    { label: '日柱', value: userBaziData.dayColumn, element: userBaziData.dayElement },
+                    { label: '时柱', value: userBaziData.hourColumn, element: userBaziData.hourElement }
+                ];
+                
+                // 创建用户八字排盘展示
+                userColumns.forEach(col => {
+                    const div = document.createElement('div');
+                    div.className = 'bazi-column';
+                    
+                    const labelDiv = document.createElement('div');
+                    labelDiv.className = 'bazi-label';
+                    labelDiv.textContent = col.label;
+                    
+                    const valueDiv = document.createElement('div');
+                    valueDiv.className = 'bazi-value';
+                    valueDiv.textContent = col.value;
+                    
+                    const elementDiv = document.createElement('div');
+                    elementDiv.className = 'bazi-element';
+                    elementDiv.textContent = col.element || '';
+                    
+                    div.appendChild(labelDiv);
+                    div.appendChild(valueDiv);
+                    div.appendChild(elementDiv);
+                    userGrid.appendChild(div);
+                });
+            }
+            
+            userSection.appendChild(userGrid);
+            baziGrid.appendChild(userSection);
+            
+            // 添加分隔线
+            const separator = document.createElement('div');
+            separator.style.height = '2px';
+            separator.style.background = 'linear-gradient(to right, transparent, var(--secondary-color), transparent)';
+            separator.style.margin = '20px 0';
+            baziGrid.appendChild(separator);
+            
+            // 创建伴侣八字区域
+            const partnerSection = document.createElement('div');
+            partnerSection.className = 'bazi-section';
+            
+            const partnerTitle = document.createElement('h5');
+            partnerTitle.textContent = `${STATE.partnerData.partnerName} 的八字排盘`;
+            partnerTitle.style.color = 'var(--primary-color)';
+            partnerTitle.style.marginBottom = '15px';
+            partnerTitle.style.textAlign = 'center';
+            partnerSection.appendChild(partnerTitle);
+            
+            const partnerGrid = document.createElement('div');
+            partnerGrid.className = 'bazi-section-grid';
+            
+            // 伴侣的八字数据（这里简化处理，实际应该从AI回复中解析）
+            if (STATE.partnerBaziData) {
+                const partnerColumns = [
+                    { label: '年柱', value: STATE.partnerBaziData.yearColumn, element: STATE.partnerBaziData.yearElement },
+                    { label: '月柱', value: STATE.partnerBaziData.monthColumn, element: STATE.partnerBaziData.monthElement },
+                    { label: '日柱', value: STATE.partnerBaziData.dayColumn, element: STATE.partnerBaziData.dayElement },
+                    { label: '时柱', value: STATE.partnerBaziData.hourColumn, element: STATE.partnerBaziData.hourElement }
+                ];
+                
+                // 创建伴侣八字排盘展示
+                partnerColumns.forEach(col => {
+                    const div = document.createElement('div');
+                    div.className = 'bazi-column';
+                    
+                    const labelDiv = document.createElement('div');
+                    labelDiv.className = 'bazi-label';
+                    labelDiv.textContent = col.label;
+                    
+                    const valueDiv = document.createElement('div');
+                    valueDiv.className = 'bazi-value';
+                    valueDiv.textContent = col.value;
+                    
+                    const elementDiv = document.createElement('div');
+                    elementDiv.className = 'bazi-element';
+                    elementDiv.textContent = col.element || '';
+                    
+                    div.appendChild(labelDiv);
+                    div.appendChild(valueDiv);
+                    div.appendChild(elementDiv);
+                    partnerGrid.appendChild(div);
+                });
+            }
+            
+            partnerSection.appendChild(partnerGrid);
+            baziGrid.appendChild(partnerSection);
+            
+        } else {
+            // 其他服务：只显示用户的八字
+            const baziDataToDisplay = STATE.baziData;
+            
+            if (!baziDataToDisplay) return;
+            
+            // 四柱：年柱、月柱、日柱、时柱
+            const columns = [
+                { label: '年柱', value: baziDataToDisplay.yearColumn, element: baziDataToDisplay.yearElement },
+                { label: '月柱', value: baziDataToDisplay.monthColumn, element: baziDataToDisplay.monthElement },
+                { label: '日柱', value: baziDataToDisplay.dayColumn, element: baziDataToDisplay.dayElement },
+                { label: '时柱', value: baziDataToDisplay.hourColumn, element: baziDataToDisplay.hourElement }
             ];
             
-            // 创建用户八字排盘展示
-            userColumns.forEach(col => {
+            // 创建八字排盘展示
+            columns.forEach(col => {
                 const div = document.createElement('div');
                 div.className = 'bazi-column';
                 
@@ -326,249 +475,141 @@ export function displayBaziPan() {
                 div.appendChild(labelDiv);
                 div.appendChild(valueDiv);
                 div.appendChild(elementDiv);
-                userGrid.appendChild(div);
+                baziGrid.appendChild(div);
             });
         }
         
-        userSection.appendChild(userGrid);
-        baziGrid.appendChild(userSection);
-        
-        // 添加分隔线
-        const separator = document.createElement('div');
-        separator.style.height = '2px';
-        separator.style.background = 'linear-gradient(to right, transparent, var(--secondary-color), transparent)';
-        separator.style.margin = '20px 0';
-        baziGrid.appendChild(separator);
-        
-        // 创建伴侣八字区域
-        const partnerSection = document.createElement('div');
-        partnerSection.className = 'bazi-section';
-        
-        const partnerTitle = document.createElement('h5');
-        partnerTitle.textContent = `${STATE.partnerData.partnerName} 的八字排盘`;
-        partnerTitle.style.color = 'var(--primary-color)';
-        partnerTitle.style.marginBottom = '15px';
-        partnerTitle.style.textAlign = 'center';
-        partnerSection.appendChild(partnerTitle);
-        
-        const partnerGrid = document.createElement('div');
-        partnerGrid.className = 'bazi-section-grid';
-        
-        // 伴侣的八字数据（需要从AI回复中解析或计算）
-        const partnerBaziData = STATE.partnerBaziData || calculatePartnerBazi();
-        
-        if (partnerBaziData) {
-            const partnerColumns = [
-                { label: '年柱', value: partnerBaziData.yearColumn, element: partnerBaziData.yearElement },
-                { label: '月柱', value: partnerBaziData.monthColumn, element: partnerBaziData.monthElement },
-                { label: '日柱', value: partnerBaziData.dayColumn, element: partnerBaziData.dayElement },
-                { label: '时柱', value: partnerBaziData.hourColumn, element: partnerBaziData.hourElement }
-            ];
-            
-            // 创建伴侣八字排盘展示
-            partnerColumns.forEach(col => {
-                const div = document.createElement('div');
-                div.className = 'bazi-column';
-                
-                const labelDiv = document.createElement('div');
-                labelDiv.className = 'bazi-label';
-                labelDiv.textContent = col.label;
-                
-                const valueDiv = document.createElement('div');
-                valueDiv.className = 'bazi-value';
-                valueDiv.textContent = col.value;
-                
-                const elementDiv = document.createElement('div');
-                elementDiv.className = 'bazi-element';
-                elementDiv.textContent = col.element || '';
-                
-                div.appendChild(labelDiv);
-                div.appendChild(valueDiv);
-                div.appendChild(elementDiv);
-                partnerGrid.appendChild(div);
-            });
-            
-            // 保存伴侣八字数据到状态
-            STATE.partnerBaziData = partnerBaziData;
-        }
-        
-        partnerSection.appendChild(partnerGrid);
-        baziGrid.appendChild(partnerSection);
-        
-    } else {
-        // 其他服务：只显示用户的八字
-        const baziDataToDisplay = STATE.baziData;
-        
-        if (!baziDataToDisplay) return;
-        
-        // 四柱：年柱、月柱、日柱、时柱
-        const columns = [
-            { label: '年柱', value: baziDataToDisplay.yearColumn, element: baziDataToDisplay.yearElement },
-            { label: '月柱', value: baziDataToDisplay.monthColumn, element: baziDataToDisplay.monthElement },
-            { label: '日柱', value: baziDataToDisplay.dayColumn, element: baziDataToDisplay.dayElement },
-            { label: '时柱', value: baziDataToDisplay.hourColumn, element: baziDataToDisplay.hourElement }
-        ];
-        
-        // 创建八字排盘展示
-        columns.forEach(col => {
-            const div = document.createElement('div');
-            div.className = 'bazi-column';
-            
-            const labelDiv = document.createElement('div');
-            labelDiv.className = 'bazi-label';
-            labelDiv.textContent = col.label;
-            
-            const valueDiv = document.createElement('div');
-            valueDiv.className = 'bazi-value';
-            valueDiv.textContent = col.value;
-            
-            const elementDiv = document.createElement('div');
-            elementDiv.className = 'bazi-element';
-            elementDiv.textContent = col.element || '';
-            
-            div.appendChild(labelDiv);
-            div.appendChild(valueDiv);
-            div.appendChild(elementDiv);
-            baziGrid.appendChild(div);
-        });
+        console.log('八字排盘显示完成');
+    } catch (error) {
+        console.error('显示八字排盘失败:', error);
     }
-}
-
-// 计算伴侣八字（辅助函数）
-function calculatePartnerBazi() {
-    if (!STATE.partnerData) return null;
-    
-    // 使用相同的计算函数
-    const partnerDataForCalc = {
-        birthYear: STATE.partnerData.partnerBirthYear,
-        birthMonth: STATE.partnerData.partnerBirthMonth,
-        birthDay: STATE.partnerData.partnerBirthDay,
-        birthHour: STATE.partnerData.partnerBirthHour,
-        birthMinute: STATE.partnerData.partnerBirthMinute
-    };
-    
-    return calculateBazi(partnerDataForCalc);
 }
 
 // 处理并显示分析结果
 export function processAndDisplayAnalysis(result) {
     console.log('处理分析结果...');
     
-    // 免费部分：八字排盘、大运排盘、八字喜用分析、性格特点、适宜行业职业推荐
-    const freeSections = [
-        '【八字排盘】',
-        '【大运排盘】',
-        '【八字喜用分析】',
-        '【性格特点】',
-        '【适宜行业职业推荐】'
-    ];
-    
-    let freeContent = '';
-    let lockedContent = '';
-    
-    // 按【分割内容
-    const sections = result.split('【');
-    
-    // 重新组装，保留【标记
-    for (let i = 1; i < sections.length; i++) {
-        const section = '【' + sections[i];
-        const sectionTitle = section.split('】')[0] + '】';
+    try {
+        // 免费部分：八字排盘、大运排盘、八字喜用分析、性格特点、适宜行业职业推荐
+        const freeSections = [
+            '【八字排盘】',
+            '【大运排盘】',
+            '【八字喜用分析】',
+            '【性格特点】',
+            '【适宜行业职业推荐】'
+        ];
         
-        // 八字排盘已经单独显示，不在这里显示
-        if (sectionTitle === '【八字排盘】') {
-            continue;
-        }
+        let freeContent = '';
+        let lockedContent = '';
         
-        // 大运排盘也不显示
-        if (sectionTitle === '【大运排盘】') {
-            continue;
-        }
+        // 按【分割内容
+        const sections = result.split('【');
         
-        if (freeSections.includes(sectionTitle)) {
-            freeContent += section + '\n\n';
-        } else {
-            lockedContent += section + '\n\n';
-        }
-    }
-    
-    // 如果分割不理想，使用简单的方法
-    if (freeContent.length < 100) {
-        freeContent = '';
-        // 尝试找到免费部分
-        for (const freeSection of freeSections) {
-            const startIndex = result.indexOf(freeSection);
-            if (startIndex !== -1) {
-                // 找到下一个【或结束
-                let endIndex = result.indexOf('【', startIndex + 1);
-                if (endIndex === -1) {
-                    endIndex = result.length;
-                }
-                freeContent += result.substring(startIndex, endIndex) + '\n\n';
+        // 重新组装，保留【标记
+        for (let i = 1; i < sections.length; i++) {
+            const section = '【' + sections[i];
+            const sectionTitle = section.split('】')[0] + '】';
+            
+            // 八字排盘已经单独显示，不在这里显示
+            if (sectionTitle === '【八字排盘】') {
+                continue;
+            }
+            
+            // 大运排盘也不显示
+            if (sectionTitle === '【大运排盘】') {
+                continue;
+            }
+            
+            if (freeSections.includes(sectionTitle)) {
+                freeContent += section + '\n\n';
+            } else {
+                lockedContent += section + '\n\n';
             }
         }
         
-        // 剩余部分作为锁定内容
-        if (freeContent) {
-            lockedContent = result.replace(freeContent, '');
+        // 如果分割不理想，使用简单的方法
+        if (freeContent.length < 100) {
+            freeContent = '';
+            // 尝试找到免费部分
+            for (const freeSection of freeSections) {
+                const startIndex = result.indexOf(freeSection);
+                if (startIndex !== -1) {
+                    // 找到下一个【或结束
+                    let endIndex = result.indexOf('【', startIndex + 1);
+                    if (endIndex === -1) {
+                        endIndex = result.length;
+                    }
+                    freeContent += result.substring(startIndex, endIndex) + '\n\n';
+                }
+            }
+            
+            // 剩余部分作为锁定内容
+            if (freeContent) {
+                lockedContent = result.replace(freeContent, '');
+            }
         }
-    }
-    
-    // 显示免费内容
-    const freeAnalysisText = UI.freeAnalysisText();
-    if (freeAnalysisText) {
-        // 将免费内容格式化为HTML
-        let formattedContent = '';
-        const freeSectionsArray = freeContent.split('\n\n');
         
-        freeSectionsArray.forEach(section => {
-            if (section.trim()) {
-                // 提取标题
-                const titleMatch = section.match(/【([^】]+)】/);
-                if (titleMatch) {
-                    const title = titleMatch[1];
-                    const content = section.replace(titleMatch[0], '').trim();
-                    
-                    formattedContent += `
-                    <div class="analysis-section">
-                        <h5>${title}</h5>
-                        <div class="analysis-content">${content.replace(/\n/g, '<br>')}</div>
-                    </div>`;
-                } else {
-                    formattedContent += `<div class="analysis-content">${section.replace(/\n/g, '<br>')}</div>`;
+        // 显示免费内容
+        const freeAnalysisText = UI.freeAnalysisText();
+        if (freeAnalysisText) {
+            // 将免费内容格式化为HTML
+            let formattedContent = '';
+            const freeSectionsArray = freeContent.split('\n\n');
+            
+            freeSectionsArray.forEach(section => {
+                if (section.trim()) {
+                    // 提取标题
+                    const titleMatch = section.match(/【([^】]+)】/);
+                    if (titleMatch) {
+                        const title = titleMatch[1];
+                        const content = section.replace(titleMatch[0], '').trim();
+                        
+                        formattedContent += `
+                        <div class="analysis-section">
+                            <h5>${title}</h5>
+                            <div class="analysis-content">${content.replace(/\n/g, '<br>')}</div>
+                        </div>`;
+                    } else {
+                        formattedContent += `<div class="analysis-content">${section.replace(/\n/g, '<br>')}</div>`;
+                    }
                 }
-            }
-        });
+            });
+            
+            freeAnalysisText.innerHTML = formattedContent;
+        }
         
-        freeAnalysisText.innerHTML = formattedContent;
-    }
-    
-    // 存储锁定内容
-    const lockedAnalysisText = UI.lockedAnalysisText();
-    if (lockedAnalysisText) {
-        // 将锁定内容格式化为HTML
-        let formattedLockedContent = '';
-        const lockedSectionsArray = lockedContent.split('\n\n');
-        
-        lockedSectionsArray.forEach(section => {
-            if (section.trim()) {
-                // 提取标题
-                const titleMatch = section.match(/【([^】]+)】/);
-                if (titleMatch) {
-                    const title = titleMatch[1];
-                    const content = section.replace(titleMatch[0], '').trim();
-                    
-                    formattedLockedContent += `
-                    <div class="analysis-section">
-                        <h5>${title}</h5>
-                        <div class="analysis-content">${content.replace(/\n/g, '<br>')}</div>
-                    </div>`;
-                } else {
-                    formattedLockedContent += `<div class="analysis-content">${section.replace(/\n/g, '<br>')}</div>`;
+        // 存储锁定内容
+        const lockedAnalysisText = UI.lockedAnalysisText();
+        if (lockedAnalysisText) {
+            // 将锁定内容格式化为HTML
+            let formattedLockedContent = '';
+            const lockedSectionsArray = lockedContent.split('\n\n');
+            
+            lockedSectionsArray.forEach(section => {
+                if (section.trim()) {
+                    // 提取标题
+                    const titleMatch = section.match(/【([^】]+)】/);
+                    if (titleMatch) {
+                        const title = titleMatch[1];
+                        const content = section.replace(titleMatch[0], '').trim();
+                        
+                        formattedLockedContent += `
+                        <div class="analysis-section">
+                            <h5>${title}</h5>
+                            <div class="analysis-content">${content.replace(/\n/g, '<br>')}</div>
+                        </div>`;
+                    } else {
+                        formattedLockedContent += `<div class="analysis-content">${section.replace(/\n/g, '<br>')}</div>`;
+                    }
                 }
-            }
-        });
+            });
+            
+            lockedAnalysisText.innerHTML = formattedLockedContent;
+        }
         
-        lockedAnalysisText.innerHTML = formattedLockedContent;
+        console.log('分析结果显示完成');
+    } catch (error) {
+        console.error('处理分析结果失败:', error);
     }
 }
 
@@ -576,32 +617,44 @@ export function processAndDisplayAnalysis(result) {
 export function showPaymentModal() {
     console.log('显示支付弹窗...');
     
-    const serviceConfig = SERVICES[STATE.currentService];
-    if (!serviceConfig) return;
-    
-    // 生成订单信息
-    STATE.currentOrder = {
-        serviceType: STATE.currentService,
-        price: serviceConfig.price,
-        orderId: generateOrderId(),
-        unlockItems: serviceConfig.lockedItems
-    };
-    
-    // 更新支付弹窗内容
-    UI.paymentServiceType().textContent = STATE.currentService + '完整报告解锁';
-    UI.paymentAmount().textContent = '¥' + STATE.currentOrder.price;
-    UI.paymentOrderId().textContent = STATE.currentOrder.orderId;
-    
-    // 显示支付弹窗
-    const paymentModal = UI.paymentModal();
-    if (paymentModal) {
-        showElement(paymentModal);
-        document.body.style.overflow = 'hidden';
+    try {
+        const serviceConfig = SERVICES[STATE.currentService];
+        if (!serviceConfig) return;
+        
+        // 生成订单信息
+        STATE.currentOrder = {
+            serviceType: STATE.currentService,
+            price: serviceConfig.price,
+            orderId: generateOrderId(),
+            unlockItems: serviceConfig.lockedItems
+        };
+        
+        // 更新支付弹窗内容
+        const paymentServiceType = UI.paymentServiceType();
+        const paymentAmount = UI.paymentAmount();
+        const paymentOrderId = UI.paymentOrderId();
+        
+        if (paymentServiceType) paymentServiceType.textContent = STATE.currentService + '完整报告解锁';
+        if (paymentAmount) paymentAmount.textContent = '¥' + STATE.currentOrder.price;
+        if (paymentOrderId) paymentOrderId.textContent = STATE.currentOrder.orderId;
+        
+        // 显示支付弹窗
+        const paymentModal = UI.paymentModal();
+        if (paymentModal) {
+            showElement(paymentModal);
+            document.body.style.overflow = 'hidden';
+        }
+        
+        console.log('支付弹窗显示完成');
+    } catch (error) {
+        console.error('显示支付弹窗失败:', error);
     }
 }
 
 // 关闭支付弹窗
 export function closePaymentModal() {
+    console.log('关闭支付弹窗...');
+    
     const paymentModal = UI.paymentModal();
     if (paymentModal) {
         hideElement(paymentModal);
@@ -611,153 +664,203 @@ export function closePaymentModal() {
 
 // 更新解锁界面状态
 export function updateUnlockInterface() {
-    const lockedOverlay = DOM.id('locked-overlay');
-    if (!lockedOverlay) return;
+    console.log('更新解锁界面状态...');
     
-    // 更新标题
-    const unlockHeader = lockedOverlay.querySelector('.unlock-header');
-    if (unlockHeader) {
-        const lockIcon = unlockHeader.querySelector('.lock-icon');
-        const headerTitle = unlockHeader.querySelector('h4');
-        const headerDesc = unlockHeader.querySelector('p');
+    try {
+        const lockedOverlay = DOM.id('locked-overlay');
+        if (!lockedOverlay) return;
         
-        if (lockIcon) lockIcon.textContent = '✅';
-        if (headerTitle) headerTitle.textContent = '完整报告已解锁，网站不需要注册，注意下载保存分析报告，关闭后结果无法找回';
-        if (headerDesc) headerDesc.textContent = '您可以查看全部命理分析内容';
-    }
-    
-    // 更新项目列表为已解锁状态
-    const unlockItems = lockedOverlay.querySelectorAll('.unlock-items li');
-    unlockItems.forEach(item => {
-        item.classList.add('unlocked-item');
-        const text = item.textContent.replace('🔒 ', '');
-        item.innerHTML = '<span>✅ ' + text + '</span>';
-    });
-    
-    // 更新解锁按钮
-    const unlockBtnContainer = lockedOverlay.querySelector('.unlock-btn-container');
-    if (unlockBtnContainer) {
-        const unlockBtn = unlockBtnContainer.querySelector('.unlock-btn');
-        const unlockPrice = unlockBtnContainer.querySelector('.unlock-price');
-        
-        if (unlockBtn) {
-            unlockBtn.innerHTML = '✅ 已解锁完整报告';
-            unlockBtn.style.background = 'linear-gradient(135deg, var(--success-color), #28c76f)';
-            unlockBtn.style.cursor = 'default';
-            unlockBtn.disabled = true;
+        // 更新标题
+        const unlockHeader = lockedOverlay.querySelector('.unlock-header');
+        if (unlockHeader) {
+            const lockIcon = unlockHeader.querySelector('.lock-icon');
+            const headerTitle = unlockHeader.querySelector('h4');
+            const headerDesc = unlockHeader.querySelector('p');
+            
+            if (lockIcon) lockIcon.textContent = '✅';
+            if (headerTitle) headerTitle.textContent = '完整报告已解锁，网站不需要注册，注意下载保存分析报告，关闭后结果无法找回';
+            if (headerDesc) headerDesc.textContent = '您可以查看全部命理分析内容';
         }
         
-        if (unlockPrice) {
-            unlockPrice.innerHTML = '<span style="color: var(--success-color);">✅ 已解锁全部内容</span>';
+        // 更新项目列表为已解锁状态
+        const unlockItems = lockedOverlay.querySelectorAll('.unlock-items li');
+        unlockItems.forEach(item => {
+            item.classList.add('unlocked-item');
+            const text = item.textContent.replace('🔒 ', '');
+            item.innerHTML = '<span>✅ ' + text + '</span>';
+        });
+        
+        // 更新解锁按钮
+        const unlockBtnContainer = lockedOverlay.querySelector('.unlock-btn-container');
+        if (unlockBtnContainer) {
+            const unlockBtn = unlockBtnContainer.querySelector('.unlock-btn');
+            const unlockPrice = unlockBtnContainer.querySelector('.unlock-price');
+            
+            if (unlockBtn) {
+                unlockBtn.innerHTML = '✅ 已解锁完整报告';
+                unlockBtn.style.background = 'linear-gradient(135deg, var(--success-color), #28c76f)';
+                unlockBtn.style.cursor = 'default';
+                unlockBtn.disabled = true;
+            }
+            
+            if (unlockPrice) {
+                unlockPrice.innerHTML = '<span style="color: var(--success-color);">✅ 已解锁全部内容</span>';
+            }
         }
+        
+        console.log('解锁界面状态更新完成');
+    } catch (error) {
+        console.error('更新解锁界面状态失败:', error);
     }
 }
 
 // 显示完整分析内容
 export function showFullAnalysisContent() {
-    const lockedAnalysisText = UI.lockedAnalysisText();
-    const freeAnalysisText = UI.freeAnalysisText();
+    console.log('显示完整分析内容...');
     
-    if (lockedAnalysisText && lockedAnalysisText.textContent.trim() && freeAnalysisText) {
-        // 将锁定内容添加到免费内容中
-        const currentContent = freeAnalysisText.innerHTML;
-        freeAnalysisText.innerHTML = currentContent + lockedAnalysisText.innerHTML;
+    try {
+        const lockedAnalysisText = UI.lockedAnalysisText();
+        const freeAnalysisText = UI.freeAnalysisText();
+        
+        if (lockedAnalysisText && lockedAnalysisText.textContent.trim() && freeAnalysisText) {
+            // 将锁定内容添加到免费内容中
+            const currentContent = freeAnalysisText.innerHTML;
+            freeAnalysisText.innerHTML = currentContent + lockedAnalysisText.innerHTML;
+        }
+        
+        console.log('完整分析内容显示完成');
+    } catch (error) {
+        console.error('显示完整分析内容失败:', error);
     }
 }
 
 // 锁定下载按钮
 export function lockDownloadButton() {
-    const downloadBtn = UI.downloadReportBtn();
-    const downloadBtnText = DOM.id('download-btn-text');
+    console.log('锁定下载按钮...');
     
-    if (downloadBtn && downloadBtnText) {
-        downloadBtn.disabled = true;
-        downloadBtn.classList.add('download-btn-locked');
-        downloadBtnText.textContent = '下载报告';
-        STATE.isDownloadLocked = true;
+    try {
+        const downloadBtn = UI.downloadReportBtn();
+        const downloadBtnText = DOM.id('download-btn-text');
+        
+        if (downloadBtn && downloadBtnText) {
+            downloadBtn.disabled = true;
+            downloadBtn.classList.add('download-btn-locked');
+            downloadBtnText.textContent = '下载报告';
+            STATE.isDownloadLocked = true;
+        }
+        
+        console.log('下载按钮已锁定');
+    } catch (error) {
+        console.error('锁定下载按钮失败:', error);
     }
 }
 
 // 解锁下载按钮
 export function unlockDownloadButton() {
-    const downloadBtn = UI.downloadReportBtn();
-    const downloadBtnText = DOM.id('download-btn-text');
+    console.log('解锁下载按钮...');
     
-    if (downloadBtn && downloadBtnText) {
-        downloadBtn.disabled = false;
-        downloadBtn.classList.remove('download-btn-locked');
-        downloadBtnText.textContent = '下载报告';
-        STATE.isDownloadLocked = false;
+    try {
+        const downloadBtn = UI.downloadReportBtn();
+        const downloadBtnText = DOM.id('download-btn-text');
+        
+        if (downloadBtn && downloadBtnText) {
+            downloadBtn.disabled = false;
+            downloadBtn.classList.remove('download-btn-locked');
+            downloadBtnText.textContent = '下载报告';
+            STATE.isDownloadLocked = false;
+        }
+        
+        console.log('下载按钮已解锁');
+    } catch (error) {
+        console.error('解锁下载按钮失败:', error);
     }
 }
 
 // 重置解锁界面
 export function resetUnlockInterface() {
-    const lockedOverlay = DOM.id('locked-overlay');
-    if (!lockedOverlay) return;
+    console.log('重置解锁界面...');
     
-    // 重置标题
-    const unlockHeader = lockedOverlay.querySelector('.unlock-header');
-    if (unlockHeader) {
-        const lockIcon = unlockHeader.querySelector('.lock-icon');
-        const headerTitle = unlockHeader.querySelector('h4');
-        const headerDesc = unlockHeader.querySelector('p');
+    try {
+        const lockedOverlay = DOM.id('locked-overlay');
+        if (!lockedOverlay) return;
         
-        if (lockIcon) lockIcon.textContent = '🔒';
-        if (headerTitle) headerTitle.textContent = '完整内容已锁定';
-        if (headerDesc) headerDesc.textContent = '解锁完整分析报告，查看全部命理分析内容';
-    }
-    
-    // 重置项目列表为锁定状态
-    const unlockItems = lockedOverlay.querySelectorAll('.unlock-items li');
-    unlockItems.forEach(item => {
-        item.classList.remove('unlocked-item');
-        const text = item.textContent.replace('✅ ', '');
-        item.innerHTML = '<span>🔒 ' + text + '</span>';
-    });
-    
-    // 重置解锁按钮
-    const unlockBtnContainer = lockedOverlay.querySelector('.unlock-btn-container');
-    if (unlockBtnContainer) {
-        const unlockBtn = unlockBtnContainer.querySelector('.unlock-btn');
-        const unlockPrice = unlockBtnContainer.querySelector('.unlock-price');
-        
-        if (unlockBtn) {
-            unlockBtn.innerHTML = `解锁完整报告 (¥<span id="unlock-price">${SERVICES[STATE.currentService].price}</span>)`;
-            unlockBtn.style.background = 'linear-gradient(135deg, var(--secondary-color), #e6b800)';
-            unlockBtn.style.cursor = 'pointer';
-            unlockBtn.disabled = false;
+        // 重置标题
+        const unlockHeader = lockedOverlay.querySelector('.unlock-header');
+        if (unlockHeader) {
+            const lockIcon = unlockHeader.querySelector('.lock-icon');
+            const headerTitle = unlockHeader.querySelector('h4');
+            const headerDesc = unlockHeader.querySelector('p');
+            
+            if (lockIcon) lockIcon.textContent = '🔒';
+            if (headerTitle) headerTitle.textContent = '完整内容已锁定';
+            if (headerDesc) headerDesc.textContent = '解锁完整分析报告，查看全部命理分析内容';
         }
         
-        if (unlockPrice) {
-            const itemCount = SERVICES[STATE.currentService].lockedItems.length;
-            unlockPrice.innerHTML = `共包含 <span id="unlock-count">${itemCount}</span> 项详细分析`;
+        // 重置项目列表为锁定状态
+        const unlockItems = lockedOverlay.querySelectorAll('.unlock-items li');
+        unlockItems.forEach(item => {
+            item.classList.remove('unlocked-item');
+            const text = item.textContent.replace('✅ ', '');
+            item.innerHTML = '<span>🔒 ' + text + '</span>';
+        });
+        
+        // 重置解锁按钮
+        const unlockBtnContainer = lockedOverlay.querySelector('.unlock-btn-container');
+        if (unlockBtnContainer) {
+            const unlockBtn = unlockBtnContainer.querySelector('.unlock-btn');
+            const unlockPrice = unlockBtnContainer.querySelector('.unlock-price');
+            
+            if (unlockBtn) {
+                unlockBtn.innerHTML = `解锁完整报告 (¥<span id="unlock-price">${SERVICES[STATE.currentService].price}</span>)`;
+                unlockBtn.style.background = 'linear-gradient(135deg, var(--secondary-color), #e6b800)';
+                unlockBtn.style.cursor = 'pointer';
+                unlockBtn.disabled = false;
+            }
+            
+            if (unlockPrice) {
+                const itemCount = SERVICES[STATE.currentService].lockedItems.length;
+                unlockPrice.innerHTML = `共包含 <span id="unlock-count">${itemCount}</span> 项详细分析`;
+            }
         }
+        
+        console.log('解锁界面重置完成');
+    } catch (error) {
+        console.error('重置解锁界面失败:', error);
     }
 }
 
 // 按钮拉伸动画
 export function animateButtonStretch() {
-    const button = UI.analyzeBtn();
-    if (!button) return;
+    console.log('触发按钮拉伸动画...');
     
-    // 添加拉伸动画类
-    button.classList.add('stretching');
-    
-    // 动画结束后移除类并恢复初始状态
-    setTimeout(() => {
-        button.classList.remove('stretching');
+    try {
+        const button = UI.analyzeBtn();
+        if (!button) return;
         
-        // 5秒后恢复原始宽度
+        // 添加拉伸动画类
+        button.classList.add('stretching');
+        
+        // 动画结束后移除类并恢复初始状态
         setTimeout(() => {
-            button.style.width = '';
-            button.style.maxWidth = '';
-        }, 5000);
-    }, 800);
+            button.classList.remove('stretching');
+            
+            // 5秒后恢复原始宽度
+            setTimeout(() => {
+                button.style.width = '';
+                button.style.maxWidth = '';
+            }, 5000);
+        }, 800);
+        
+        console.log('按钮拉伸动画完成');
+    } catch (error) {
+        console.error('触发按钮拉伸动画失败:', error);
+    }
 }
 
 // 显示加载弹窗
 export function showLoadingModal() {
+    console.log('显示加载弹窗...');
+    
     const loadingModal = UI.loadingModal();
     if (loadingModal) {
         showElement(loadingModal);
@@ -767,6 +870,8 @@ export function showLoadingModal() {
 
 // 隐藏加载弹窗
 export function hideLoadingModal() {
+    console.log('隐藏加载弹窗...');
+    
     const loadingModal = UI.loadingModal();
     if (loadingModal) {
         hideElement(loadingModal);
@@ -776,20 +881,31 @@ export function hideLoadingModal() {
 
 // 显示分析结果区域
 export function showAnalysisResult() {
-    const analysisResultSection = UI.analysisResultSection();
-    if (analysisResultSection) {
-        showElement(analysisResultSection);
+    console.log('显示分析结果区域...');
+    
+    try {
+        const analysisResultSection = UI.analysisResultSection();
+        if (analysisResultSection) {
+            showElement(analysisResultSection);
+            
+            // 设置分析时间
+            const analysisTime = UI.analysisTime();
+            if (analysisTime) analysisTime.textContent = formatDate();
+            
+            // 滚动到结果区域
+            analysisResultSection.scrollIntoView({ behavior: 'smooth' });
+        }
         
-        // 设置分析时间
-        UI.analysisTime().textContent = formatDate();
-        
-        // 滚动到结果区域
-        analysisResultSection.scrollIntoView({ behavior: 'smooth' });
+        console.log('分析结果区域显示完成');
+    } catch (error) {
+        console.error('显示分析结果区域失败:', error);
     }
 }
 
 // 隐藏分析结果区域
 export function hideAnalysisResult() {
+    console.log('隐藏分析结果区域...');
+    
     const analysisResultSection = UI.analysisResultSection();
     if (analysisResultSection) {
         hideElement(analysisResultSection);
@@ -798,84 +914,109 @@ export function hideAnalysisResult() {
 
 // 重置表单错误状态
 export function resetFormErrors() {
-    DOM.getAll('.error').forEach(error => {
-        error.style.display = 'none';
-    });
+    console.log('重置表单错误状态...');
+    
+    try {
+        DOM.getAll('.error').forEach(error => {
+            error.style.display = 'none';
+        });
+        
+        console.log('表单错误状态重置完成');
+    } catch (error) {
+        console.error('重置表单错误状态失败:', error);
+    }
 }
 
 // 验证表单
 export function validateForm() {
     console.log('验证表单...');
-    let isValid = true;
     
-    // 重置错误信息
-    resetFormErrors();
-    
-    // 验证函数
-    const validateField = (fieldId, errorId) => {
-        const field = DOM.id(fieldId);
-        const error = DOM.id(errorId);
+    try {
+        let isValid = true;
         
-        if (!field || !error) return true;
+        // 重置错误信息
+        resetFormErrors();
         
-        if (!field.value || field.value.trim() === '') {
-            error.style.display = 'block';
-            return false;
+        // 验证函数
+        const validateField = (fieldId, errorId) => {
+            const field = DOM.id(fieldId);
+            const error = DOM.id(errorId);
+            
+            if (!field || !error) return true;
+            
+            if (!field.value || field.value.trim() === '') {
+                error.style.display = 'block';
+                return false;
+            }
+            
+            return true;
+        };
+        
+        // 验证必填字段
+        if (!validateField('name', 'name-error')) isValid = false;
+        if (!validateField('gender', 'gender-error')) isValid = false;
+        if (!validateField('birth-year', 'birth-year-error')) isValid = false;
+        if (!validateField('birth-month', 'birth-month-error')) isValid = false;
+        if (!validateField('birth-day', 'birth-day-error')) isValid = false;
+        if (!validateField('birth-hour', 'birth-hour-error')) isValid = false;
+        if (!validateField('birth-minute', 'birth-minute-error')) isValid = false;
+        if (!validateField('birth-city', 'birth-city-error')) isValid = false;
+        
+        // 如果是八字合婚，验证伴侣信息
+        if (STATE.currentService === '八字合婚') {
+            if (!validateField('partner-name', 'partner-name-error')) isValid = false;
+            if (!validateField('partner-gender', 'partner-gender-error')) isValid = false;
+            if (!validateField('partner-birth-year', 'partner-birth-year-error')) isValid = false;
+            if (!validateField('partner-birth-month', 'partner-birth-month-error')) isValid = false;
+            if (!validateField('partner-birth-day', 'partner-birth-day-error')) isValid = false;
+            if (!validateField('partner-birth-hour', 'partner-birth-hour-error')) isValid = false;
+            if (!validateField('partner-birth-minute', 'partner-birth-minute-error')) isValid = false;
+            if (!validateField('partner-birth-city', 'partner-birth-city-error')) isValid = false;
         }
         
-        return true;
-    };
-    
-    // 验证必填字段
-    if (!validateField('name', 'name-error')) isValid = false;
-    if (!validateField('gender', 'gender-error')) isValid = false;
-    if (!validateField('birth-year', 'birth-year-error')) isValid = false;
-    if (!validateField('birth-month', 'birth-month-error')) isValid = false;
-    if (!validateField('birth-day', 'birth-day-error')) isValid = false;
-    if (!validateField('birth-hour', 'birth-hour-error')) isValid = false;
-    if (!validateField('birth-minute', 'birth-minute-error')) isValid = false;
-    if (!validateField('birth-city', 'birth-city-error')) isValid = false;
-    
-    // 如果是八字合婚，验证伴侣信息
-    if (STATE.currentService === '八字合婚') {
-        if (!validateField('partner-name', 'partner-name-error')) isValid = false;
-        if (!validateField('partner-gender', 'partner-gender-error')) isValid = false;
-        if (!validateField('partner-birth-year', 'partner-birth-year-error')) isValid = false;
-        if (!validateField('partner-birth-month', 'partner-birth-month-error')) isValid = false;
-        if (!validateField('partner-birth-day', 'partner-birth-day-error')) isValid = false;
-        if (!validateField('partner-birth-hour', 'partner-birth-hour-error')) isValid = false;
-        if (!validateField('partner-birth-minute', 'partner-birth-minute-error')) isValid = false;
-        if (!validateField('partner-birth-city', 'partner-birth-city-error')) isValid = false;
+        console.log('表单验证完成，结果:', isValid);
+        return isValid;
+        
+    } catch (error) {
+        console.error('验证表单失败:', error);
+        return false;
     }
-    
-    return isValid;
 }
 
 // 收集用户数据
 export function collectUserData() {
-    STATE.userData = {
-        name: UI.name().value,
-        gender: UI.gender().value === 'male' ? '男' : '女',
-        birthYear: UI.birthYear().value,
-        birthMonth: UI.birthMonth().value,
-        birthDay: UI.birthDay().value,
-        birthHour: UI.birthHour().value,
-        birthMinute: UI.birthMinute().value,
-        birthCity: UI.birthCity().value
-    };
+    console.log('收集用户数据...');
     
-    // 如果是八字合婚，收集伴侣数据
-    if (STATE.currentService === '八字合婚') {
-        STATE.partnerData = {
-            partnerName: UI.partnerName().value,
-            partnerGender: UI.partnerGender().value === 'male' ? '男' : '女',
-            partnerBirthYear: UI.partnerBirthYear().value,
-            partnerBirthMonth: UI.partnerBirthMonth().value,
-            partnerBirthDay: UI.partnerBirthDay().value,
-            partnerBirthHour: UI.partnerBirthHour().value,
-            partnerBirthMinute: UI.partnerBirthMinute().value,
-            partnerBirthCity: UI.partnerBirthCity().value
+    try {
+        STATE.userData = {
+            name: UI.name()?.value || '',
+            gender: UI.gender()?.value === 'male' ? '男' : '女',
+            birthYear: UI.birthYear()?.value || '',
+            birthMonth: UI.birthMonth()?.value || '',
+            birthDay: UI.birthDay()?.value || '',
+            birthHour: UI.birthHour()?.value || '',
+            birthMinute: UI.birthMinute()?.value || '',
+            birthCity: UI.birthCity()?.value || ''
         };
+        
+        // 如果是八字合婚，收集伴侣数据
+        if (STATE.currentService === '八字合婚') {
+            STATE.partnerData = {
+                partnerName: UI.partnerName()?.value || '',
+                partnerGender: UI.partnerGender()?.value === 'male' ? '男' : '女',
+                partnerBirthYear: UI.partnerBirthYear()?.value || '',
+                partnerBirthMonth: UI.partnerBirthMonth()?.value || '',
+                partnerBirthDay: UI.partnerBirthDay()?.value || '',
+                partnerBirthHour: UI.partnerBirthHour()?.value || '',
+                partnerBirthMinute: UI.partnerBirthMinute()?.value || '',
+                partnerBirthCity: UI.partnerBirthCity()?.value || ''
+            };
+        }
+        
+        console.log('用户数据收集完成:', STATE.userData);
+        if (STATE.partnerData) console.log('伴侣数据:', STATE.partnerData);
+        
+    } catch (error) {
+        console.error('收集用户数据失败:', error);
     }
 }
-
