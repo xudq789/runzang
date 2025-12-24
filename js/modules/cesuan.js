@@ -1,5 +1,5 @@
 // 测算验证模块
-import { calculateBazi } from './core/utils.js';
+import { calculateBazi } from '../core/utils.js';
 
 export class CesuanModule {
     static getServiceConfig() {
@@ -76,4 +76,5 @@ export class CesuanModule {
         return calculateBazi(userData);
     }
 }
+
 
