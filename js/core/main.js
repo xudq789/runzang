@@ -95,7 +95,16 @@ function setupEventListeners() {
     UI.unlockBtn().addEventListener('click', showPaymentModal);
     
     // 下载报告按钮
-    UI.downloadReportBtn().addEventListener('click', downloadReport);
+    UI.downloadReportBtn().addEventListener('click', function() {
+    console.log('下载报告功能...');
+    
+    if (STATE.isDownloadLocked) {
+        alert('请先解锁完整报告才能下载');
+        return;
+    }
+    
+    alert('下载功能正在开发中，请稍后再试');
+});
     
     // 重新测算按钮
     UI.recalculateBtn().addEventListener('click', newAnalysis);
@@ -299,6 +308,7 @@ window.closePaymentModal = closePaymentModal;
 window.confirmPayment = confirmPayment;
 window.downloadReport = downloadReport;
 window.newAnalysis = newAnalysis;
+
 
 
 
