@@ -67,7 +67,7 @@ async function initApp() {
         STATE.apiStatus = await checkAPIStatus();
         
         // 预加载图片
-        // preloadImages(); // 注释掉或删除
+        preloadImages();
         
         console.log('应用初始化完成');
     } catch (error) {
@@ -306,8 +306,12 @@ window.startAnalysis = startAnalysis;
 window.showPaymentModal = showPaymentModal;
 window.closePaymentModal = closePaymentModal;
 window.confirmPayment = confirmPayment;
-window.downloadReport = downloadReport;
+window.downloadReport = function() {
+    console.log('下载报告...');
+    alert('下载功能正在开发中');
+};
 window.newAnalysis = newAnalysis;
+
 
 
 
