@@ -67,7 +67,7 @@ async function initApp() {
         STATE.apiStatus = await checkAPIStatus();
         
         // 预加载图片
-        preloadImages();
+        //preloadImages();
         
         console.log('应用初始化完成');
     } catch (error) {
@@ -311,6 +311,7 @@ window.downloadReport = function() {
     alert('下载功能正在开发中');
 };
 window.newAnalysis = newAnalysis;
+
 
 
 
