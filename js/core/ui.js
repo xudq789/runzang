@@ -1,6 +1,6 @@
 // UI控制模块
-import { DOM, formatDate, hideElement, showElement, generateOrderId } from './utils.js';
-import { SERVICES, STATE } from './config.js';
+import { DOM, formatDate, hideElement, showElement, generateOrderId, calculateBazi } from './utils.js';
+import { SERVICES, STATE, PAYMENT_CONFIG } from './config.js';
 
 // UI元素集合
 export const UI = {
@@ -572,6 +572,81 @@ export function processAndDisplayAnalysis(result) {
     }
 }
 
+// 生成请求签名（简单示例）
+async function generateRequestSignature(serviceType, timestamp) {
+  const str = `${serviceType}${timestamp}${PAYMENT_CONFIG.API_SECRET}`;
+  const encoder = new TextEncoder();
+  const data = encoder.encode(str);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// 获取客户端IP（通过公共服务）
+async function getClientIP() {
+  try {
+    const response = await fetch('https://api.ipify.org?format=json');
+    const data = await response.json();
+    return data.ip || 'unknown';
+  } catch (error) {
+    return 'unknown';
+  }
+}
+
+// 开始轮询支付结果
+function startPaymentPolling(orderId) {
+  let pollCount = 0;
+  const maxPolls = 60; // 最多轮询3分钟（3000ms * 60）
+  
+  const pollInterval = setInterval(async () => {
+    pollCount++;
+    
+    if (pollCount > maxPolls) {
+      clearInterval(pollInterval);
+      document.getElementById('payment-status-text').textContent = '支付超时，请检查支付状态';
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${PAYMENT_CONFIG.GATEWAY_URL}/status/${orderId}`);
+      const result = await response.json();
+      
+      if (result.success && result.data.status === 'success') {
+        // 支付成功
+        clearInterval(pollInterval);
+        handlePaymentSuccess();
+      }
+      
+    } catch (error) {
+      console.error('轮询支付状态失败:', error);
+    }
+  }, PAYMENT_CONFIG.POLL_INTERVAL);
+}
+
+// 支付成功处理
+function handlePaymentSuccess() {
+  // 设置支付解锁状态
+  STATE.isPaymentUnlocked = true;
+  STATE.isDownloadLocked = false;
+  
+  // 关闭支付弹窗
+  closePaymentModal();
+  
+  // 更新解锁界面
+  updateUnlockInterface();
+  
+  // 显示完整内容
+  showFullAnalysisContent();
+  
+  // 解锁下载按钮
+  unlockDownloadButton();
+  
+  // 显示成功提示
+  alert('支付成功！完整报告已解锁。');
+  
+  return true;
+}
+
 // 显示支付弹窗 - 集成真实支付宝支付
 export async function showPaymentModal() {
   console.log('显示支付弹窗，调用真实支付...');
@@ -677,63 +752,6 @@ export async function showPaymentModal() {
   }
 }
 
-// 生成请求签名（简单示例）
-async function generateRequestSignature(serviceType, timestamp) {
-  const str = `${serviceType}${timestamp}${PAYMENT_CONFIG.API_SECRET}`;
-  const encoder = new TextEncoder();
-  const data = encoder.encode(str);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-// 获取客户端IP（通过公共服务）
-async function getClientIP() {
-  try {
-    const response = await fetch('https://api.ipify.org?format=json');
-    const data = await response.json();
-    return data.ip || 'unknown';
-  } catch (error) {
-    return 'unknown';
-  }
-}
-
-// 开始轮询支付结果
-function startPaymentPolling(orderId) {
-  let pollCount = 0;
-  const maxPolls = 60; // 最多轮询3分钟（3000ms * 60）
-  
-  const pollInterval = setInterval(async () => {
-    pollCount++;
-    
-    if (pollCount > maxPolls) {
-      clearInterval(pollInterval);
-      document.getElementById('payment-status-text').textContent = '支付超时，请检查支付状态';
-      return;
-    }
-    
-    try {
-      const response = await fetch(`${PAYMENT_CONFIG.GATEWAY_URL}/status/${orderId}`);
-      const result = await response.json();
-      
-      if (result.success && result.data.status === 'success') {
-        // 支付成功
-        clearInterval(pollInterval);
-        handlePaymentSuccess();
-      }
-      
-    } catch (error) {
-      console.error('轮询支付状态失败:', error);
-    }
-  }, PAYMENT_CONFIG.POLL_INTERVAL);
-}
-
-// 支付成功处理
-function handlePaymentSuccess() {
-  // 设置支付解锁状态
-  STATE.isPaymentUnlocked = true;
-  STATE.isDownloadLocked = false;
-
 // 关闭支付弹窗
 export function closePaymentModal() {
     const paymentModal = UI.paymentModal();
@@ -825,21 +843,6 @@ export function unlockDownloadButton() {
     }
 }
 
-// 显示成功提示
-  alert('支付成功！完整报告已解锁。');
-  
-  return true;
-}
-
-// 关闭支付弹窗
-export function closePaymentModal() {
-    const paymentModal = UI.paymentModal();
-    if (paymentModal) {
-        hideElement(paymentModal);
-        document.body.style.overflow = 'auto';
-    }
-}    
-    
 // 重置解锁界面
 export function resetUnlockInterface() {
     console.log('resetUnlockInterface: 重置解锁界面');
@@ -1024,5 +1027,3 @@ export function collectUserData() {
         };
     }
 }
-
-
