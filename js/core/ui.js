@@ -825,6 +825,21 @@ export function unlockDownloadButton() {
     }
 }
 
+// 显示成功提示
+  alert('支付成功！完整报告已解锁。');
+  
+  return true;
+}
+
+// 关闭支付弹窗
+export function closePaymentModal() {
+    const paymentModal = UI.paymentModal();
+    if (paymentModal) {
+        hideElement(paymentModal);
+        document.body.style.overflow = 'auto';
+    }
+}    
+    
 // 重置解锁界面
 export function resetUnlockInterface() {
     console.log('resetUnlockInterface: 重置解锁界面');
@@ -1009,4 +1024,5 @@ export function collectUserData() {
         };
     }
 }
+
 
