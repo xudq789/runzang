@@ -304,15 +304,14 @@ export const STATE = {
     isDownloadLocked: true
 };
 
-// 在 config.js 末尾添加
+// 在 config.js 末尾修改 PAYMENT_CONFIG
 export const PAYMENT_CONFIG = {
-  // 你的支付网关地址（使用子域名，如 pay.runzang.top）
-  GATEWAY_URL: 'https://runzang.top/api/payment',
-  // API密钥（前端用于签名，与后端保持一致）
-  API_SECRET: 'your-frontend-secret-key-123456', // ！！！生产环境要更换
-  // 支付结果轮询间隔（毫秒）
+  // ⚠️ 修复9：更新为您的实际后端地址
+  GATEWAY_URL: 'https://runzang.top/api/payment', // 改为您的腾讯云域名
+  API_SECRET: 'your-frontend-secret-key-123456', // 与后端保持一致
   POLL_INTERVAL: 3000
 };
+
 
 
 
