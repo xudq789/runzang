@@ -647,219 +647,134 @@ function handlePaymentSuccess() {
   return true;
 }
 
-// 显示支付弹窗 - 真实支付修复版
+// 显示支付弹窗 - 优化版本
 export async function showPaymentModal() {
-  console.log('调用真实支付接口...');
+  console.log('调用支付接口...');
   
   const serviceConfig = SERVICES[STATE.currentService];
   if (!serviceConfig) return;
   
-  // 1. 先显示支付弹窗（让用户看到正在处理）
-  const paymentModal = UI.paymentModal();
-  if (paymentModal) {
-    showElement(paymentModal);
-    document.body.style.overflow = 'hidden';
-    
-    // 显示加载状态
-    UI.paymentServiceType().textContent = STATE.currentService;
-    UI.paymentAmount().textContent = '¥' + serviceConfig.price;
-    UI.paymentOrderId().textContent = '生成订单中...';
-  }
-  
-  // 2. 清除旧的支付按钮
-  const paymentMethods = document.querySelector('.payment-methods');
-  if (paymentMethods) {
-    paymentMethods.innerHTML = '<div style="text-align:center;padding:20px;">正在生成支付链接...</div>';
-  }
-  
   try {
-    // 3. 调用真实后端支付接口 - 使用 POST 方法
-    console.log('正在调用支付接口...');
+    // 1. 先显示支付弹窗
+    const paymentModal = UI.paymentModal();
+    if (paymentModal) {
+      showElement(paymentModal);
+      document.body.style.overflow = 'hidden';
+      
+      // 先显示基本信息
+      UI.paymentServiceType().textContent = STATE.currentService;
+      UI.paymentAmount().textContent = '¥' + serviceConfig.price;
+      UI.paymentOrderId().textContent = '生成中...';
+    }
     
+    // 2. 调用您的后端支付接口
     const response = await fetch('https://runzang.top/api/payment/create', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
       },
       body: JSON.stringify({
         serviceType: STATE.currentService
-        // 不需要 timestamp 和 sign，后端应该简化验证
       })
     });
     
-    console.log('响应状态:', response.status, response.statusText);
-    
-    if (!response.ok) {
-      // 尝试获取错误信息
-      let errorMsg = `支付接口错误 (${response.status})`;
-      try {
-        const errorData = await response.text();
-        if (errorData) errorMsg += ': ' + errorData;
-      } catch (e) {}
-      
-      throw new Error(errorMsg);
-    }
-    
     const result = await response.json();
-    console.log('支付接口返回:', result);
     
     if (!result.success) {
-      throw new Error(result.message || '创建订单失败');
+      alert('创建订单失败：' + (result.message || '请稍后重试'));
+      closePaymentModal();
+      return;
     }
     
     const { paymentUrl, outTradeNo, amount, subject } = result.data;
     
-    console.log('支付链接:', paymentUrl);
+    console.log('支付URL:', paymentUrl);
     console.log('订单号:', outTradeNo);
     
-    // 4. 更新支付弹窗显示真实信息
+    // 3. 更新支付弹窗显示真实信息
     UI.paymentServiceType().textContent = subject || STATE.currentService;
     UI.paymentAmount().textContent = '¥' + amount;
     UI.paymentOrderId().textContent = outTradeNo;
     
-    // 保存订单ID
-    STATE.currentOrderId = outTradeNo;
+    // 4. 清除旧的支付按钮
+    const oldBtn = document.getElementById('alipay-redirect-btn');
+    if (oldBtn) oldBtn.remove();
     
-    // 5. 创建真实支付宝支付按钮
-    if (paymentMethods) {
-      paymentMethods.innerHTML = `
-        <div style="text-align: center; margin: 20px 0;">
-          <button id="real-alipay-btn" class="dynamic-pulse-btn" 
-            style="margin: 10px auto; max-width: 300px; background: linear-gradient(135deg, #1677FF, #4096ff); padding: 15px 30px; font-size: 16px;">
-            <span style="display: flex; align-items: center; justify-content: center;">
-              <span style="margin-right: 10px; font-size: 20px;">💰</span>
-              前往支付宝安全支付
-            </span>
-          </button>
-          <div style="font-size: 13px; color: #666; margin-top: 10px;">
-            将在新窗口打开支付宝支付页面
-          </div>
-        </div>
-        
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #1677FF;">
-          <div style="font-weight: bold; color: #1677FF; margin-bottom: 5px;">支付说明：</div>
-          <div style="font-size: 13px; color: #666;">
-            1. 点击上方按钮跳转到支付宝支付<br>
-            2. 支付完成后会自动返回<br>
-            3. 如遇问题，可点击下方"我已支付"手动确认
-          </div>
-        </div>
-      `;
+    // 5. 创建支付按钮
+    const payBtn = document.createElement('button');
+    payBtn.id = 'alipay-redirect-btn';
+    payBtn.className = 'dynamic-pulse-btn';
+    payBtn.style.cssText = `
+      margin: 20px auto;
+      display: block;
+      max-width: 250px;
+      background: linear-gradient(135deg, #1677FF, #4096ff);
+    `;
+    payBtn.innerHTML = `
+      <span style="display: flex; align-items: center; justify-content: center;">
+        <span style="margin-right: 8px;">💰</span>
+        前往支付宝支付
+      </span>
+    `;
+    
+    // 6. 支付按钮点击事件
+    payBtn.onclick = () => {
+      console.log('跳转到支付宝支付');
+      window.open(paymentUrl, '_blank'); // 新窗口打开支付
       
-      // 6. 绑定支付按钮点击事件
-      document.getElementById('real-alipay-btn').onclick = () => {
-        console.log('跳转到支付宝支付页面:', paymentUrl);
-        
-        // 新窗口打开支付页面
-        const payWindow = window.open(paymentUrl, '_blank', 'width=800,height=600');
-        
-        if (!payWindow) {
-          alert('请允许弹出窗口，或直接访问：' + paymentUrl);
-          return;
-        }
-        
-        // 开始检查支付状态
-        startPaymentStatusCheck(outTradeNo);
-      };
+      // 开始检查支付状态
+      checkPaymentStatus(outTradeNo);
+    };
+    
+    // 7. 插入到支付弹窗
+    const paymentMethods = document.querySelector('.payment-methods');
+    if (paymentMethods) {
+      paymentMethods.innerHTML = '';
+      paymentMethods.appendChild(payBtn);
+    } else {
+      // 如果没有.payment-methods容器，插入到订单信息下方
+      const orderInfo = document.querySelector('.order-info');
+      if (orderInfo) {
+        orderInfo.parentNode.insertBefore(payBtn, orderInfo.nextSibling);
+      }
     }
     
   } catch (error) {
-    console.error('支付初始化失败:', error);
-    
-    // 显示错误信息并提供备用方案
-    if (paymentMethods) {
-      paymentMethods.innerHTML = `
-        <div style="text-align: center; padding: 20px;">
-          <div style="color: #dc3545; margin-bottom: 15px;">
-            <span style="font-size: 24px;">⚠️</span>
-            <div style="font-weight: bold; margin: 10px 0;">支付系统暂时维护</div>
-            <div style="font-size: 14px; color: #666;">${error.message}</div>
-          </div>
-          
-          <div style="background: #fff8e1; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: left;">
-            <div style="font-weight: bold; margin-bottom: 10px;">备用支付方案：</div>
-            <div style="font-size: 14px;">
-              1. 支付宝直接转账到：<strong>runzang888</strong><br>
-              2. 添加微信客服：<strong>runzang888</strong><br>
-              3. 付款后联系客服为您手动解锁
-            </div>
-          </div>
-          
-          <button id="manual-unlock-btn" class="dynamic-pulse-btn" 
-            style="margin: 10px auto; max-width: 250px; background: linear-gradient(135deg, #8b4513, #d4af37);">
-            <span>💬 联系客服解锁</span>
-          </button>
-        </div>
-      `;
-      
-      document.getElementById('manual-unlock-btn').onclick = () => {
-        alert('请添加客服微信：runzang888\n付款后客服会为您解锁内容。');
-      };
-    }
+    console.error('支付失败:', error);
+    alert('网络连接失败，请检查网络后重试');
+    closePaymentModal();
   }
 }
 
-// 开始检查支付状态
-function startPaymentStatusCheck(orderId) {
-  console.log('开始检查支付状态:', orderId);
-  
-  let checkCount = 0;
-  const maxChecks = 20; // 最多检查1分钟（3秒×20次）
-  
-  const statusText = document.getElementById('payment-status-text');
-  if (statusText) {
-    statusText.textContent = '等待支付确认...';
-  }
-  
+// 检查支付状态的简单函数
+function checkPaymentStatus(orderId) {
+  // 每3秒检查一次支付状态
   const checkInterval = setInterval(async () => {
-    checkCount++;
-    
-    if (checkCount > maxChecks) {
-      clearInterval(checkInterval);
-      if (statusText) {
-        statusText.textContent = '支付超时，请检查支付状态';
-      }
-      return;
-    }
-    
     try {
       const response = await fetch(`https://runzang.top/api/payment/status/${orderId}`);
       const result = await response.json();
       
-      console.log('支付状态检查:', result);
-      
       if (result.success && result.data.status === 'paid') {
         clearInterval(checkInterval);
-        handlePaymentSuccess();
+        alert('支付成功！正在为您解锁内容...');
+        
+        // 解锁内容
+        STATE.isPaymentUnlocked = true;
+        STATE.isDownloadLocked = false;
+        closePaymentModal();
+        updateUnlockInterface();
+        showFullAnalysisContent();
+        unlockDownloadButton();
       }
-      
     } catch (error) {
-      console.log('状态检查失败:', error.message);
+      console.log('检查支付状态:', error.message);
     }
-  }, 3000); // 每3秒检查一次
-}
-
-// 支付成功处理
-function handlePaymentSuccess() {
-  // 设置支付解锁状态
-  STATE.isPaymentUnlocked = true;
-  STATE.isDownloadLocked = false;
+  }, 3000); // 3秒检查一次
   
-  // 关闭支付弹窗
-  closePaymentModal();
-  
-  // 更新解锁界面
-  updateUnlockInterface();
-  
-  // 显示完整内容
-  showFullAnalysisContent();
-  
-  // 解锁下载按钮
-  unlockDownloadButton();
-  
-  // 显示成功提示
-  alert('✅ 支付成功！完整报告已解锁。');
+  // 30秒后停止检查
+  setTimeout(() => {
+    clearInterval(checkInterval);
+  }, 30000);
 }
 
 // 关闭支付弹窗
@@ -1137,3 +1052,4 @@ export function collectUserData() {
         };
     }
 }
+
