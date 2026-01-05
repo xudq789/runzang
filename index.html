@@ -355,7 +355,69 @@
 
     <!-- 模块化JavaScript文件 -->
     <script src="js/core/main.js" type="module"></script>
+
+    <!-- 在页面底部添加 -->
+<button id="emergency-unlock-btn" style="
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 15px;
+  background: #FF9800;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  z-index: 9999;
+  font-size: 12px;
+  display: none;
+  cursor: pointer;
+">
+  🔓 应急解锁
+</button>
+
+<script>
+// 应急解锁按钮
+const emergencyBtn = document.getElementById('emergency-unlock-btn');
+
+// 检查是否需要显示应急按钮
+function checkEmergency() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const hasAlipayCallback = urlParams.has('out_trade_no');
+  const isLocked = document.querySelector('#locked-overlay')?.style.display !== 'none';
+  
+  if (hasAlipayCallback && isLocked) {
+    emergencyBtn.style.display = 'block';
+  }
+}
+
+// 应急解锁功能
+emergencyBtn.addEventListener('click', function() {
+  // 获取订单号
+  const urlParams = new URLSearchParams(window.location.search);
+  const orderId = urlParams.get('out_trade_no');
+  
+  if (orderId) {
+    // 标记为已支付
+    localStorage.setItem('paid_order_id', orderId);
+    
+    // 解锁内容
+    unlockAllContent();
+    
+    // 清理URL
+    window.history.replaceState({}, '', window.location.pathname);
+    
+    // 隐藏按钮
+    this.style.display = 'none';
+    
+    alert('✅ 应急解锁成功！');
+  }
+});
+
+// 页面加载后检查
+window.addEventListener('load', checkEmergency);
+</script>
+
 </body>
 </html>
+
 
 
