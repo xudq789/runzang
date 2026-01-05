@@ -3,7 +3,7 @@ export const SERVICES = {
     '测算验证': {
         heroImage: 'https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/1-1.jpg',
         detailImage: 'https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/1-2.jpg',
-        price: 9.8,
+        price: 0.08,
         lockedItems: [
             '富贵层次评估',
             '过往大运营凶分析',
@@ -309,6 +309,7 @@ export const PAYMENT_CONFIG = {
   GATEWAY_URL: 'https://runzang.top/api/payment'  // 只有这一行就够了
   // 删除其他复杂的配置
 };
+
 
 
 
