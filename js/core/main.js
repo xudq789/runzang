@@ -186,62 +186,126 @@ function checkLocalPaymentRecords() {
 
 // ============ 原有初始化函数（修改版） ============
 
-// 初始化应用
+// 在 initApp 函数开头添加：
 async function initApp() {
-    console.log('🚀 应用初始化开始...');
+  console.log('🚀 应用初始化开始...');
+  
+  // ============ 【核心】恢复支付前的状态 ============
+  await restorePaymentState();
+  
+  // ============ 原有初始化代码 ============
+  try {
+    // 初始化表单选项
+    initFormOptions();
     
-    try {
-        // ============ 【第一步】支付返回处理 ============
-        console.log('1. 处理支付返回...');
-        const isPaymentReturn = await handleAlipayReturn();
-        
-        if (isPaymentReturn) {
-            console.log('支付返回处理完成');
-            // 清理URL参数
-            cleanUrlParams();
-        }
-        
-        // ============ 【第二步】初始化表单选项 ============
-        console.log('2. 初始化表单选项...');
-        initFormOptions();
-        
-        // ============ 【第三步】设置默认值 ============
-        console.log('3. 设置默认值...');
-        setDefaultValues();
-        
-        // ============ 【第四步】更新服务显示 ============
-        console.log('4. 更新服务显示...');
-        updateServiceDisplay(STATE.currentService);
-        
-        // ============ 【第五步】更新解锁信息 ============
-        console.log('5. 更新解锁信息...');
-        updateUnlockInfo();
-        
-        // ============ 【第六步】锁定下载按钮 ============
-        console.log('6. 锁定下载按钮...');
-        lockDownloadButton();
-        
-        // ============ 【第七步】设置事件监听器 ============
-        console.log('7. 设置事件监听器...');
-        setupEventListeners();
-        
-        // ============ 【第八步】检查API状态 ============
-        console.log('8. 检查API状态...');
-        STATE.apiStatus = await checkAPIStatus();
-        
-        // ============ 【第九步】预加载图片 ============
-        console.log('9. 预加载图片...');
-        preloadImages();
-        
-        // ============ 【第十步】检查本地支付记录 ============
-        console.log('10. 检查本地支付记录...');
-        checkLocalPaymentRecords();
-        
-        console.log('✅ 应用初始化完成');
-        
-    } catch (error) {
-        console.error('❌ 应用初始化失败:', error);
+    // 设置默认值
+    setDefaultValues();
+    
+    // 更新服务显示
+    updateServiceDisplay(STATE.currentService);
+    
+    // 更新解锁信息
+    updateUnlockInfo();
+    
+    // 锁定下载按钮
+    lockDownloadButton();
+    
+    // 设置事件监听器
+    setupEventListeners();
+    
+    // 检查API状态
+    STATE.apiStatus = await checkAPIStatus();
+    
+    // 预加载图片
+    preloadImages();
+    
+    console.log('✅ 应用初始化完成');
+    
+  } catch (error) {
+    console.error('❌ 应用初始化失败:', error);
+  }
+}
+
+// 新增：恢复支付前状态
+async function restorePaymentState() {
+  console.log('🔄 检查是否需要恢复支付前状态...');
+  
+  // 1. 检查是否有待恢复的状态
+  const savedState = localStorage.getItem('pending_payment_state');
+  const pendingOrderId = localStorage.getItem('pending_order_id');
+  
+  if (!savedState || !pendingOrderId) {
+    console.log('没有待恢复的支付状态');
+    return;
+  }
+  
+  try {
+    const stateData = JSON.parse(savedState);
+    console.log('找到待恢复的状态，订单:', pendingOrderId);
+    
+    // 2. 恢复分析结果
+    if (stateData.analysisResult) {
+      console.log('恢复分析结果...');
+      
+      // 恢复状态
+      STATE.currentService = stateData.serviceType;
+      STATE.fullAnalysisResult = stateData.analysisResult;
+      STATE.baziData = stateData.baziData;
+      STATE.partnerBaziData = stateData.partnerBaziData;
+      STATE.userData = stateData.userData;
+      STATE.partnerData = stateData.partnerData;
+      
+      // 重新显示分析结果
+      displayPredictorInfo();
+      displayBaziPan();
+      processAndDisplayAnalysis(stateData.analysisResult);
+      showAnalysisResult();
+      
+      console.log('✅ 分析结果已恢复');
     }
+    
+    // 3. 验证支付状态
+    console.log('验证支付状态...');
+    const paymentVerified = await verifyPaymentStatus(pendingOrderId);
+    
+    if (paymentVerified) {
+      console.log('✅ 支付验证成功，解锁报告');
+      
+      // 解锁内容
+      STATE.isPaymentUnlocked = true;
+      STATE.isDownloadLocked = false;
+      
+      updateUnlockInterface();
+      showFullAnalysisContent();
+      unlockDownloadButton();
+      
+      // 显示成功提示
+      setTimeout(() => {
+        alert('✅ 支付成功！算命报告已解锁。');
+      }, 500);
+      
+      // 清理状态
+      localStorage.removeItem('pending_payment_state');
+      localStorage.removeItem('pending_order_id');
+      
+    } else {
+      console.log('支付未完成，保持锁定状态');
+      // 保持锁定状态，等待用户重试
+    }
+    
+    // 4. 恢复滚动位置
+    if (stateData.scrollPosition) {
+      setTimeout(() => {
+        window.scrollTo(0, stateData.scrollPosition);
+      }, 100);
+    }
+    
+  } catch (error) {
+    console.error('恢复状态失败:', error);
+    // 清理损坏的状态
+    localStorage.removeItem('pending_payment_state');
+    localStorage.removeItem('pending_order_id');
+  }
 }
 
 // 设置事件监听器
@@ -677,3 +741,4 @@ window.downloadReport = downloadReport;
 window.newAnalysis = newAnalysis;
 window.handlePaymentSuccess = handlePaymentSuccess;
 window.unlockContent = unlockContent; // 【新增】导出解锁函数
+
