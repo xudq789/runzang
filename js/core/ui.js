@@ -717,26 +717,38 @@ export async function showPaymentModal() {
       </span>
     `;
     
-    // 在 showPaymentModal 函数中，修改 payBtn.onclick：
-payBtn.onclick = async () => {
-  console.log('跳转到支付宝支付');
-  window.open(paymentUrl, '_blank'); // 新窗口打开支付
+// 修改 payBtn.onclick（在 showPaymentModal 函数中）：
+payBtn.onclick = function() {
+  console.log('支付宝支付，订单号:', outTradeNo);
   
-  // 开始检查支付状态
-  const paymentResult = await checkPaymentStatus(outTradeNo);
+  // ✅ 关键：保存支付前的状态
+  savePaymentState(outTradeNo);
   
-  if (paymentResult.success) {
-    // 支付成功
-    closePaymentModal();
-    updateUnlockInterface();
-    showFullAnalysisContent();
-    unlockDownloadButton();
-    alert('✅ 支付成功！报告已解锁。');
-  } else {
-    // 提示用户检查支付
-    alert('支付状态未确认，请确认是否已完成支付，或稍后刷新页面');
-  }
+  // ✅ 关键：在当前窗口打开支付页面（不是新窗口）
+  window.location.href = paymentUrl;
+  
+  // 不需要关闭支付弹窗，因为页面会跳转
+  // closePaymentModal(); // 注释掉这行
 };
+
+// 新增：保存支付状态函数
+function savePaymentState(orderId) {
+  // 保存当前的分析结果和用户数据
+  const paymentData = {
+    orderId: orderId,
+    serviceType: STATE.currentService,
+    analysisResult: STATE.fullAnalysisResult,
+    userData: STATE.userData,
+    baziData: STATE.baziData,
+    timestamp: Date.now(),
+    // 保存解锁前的滚动位置（可选）
+    scrollPosition: window.scrollY
+  };
+  
+  localStorage.setItem('payment_pending_data', JSON.stringify(paymentData));
+  localStorage.setItem('pending_order_id', orderId);
+  console.log('支付状态已保存:', paymentData);
+}
     
     // 7. 插入到支付弹窗
     const paymentMethods = document.querySelector('.payment-methods');
@@ -1070,4 +1082,5 @@ export function collectUserData() {
         };
     }
 }
+
 
