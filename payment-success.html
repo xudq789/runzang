@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+        // 提取订单ID并跳转
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('out_trade_no');
+        if (orderId) {
+            // 跳转回报告页面，带上订单ID
+            window.location.href = 'https://xudq789.github.io/runzang/?order=' + orderId;
+        }
+    </script>
+</head>
+<body>处理中...</body>
+</html>
