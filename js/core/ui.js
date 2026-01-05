@@ -717,52 +717,33 @@ export async function showPaymentModal() {
       </span>
     `;
     
-// 修改 payBtn.onclick（在 showPaymentModal 函数中）：
+// 修改支付按钮点击事件
 payBtn.onclick = function() {
-  console.log('跳转到支付宝支付，订单号:', outTradeNo);
+  console.log('支付宝支付，订单号:', outTradeNo);
   
-  // ✅ 关键：保存支付前的所有状态
-  saveAnalysisState();
+  // ✅ 关键：保存当前分析结果到localStorage
+  if (STATE.fullAnalysisResult) {
+    localStorage.setItem('last_analysis_result', STATE.fullAnalysisResult);
+    localStorage.setItem('last_analysis_service', STATE.currentService);
+    localStorage.setItem('last_user_data', JSON.stringify(STATE.userData || {}));
+    localStorage.setItem('last_order_id', outTradeNo);
+    console.log('分析结果已保存');
+  }
   
-  // ✅ 关键：在当前窗口打开支付宝（不是新窗口！）
-  // 这会跳转到支付宝页面，支付完成后再回来
-  window.location.href = paymentUrl;
+  // ✅ 显示重要提示
+  const confirmed = confirm(
+    '重要提示：\n\n' +
+    '1. 支付完成后会自动返回\n' +
+    '2. 返回后会看到已解锁的完整报告\n' +
+    '3. 请不要关闭当前窗口\n\n' +
+    '点击"确定"继续支付'
+  );
   
-  // 注意：不要调用 closePaymentModal()，因为页面会跳转
+  if (confirmed) {
+    // ✅ 关键：在当前窗口打开支付宝
+    window.location.href = paymentUrl;
+  }
 };
-
-// 新增：保存分析状态函数
-function saveAnalysisState() {
-  const stateToSave = {
-    // 订单信息
-    orderId: outTradeNo,
-    serviceType: STATE.currentService,
-    amount: serviceConfig.price,
-    
-    // 分析结果
-    analysisResult: STATE.fullAnalysisResult,
-    baziData: STATE.baziData,
-    partnerBaziData: STATE.partnerBaziData,
-    
-    // 用户数据
-    userData: STATE.userData,
-    partnerData: STATE.partnerData,
-    
-    // 时间戳和状态
-    savedAt: new Date().toISOString(),
-    scrollPosition: window.scrollY,
-    
-    // UI状态
-    isPaymentUnlocked: STATE.isPaymentUnlocked,
-    isDownloadLocked: STATE.isDownloadLocked
-  };
-  
-  // 保存到 localStorage
-  localStorage.setItem('pending_payment_state', JSON.stringify(stateToSave));
-  localStorage.setItem('pending_order_id', outTradeNo);
-  
-  console.log('✅ 分析状态已保存，准备跳转到支付宝');
-}
     
     // 7. 插入到支付弹窗
     const paymentMethods = document.querySelector('.payment-methods');
@@ -1096,6 +1077,7 @@ export function collectUserData() {
         };
     }
 }
+
 
 
 
