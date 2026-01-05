@@ -719,35 +719,49 @@ export async function showPaymentModal() {
     
 // 修改 payBtn.onclick（在 showPaymentModal 函数中）：
 payBtn.onclick = function() {
-  console.log('支付宝支付，订单号:', outTradeNo);
+  console.log('跳转到支付宝支付，订单号:', outTradeNo);
   
-  // ✅ 关键：保存支付前的状态
-  savePaymentState(outTradeNo);
+  // ✅ 关键：保存支付前的所有状态
+  saveAnalysisState();
   
-  // ✅ 关键：在当前窗口打开支付页面（不是新窗口）
+  // ✅ 关键：在当前窗口打开支付宝（不是新窗口！）
+  // 这会跳转到支付宝页面，支付完成后再回来
   window.location.href = paymentUrl;
   
-  // 不需要关闭支付弹窗，因为页面会跳转
-  // closePaymentModal(); // 注释掉这行
+  // 注意：不要调用 closePaymentModal()，因为页面会跳转
 };
 
-// 新增：保存支付状态函数
-function savePaymentState(orderId) {
-  // 保存当前的分析结果和用户数据
-  const paymentData = {
-    orderId: orderId,
+// 新增：保存分析状态函数
+function saveAnalysisState() {
+  const stateToSave = {
+    // 订单信息
+    orderId: outTradeNo,
     serviceType: STATE.currentService,
+    amount: serviceConfig.price,
+    
+    // 分析结果
     analysisResult: STATE.fullAnalysisResult,
-    userData: STATE.userData,
     baziData: STATE.baziData,
-    timestamp: Date.now(),
-    // 保存解锁前的滚动位置（可选）
-    scrollPosition: window.scrollY
+    partnerBaziData: STATE.partnerBaziData,
+    
+    // 用户数据
+    userData: STATE.userData,
+    partnerData: STATE.partnerData,
+    
+    // 时间戳和状态
+    savedAt: new Date().toISOString(),
+    scrollPosition: window.scrollY,
+    
+    // UI状态
+    isPaymentUnlocked: STATE.isPaymentUnlocked,
+    isDownloadLocked: STATE.isDownloadLocked
   };
   
-  localStorage.setItem('payment_pending_data', JSON.stringify(paymentData));
-  localStorage.setItem('pending_order_id', orderId);
-  console.log('支付状态已保存:', paymentData);
+  // 保存到 localStorage
+  localStorage.setItem('pending_payment_state', JSON.stringify(stateToSave));
+  localStorage.setItem('pending_order_id', outTradeNo);
+  
+  console.log('✅ 分析状态已保存，准备跳转到支付宝');
 }
     
     // 7. 插入到支付弹窗
@@ -1082,5 +1096,6 @@ export function collectUserData() {
         };
     }
 }
+
 
 
