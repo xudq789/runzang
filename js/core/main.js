@@ -186,44 +186,245 @@ function checkLocalPaymentRecords() {
 
 // ============ 原有初始化函数（修改版） ============
 
-// 在 initApp 函数开头添加：
+// 在 initApp 函数最开头添加：
 async function initApp() {
   console.log('🚀 应用初始化开始...');
   
-  // ============ 【核心】恢复支付前的状态 ============
-  await restorePaymentState();
+  // ============ 【核心修复】支付宝回调强制跳转 ============
+  const urlParams = new URLSearchParams(window.location.search);
+  const orderId = urlParams.get('out_trade_no');
   
-  // ============ 原有初始化代码 ============
-  try {
-    // 初始化表单选项
-    initFormOptions();
+  if (orderId) {
+    console.log('🎯 支付宝支付完成回调，订单:', orderId);
     
-    // 设置默认值
-    setDefaultValues();
+    // 立即保存支付信息
+    localStorage.setItem('paid_order_id', orderId);
+    localStorage.setItem('payment_time', new Date().toISOString());
     
-    // 更新服务显示
-    updateServiceDisplay(STATE.currentService);
+    // ✅ 关键：检查是否有分析结果
+    const hasAnalysis = checkIfAnalysisExists();
     
-    // 更新解锁信息
-    updateUnlockInfo();
+    if (hasAnalysis) {
+      // 有分析结果，直接解锁并显示
+      console.log('有分析结果，解锁并显示');
+      await handlePaymentAndShowReport(orderId);
+    } else {
+      // 没有分析结果，显示提示
+      console.log('没有分析结果，显示提示');
+      showNoAnalysisAlert(orderId);
+    }
     
-    // 锁定下载按钮
-    lockDownloadButton();
-    
-    // 设置事件监听器
-    setupEventListeners();
-    
-    // 检查API状态
-    STATE.apiStatus = await checkAPIStatus();
-    
-    // 预加载图片
-    preloadImages();
-    
-    console.log('✅ 应用初始化完成');
-    
-  } catch (error) {
-    console.error('❌ 应用初始化失败:', error);
+    return; // 停止继续初始化，等待下一步
   }
+  
+  // ============ 原有的初始化代码 ============
+  // ... 你的其他代码
+}
+
+// 检查是否有分析结果
+function checkIfAnalysisExists() {
+  // 方法1：检查STATE
+  if (window.STATE && STATE.fullAnalysisResult) {
+    console.log('STATE中有分析结果');
+    return true;
+  }
+  
+  // 方法2：检查DOM元素
+  const freeAnalysis = document.getElementById('free-analysis-text');
+  if (freeAnalysis && freeAnalysis.innerText.length > 100) {
+    console.log('DOM中有分析结果');
+    return true;
+  }
+  
+  // 方法3：检查localStorage
+  const savedAnalysis = localStorage.getItem('last_analysis_result');
+  if (savedAnalysis && savedAnalysis.length > 100) {
+    console.log('localStorage中有分析结果');
+    return true;
+  }
+  
+  return false;
+}
+
+// 处理支付并显示报告
+async function handlePaymentAndShowReport(orderId) {
+  // 1. 验证支付状态
+  const paid = await verifyPaymentStatus(orderId);
+  
+  if (paid) {
+    console.log('✅ 支付验证成功');
+    
+    // 2. 强制显示分析结果区域
+    showAnalysisResultArea();
+    
+    // 3. 解锁内容
+    unlockAllContent();
+    
+    // 4. 清理URL参数
+    cleanUrlParams();
+    
+    // 5. 显示成功提示
+    showSuccessMessage();
+    
+  } else {
+    console.log('支付未验证');
+    // 显示支付提示
+    showPaymentModal();
+  }
+}
+
+// 强制显示分析结果区域
+function showAnalysisResultArea() {
+  const resultSection = document.getElementById('analysis-result-section');
+  if (resultSection) {
+    resultSection.style.display = 'block';
+    console.log('分析结果区域已显示');
+  }
+  
+  // 滚动到分析结果区域
+  setTimeout(() => {
+    resultSection?.scrollIntoView({ behavior: 'smooth' });
+  }, 300);
+}
+
+// 解锁所有内容
+function unlockAllContent() {
+  console.log('🔓 解锁所有内容');
+  
+  // 1. 隐藏锁定遮罩
+  const lockedOverlay = document.getElementById('locked-overlay');
+  if (lockedOverlay) {
+    lockedOverlay.style.display = 'none';
+    console.log('锁定遮罩已隐藏');
+  }
+  
+  // 2. 显示锁定内容
+  const lockedText = document.getElementById('locked-analysis-text');
+  const freeText = document.getElementById('free-analysis-text');
+  if (lockedText && freeText) {
+    // 合并锁定内容到免费内容
+    freeText.innerHTML += lockedText.innerHTML;
+    console.log('锁定内容已合并');
+  }
+  
+  // 3. 解锁下载按钮
+  const downloadBtn = document.getElementById('download-report-btn');
+  if (downloadBtn) {
+    downloadBtn.disabled = false;
+    downloadBtn.classList.remove('download-btn-locked');
+    downloadBtn.style.opacity = '1';
+    console.log('下载按钮已解锁');
+  }
+  
+  // 4. 更新解锁按钮状态
+  const unlockBtn = document.getElementById('unlock-btn');
+  if (unlockBtn) {
+    unlockBtn.innerHTML = '✅ 已解锁完整报告';
+    unlockBtn.style.background = '#4CAF50';
+    unlockBtn.disabled = true;
+    console.log('解锁按钮已更新');
+  }
+  
+  // 5. 更新解锁项目列表
+  const unlockItems = document.querySelectorAll('.unlock-items li');
+  unlockItems.forEach(item => {
+    if (item.textContent.includes('🔒')) {
+      item.innerHTML = item.innerHTML.replace('🔒', '✅');
+      item.classList.add('unlocked-item');
+    }
+  });
+}
+
+// 显示成功消息
+function showSuccessMessage() {
+  // 创建自定义提示
+  const msg = document.createElement('div');
+  msg.id = 'payment-success-msg';
+  msg.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #4CAF50;
+    color: white;
+    padding: 15px 30px;
+    border-radius: 5px;
+    z-index: 10000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-size: 16px;
+    animation: slideDown 0.3s ease;
+  `;
+  msg.innerHTML = '✅ 支付成功！算命报告已解锁。';
+  
+  // 添加动画样式
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes slideDown {
+      from { top: -50px; opacity: 0; }
+      to { top: 20px; opacity: 1; }
+    }
+  `;
+  document.head.appendChild(style);
+  
+  document.body.appendChild(msg);
+  
+  // 5秒后移除
+  setTimeout(() => {
+    if (msg.parentNode) {
+      msg.parentNode.removeChild(msg);
+    }
+  }, 5000);
+}
+
+// 没有分析结果的提示
+function showNoAnalysisAlert(orderId) {
+  const alertHTML = `
+    <div style="
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 10000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    ">
+      <div style="
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        max-width: 400px;
+        text-align: center;
+      ">
+        <h3 style="color: #4CAF50; margin-bottom: 20px;">✅ 支付成功！</h3>
+        <p>订单号: <strong>${orderId}</strong></p>
+        <p style="margin: 20px 0;">但未找到您的分析结果。</p>
+        <div style="margin-top: 30px;">
+          <button onclick="location.href='./'" style="
+            padding: 10px 20px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin-right: 10px;
+            cursor: pointer;
+          ">返回首页重新测算</button>
+          <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
+            padding: 10px 20px;
+            background: #ccc;
+            color: #333;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+          ">关闭</button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.insertAdjacentHTML('beforeend', alertHTML);
 }
 
 // 新增：恢复支付前状态
@@ -741,4 +942,5 @@ window.downloadReport = downloadReport;
 window.newAnalysis = newAnalysis;
 window.handlePaymentSuccess = handlePaymentSuccess;
 window.unlockContent = unlockContent; // 【新增】导出解锁函数
+
 
