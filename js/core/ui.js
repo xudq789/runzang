@@ -663,7 +663,13 @@ export async function showPaymentModal() {
         // 4. 清除旧的支付按钮
         const oldBtn = document.getElementById('alipay-redirect-btn');
         if (oldBtn) oldBtn.remove();
-        
+
+        // 在创建支付按钮之前，保存分析数据
+        if (!PaymentManager.saveAnalysisBeforePayment()) {
+            alert('无法保存分析数据，请重新测算');
+            return;
+        }
+
         // 5. 创建支付按钮
         const payBtn = document.createElement('button');
         payBtn.id = 'alipay-redirect-btn';
@@ -1017,3 +1023,4 @@ export function collectUserData() {
         };
     }
 }
+
