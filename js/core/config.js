@@ -291,28 +291,30 @@ export const SERVICES = {
     }
 };
 
-// 全局状态
+// 简化全局状态 - 专注核心问题
 export const STATE = {
+    // 当前服务信息
     currentService: '测算验证',
-    fullAnalysisResult: '',
-    baziData: null,
-    currentOrder: null,
+    
+    // 用户数据
     userData: null,
     partnerData: null,
-    apiStatus: null,
+    
+    // 分析结果
+    fullAnalysisResult: '',
+    baziData: null,
+    partnerBaziData: null,
+    
+    // 支付状态 - 简化
     isPaymentUnlocked: false,
-    isDownloadLocked: true
+    isDownloadLocked: true,
+    currentOrderId: null,
+    
+    // API状态
+    apiStatus: null
 };
 
-// 修改这个部分（大约在第230行）
+// 支付配置
 export const PAYMENT_CONFIG = {
-  GATEWAY_URL: 'https://runzang.top/api/payment'  // 只有这一行就够了
-  // 删除其他复杂的配置
+  GATEWAY_URL: 'https://runzang.top/api/payment'
 };
-
-
-
-
-
-
-
