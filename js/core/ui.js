@@ -169,7 +169,7 @@ export function updateServiceDisplay(serviceName) {
         heroImage.classList.remove('loaded');
         detailImage.classList.remove('loaded');
         
-        // 更新图片源 - 直接使用完整URL
+        // 更新图片源
         heroImage.src = serviceConfig.heroImage;
         heroImage.alt = serviceName + '英雄区';
         
@@ -354,7 +354,7 @@ export function displayBaziPan() {
         const partnerGrid = document.createElement('div');
         partnerGrid.className = 'bazi-section-grid';
         
-        // 伴侣的八字数据（需要从AI回复中解析或计算）
+        // 伴侣的八字数据
         const partnerBaziData = STATE.partnerBaziData || calculatePartnerBazi();
         
         if (partnerBaziData) {
@@ -572,234 +572,174 @@ export function processAndDisplayAnalysis(result) {
     }
 }
 
-// 生成请求签名（简单示例）
-async function generateRequestSignature(serviceType, timestamp) {
-  const str = `${serviceType}${timestamp}${PAYMENT_CONFIG.API_SECRET}`;
-  const encoder = new TextEncoder();
-  const data = encoder.encode(str);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+// ============ 【新增】支付状态检查函数 ============
+export async function checkPaymentStatus(orderId) {
+    return new Promise((resolve) => {
+        let checkCount = 0;
+        const maxChecks = 10; // 30秒（10*3秒）
+        
+        const checkInterval = setInterval(async () => {
+            checkCount++;
+            
+            try {
+                const response = await fetch(`https://runzang.top/api/payment/status/${orderId}`);
+                const result = await response.json();
+                
+                console.log(`第${checkCount}次检查支付状态:`, result.data?.status);
+                
+                if (result.success && result.data.status === 'paid') {
+                    clearInterval(checkInterval);
+                    
+                    // ✅ 关键：保存支付状态到 localStorage
+                    localStorage.setItem('paid_order_id', orderId);
+                    localStorage.setItem('payment_verified', 'true');
+                    localStorage.setItem('payment_time', new Date().toISOString());
+                    
+                    resolve({ success: true, data: result.data });
+                } else if (checkCount >= maxChecks) {
+                    clearInterval(checkInterval);
+                    resolve({ success: false, message: '支付超时' });
+                }
+            } catch (error) {
+                console.log('检查支付状态出错:', error.message);
+                if (checkCount >= maxChecks) {
+                    clearInterval(checkInterval);
+                    resolve({ success: false, message: '网络错误' });
+                }
+            }
+        }, 3000); // 3秒检查一次
+    });
 }
 
-// 获取客户端IP（通过公共服务）
-async function getClientIP() {
-  try {
-    const response = await fetch('https://api.ipify.org?format=json');
-    const data = await response.json();
-    return data.ip || 'unknown';
-  } catch (error) {
-    return 'unknown';
-  }
-}
-
-// 开始轮询支付结果
-function startPaymentPolling(orderId) {
-  let pollCount = 0;
-  const maxPolls = 60; // 最多轮询3分钟（3000ms * 60）
-  
-  const pollInterval = setInterval(async () => {
-    pollCount++;
+// ============ 【修改】显示支付弹窗 - 当前窗口支付方案 ============
+export async function showPaymentModal() {
+    console.log('调用支付接口...');
     
-    if (pollCount > maxPolls) {
-      clearInterval(pollInterval);
-      document.getElementById('payment-status-text').textContent = '支付超时，请检查支付状态';
-      return;
-    }
+    const serviceConfig = SERVICES[STATE.currentService];
+    if (!serviceConfig) return;
     
     try {
-      const response = await fetch(`${PAYMENT_CONFIG.GATEWAY_URL}/status/${orderId}`);
-      const result = await response.json();
-      
-      if (result.success && result.data.status === 'success') {
-        // 支付成功
-        clearInterval(pollInterval);
-        handlePaymentSuccess();
-      }
-      
-    } catch (error) {
-      console.error('轮询支付状态失败:', error);
-    }
-  }, PAYMENT_CONFIG.POLL_INTERVAL);
-}
-
-// 支付成功处理
-function handlePaymentSuccess() {
-  // 设置支付解锁状态
-  STATE.isPaymentUnlocked = true;
-  STATE.isDownloadLocked = false;
-  
-  // 关闭支付弹窗
-  closePaymentModal();
-  
-  // 更新解锁界面
-  updateUnlockInterface();
-  
-  // 显示完整内容
-  showFullAnalysisContent();
-  
-  // 解锁下载按钮
-  unlockDownloadButton();
-  
-  // 显示成功提示
-  alert('支付成功！完整报告已解锁。');
-  
-  return true;
-}
-
-// 显示支付弹窗 - 优化版本
-export async function showPaymentModal() {
-  console.log('调用支付接口...');
-  
-  const serviceConfig = SERVICES[STATE.currentService];
-  if (!serviceConfig) return;
-  
-  try {
-    // 1. 先显示支付弹窗
-    const paymentModal = UI.paymentModal();
-    if (paymentModal) {
-      showElement(paymentModal);
-      document.body.style.overflow = 'hidden';
-      
-      // 先显示基本信息
-      UI.paymentServiceType().textContent = STATE.currentService;
-      UI.paymentAmount().textContent = '¥' + serviceConfig.price;
-      UI.paymentOrderId().textContent = '生成中...';
-    }
-    
-    // 2. 调用您的后端支付接口
-    const response = await fetch('https://runzang.top/api/payment/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        serviceType: STATE.currentService
-      })
-    });
-    
-    const result = await response.json();
-    
-    if (!result.success) {
-      alert('创建订单失败：' + (result.message || '请稍后重试'));
-      closePaymentModal();
-      return;
-    }
-    
-    const { paymentUrl, outTradeNo, amount, subject } = result.data;
-    
-    console.log('支付URL:', paymentUrl);
-    console.log('订单号:', outTradeNo);
-    
-    // 3. 更新支付弹窗显示真实信息
-    UI.paymentServiceType().textContent = subject || STATE.currentService;
-    UI.paymentAmount().textContent = '¥' + amount;
-    UI.paymentOrderId().textContent = outTradeNo;
-    
-    // 4. 清除旧的支付按钮
-    const oldBtn = document.getElementById('alipay-redirect-btn');
-    if (oldBtn) oldBtn.remove();
-    
-    // 5. 创建支付按钮
-    const payBtn = document.createElement('button');
-    payBtn.id = 'alipay-redirect-btn';
-    payBtn.className = 'dynamic-pulse-btn';
-    payBtn.style.cssText = `
-      margin: 20px auto;
-      display: block;
-      max-width: 250px;
-      background: linear-gradient(135deg, #1677FF, #4096ff);
-    `;
-    payBtn.innerHTML = `
-      <span style="display: flex; align-items: center; justify-content: center;">
-        <span style="margin-right: 8px;">💰</span>
-        前往支付宝支付
-      </span>
-    `;
-    
-// 修改支付按钮点击事件
-payBtn.onclick = function() {
-  console.log('支付宝支付，订单号:', outTradeNo);
-  
-  // ✅ 关键：保存当前分析结果到localStorage
-  if (STATE.fullAnalysisResult) {
-    localStorage.setItem('last_analysis_result', STATE.fullAnalysisResult);
-    localStorage.setItem('last_analysis_service', STATE.currentService);
-    localStorage.setItem('last_user_data', JSON.stringify(STATE.userData || {}));
-    localStorage.setItem('last_order_id', outTradeNo);
-    console.log('分析结果已保存');
-  }
-  
-  // ✅ 显示重要提示
-  const confirmed = confirm(
-    '重要提示：\n\n' +
-    '1. 支付完成后会自动返回\n' +
-    '2. 返回后会看到已解锁的完整报告\n' +
-    '3. 请不要关闭当前窗口\n\n' +
-    '点击"确定"继续支付'
-  );
-  
-  if (confirmed) {
-    // ✅ 关键：在当前窗口打开支付宝
-    window.location.href = paymentUrl;
-  }
-};
-    
-    // 7. 插入到支付弹窗
-    const paymentMethods = document.querySelector('.payment-methods');
-    if (paymentMethods) {
-      paymentMethods.innerHTML = '';
-      paymentMethods.appendChild(payBtn);
-    } else {
-      // 如果没有.payment-methods容器，插入到订单信息下方
-      const orderInfo = document.querySelector('.order-info');
-      if (orderInfo) {
-        orderInfo.parentNode.insertBefore(payBtn, orderInfo.nextSibling);
-      }
-    }
-    
-  } catch (error) {
-    console.error('支付失败:', error);
-    alert('网络连接失败，请检查网络后重试');
-    closePaymentModal();
-  }
-}
-
-// 修改现有的 checkPaymentStatus 函数（在 ui.js 中）
-function checkPaymentStatus(orderId) {
-  return new Promise((resolve) => {
-    let checkCount = 0;
-    const maxChecks = 10; // 30秒（10*3秒）
-    
-    const checkInterval = setInterval(async () => {
-      checkCount++;
-      
-      if (checkCount > maxChecks) {
-        clearInterval(checkInterval);
-        resolve({ success: false, message: '支付超时' });
-        return;
-      }
-      
-      try {
-        const response = await fetch(`https://runzang.top/api/payment/status/${orderId}`);
+        // 1. 先显示支付弹窗
+        const paymentModal = UI.paymentModal();
+        if (paymentModal) {
+            showElement(paymentModal);
+            document.body.style.overflow = 'hidden';
+            
+            // 先显示基本信息
+            UI.paymentServiceType().textContent = STATE.currentService;
+            UI.paymentAmount().textContent = '¥' + serviceConfig.price;
+            UI.paymentOrderId().textContent = '生成中...';
+        }
+        
+        // 2. 调用您的后端支付接口
+        const response = await fetch('https://runzang.top/api/payment/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                serviceType: STATE.currentService
+            })
+        });
+        
         const result = await response.json();
         
-        console.log(`第${checkCount}次检查:`, result.data?.status);
-        
-        if (result.success && result.data.status === 'paid') {
-          clearInterval(checkInterval);
-          
-          // ✅ 保存支付状态到 localStorage（关键！）
-          localStorage.setItem(`paid_order_${orderId}`, 'true');
-          localStorage.setItem('last_paid_order', orderId);
-          
-          resolve({ success: true, data: result.data });
+        if (!result.success) {
+            alert('创建订单失败：' + (result.message || '请稍后重试'));
+            closePaymentModal();
+            return;
         }
-      } catch (error) {
-        console.log('检查支付状态出错:', error.message);
-      }
-    }, 3000); // 3秒检查一次
-  });
+        
+        const { paymentUrl, outTradeNo, amount, subject } = result.data;
+        
+        console.log('支付URL:', paymentUrl);
+        console.log('订单号:', outTradeNo);
+        
+        // 3. 更新支付弹窗显示真实信息
+        UI.paymentServiceType().textContent = subject || STATE.currentService;
+        UI.paymentAmount().textContent = '¥' + amount;
+        UI.paymentOrderId().textContent = outTradeNo;
+        
+        // 4. 清除旧的支付按钮
+        const oldBtn = document.getElementById('alipay-redirect-btn');
+        if (oldBtn) oldBtn.remove();
+        
+        // 5. 创建支付按钮
+        const payBtn = document.createElement('button');
+        payBtn.id = 'alipay-redirect-btn';
+        payBtn.className = 'dynamic-pulse-btn';
+        payBtn.style.cssText = `
+            margin: 20px auto;
+            display: block;
+            max-width: 250px;
+            background: linear-gradient(135deg, #1677FF, #4096ff);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        `;
+        payBtn.innerHTML = `
+            <span style="display: flex; align-items: center; justify-content: center;">
+                <span style="margin-right: 8px;">💰</span>
+                前往支付宝支付
+            </span>
+        `;
+        
+        // 6. 支付按钮点击事件 - 【关键修改：当前窗口支付】
+        payBtn.onclick = async () => {
+            console.log('跳转到支付宝支付，订单号:', outTradeNo);
+            
+            // 保存订单ID到全局状态
+            STATE.currentOrderId = outTradeNo;
+            
+            // ✅ 关键：保存分析结果到 localStorage（防止丢失）
+            if (STATE.fullAnalysisResult) {
+                localStorage.setItem('last_analysis_result', STATE.fullAnalysisResult);
+                localStorage.setItem('last_analysis_service', STATE.currentService);
+                localStorage.setItem('last_user_data', JSON.stringify(STATE.userData || {}));
+                console.log('分析结果已保存到 localStorage');
+            }
+            
+            // ✅ 显示重要提示
+            const confirmed = confirm(
+                '重要提示：\n\n' +
+                '1. 即将跳转到支付宝完成支付\n' +
+                '2. 支付完成后会自动返回本页面\n' +
+                '3. 返回后会看到已解锁的完整报告\n' +
+                '4. 请不要关闭当前窗口\n\n' +
+                '点击"确定"继续支付'
+            );
+            
+            if (confirmed) {
+                // ✅ 关键：在当前窗口打开支付宝（不是新窗口！）
+                window.location.href = paymentUrl;
+                
+                // 注意：不需要 closePaymentModal()，因为页面会跳转
+            }
+        };
+        
+        // 7. 插入到支付弹窗
+        const paymentMethods = document.querySelector('.payment-methods');
+        if (paymentMethods) {
+            paymentMethods.innerHTML = '';
+            paymentMethods.appendChild(payBtn);
+        } else {
+            // 如果没有.payment-methods容器，插入到订单信息下方
+            const orderInfo = document.querySelector('.order-info');
+            if (orderInfo) {
+                orderInfo.parentNode.insertBefore(payBtn, orderInfo.nextSibling);
+            }
+        }
+        
+    } catch (error) {
+        console.error('支付失败:', error);
+        alert('网络连接失败，请检查网络后重试');
+        closePaymentModal();
+    }
 }
 
 // 关闭支付弹窗
@@ -824,7 +764,7 @@ export function updateUnlockInterface() {
         const headerDesc = unlockHeader.querySelector('p');
         
         if (lockIcon) lockIcon.textContent = '✅';
-        if (headerTitle) headerTitle.textContent = '完整报告已解锁，网站不需要注册，注意下载保存分析报告，关闭后结果无法找回';
+        if (headerTitle) headerTitle.textContent = '完整报告已解锁';
         if (headerDesc) headerDesc.textContent = '您可以查看全部命理分析内容';
     }
     
@@ -1077,7 +1017,3 @@ export function collectUserData() {
         };
     }
 }
-
-
-
-
