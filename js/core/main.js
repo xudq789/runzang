@@ -165,16 +165,20 @@ const PaymentManager = {
         }
     },
     
-    // 解锁内容
+    // 解锁内容 - ✅ 修复：确保下载状态正确设置
     async unlockContent(orderId) {
         console.log('🔓 开始解锁内容，订单:', orderId);
         
-        // 更新全局状态
+        // ✅ 关键修复：确保下载状态正确设置
         STATE.isPaymentUnlocked = true;
-        STATE.isDownloadLocked = false;
-        
-        // 保存当前订单ID
+        STATE.isDownloadLocked = false;  // 必须设置为 false！
         STATE.currentOrderId = orderId;
+        
+        console.log('状态已更新:', {
+            isPaymentUnlocked: STATE.isPaymentUnlocked,
+            isDownloadLocked: STATE.isDownloadLocked,
+            currentOrderId: STATE.currentOrderId
+        });
         
         // 尝试恢复分析结果
         const restored = await this.restoreAnalysis();
@@ -194,12 +198,17 @@ const PaymentManager = {
                 }
             }, 500);
         } else {
-            console.log('没有找到保存的分析结果，需要用户重新测算');
-            // 可以显示提示，让用户重新测算
+            console.log('没有找到保存的分析结果');
+            // 如果当前有分析结果，直接解锁UI
+            if (STATE.fullAnalysisResult) {
+                console.log('但有当前分析结果，直接解锁');
+                this.updateUIAfterPayment();
+                this.showSuccessMessage();
+            }
         }
     },
     
-    // 恢复分析结果
+    // 恢复分析结果 - ✅ 修复：不覆盖当前服务
     async restoreAnalysis() {
         try {
             // 检查是否有保存的分析结果
@@ -213,10 +222,11 @@ const PaymentManager = {
             }
             
             console.log('📥 从存储恢复分析结果...');
+            console.log('保存的服务:', savedService, '当前服务:', STATE.currentService);
             
-            // 恢复数据到状态
+            // ✅ 关键修复：只恢复结果，不覆盖当前服务
+            // 只把分析结果恢复到 STATE，但不改变当前服务
             STATE.fullAnalysisResult = savedResult;
-            STATE.currentService = savedService;
             
             if (savedUserData) {
                 try {
@@ -259,9 +269,10 @@ const PaymentManager = {
             showFullAnalysisContent();
         }
         
-        // 解锁下载按钮
+        // ✅ 解锁下载按钮
         if (typeof unlockDownloadButton === 'function') {
             unlockDownloadButton();
+            console.log('✅ 下载按钮已解锁');
         }
         
         // 关闭支付弹窗（如果开着）
@@ -528,7 +539,7 @@ function setupEventListeners() {
     }
 }
 
-// 切换服务
+// 切换服务 - ✅ 修复：切换服务时彻底重置状态
 function switchService(serviceName) {
     console.log('切换服务到:', serviceName, '当前服务:', STATE.currentService);
     
@@ -540,11 +551,23 @@ function switchService(serviceName) {
     // 保存旧服务名称用于比较
     const oldService = STATE.currentService;
     
-    // 重置解锁状态（如果切换了不同服务）
+    // ✅ 关键修复：切换到不同服务时，彻底重置所有状态
     if (oldService !== serviceName) {
-        console.log('切换不同服务，重置解锁状态');
+        console.log('切换到不同服务，彻底重置状态');
+        
+        // 重置状态
         STATE.isPaymentUnlocked = false;
         STATE.isDownloadLocked = true;
+        STATE.fullAnalysisResult = '';
+        STATE.baziData = null;
+        STATE.partnerBaziData = null;
+        STATE.currentOrderId = null;
+        
+        // ✅ 关键：清空用户数据，确保重新收集
+        STATE.userData = null;
+        STATE.partnerData = null;
+        
+        console.log('✅ 所有状态已重置');
     }
     
     // 先更新当前服务状态
@@ -563,15 +586,31 @@ function switchService(serviceName) {
     // 锁定下载按钮
     lockDownloadButton();
     
-    // 如果切换了不同服务，隐藏分析结果区域
+    // 如果切换到不同服务，隐藏分析结果区域
     if (oldService !== serviceName) {
         hideAnalysisResult();
+        
+        // ✅ 清空显示内容
+        const freeAnalysisText = UI.freeAnalysisText();
+        if (freeAnalysisText) {
+            freeAnalysisText.innerHTML = '';
+        }
+        
+        const predictorInfoGrid = UI.predictorInfoGrid();
+        if (predictorInfoGrid) {
+            predictorInfoGrid.innerHTML = '';
+        }
+        
+        const baziGrid = UI.baziGrid();
+        if (baziGrid) {
+            baziGrid.innerHTML = '';
+        }
     }
     
     // 滚动到顶部
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
-    console.log('服务切换完成');
+    console.log('服务切换完成，解锁状态:', STATE.isPaymentUnlocked);
 }
 
 // 预加载图片
@@ -587,7 +626,7 @@ function preloadImages() {
     });
 }
 
-// 开始分析
+// 开始分析 - ✅ 修复：确保每次都是全新分析
 async function startAnalysis() {
     console.log('开始命理分析...');
     
@@ -602,6 +641,12 @@ async function startAnalysis() {
         alert('请填写完整的个人信息');
         return;
     }
+    
+    // ✅ 关键修复：每次分析前清空旧的分析结果
+    console.log('🔄 清空旧的分析结果...');
+    STATE.fullAnalysisResult = '';
+    STATE.baziData = null;
+    STATE.partnerBaziData = null;
     
     // 重置支付解锁状态
     STATE.isPaymentUnlocked = false;
@@ -619,6 +664,12 @@ async function startAnalysis() {
     try {
         // 收集用户数据
         collectUserData();
+        
+        // ✅ 清空显示区域，确保显示新内容
+        const freeAnalysisText = UI.freeAnalysisText();
+        if (freeAnalysisText) {
+            freeAnalysisText.innerHTML = '<div class="loading-text">正在生成分析结果...</div>';
+        }
         
         // 先显示预测者信息
         displayPredictorInfo();
@@ -641,11 +692,13 @@ async function startAnalysis() {
         }
         
         console.log('生成的分析提示词长度:', prompt.length);
+        console.log('当前服务:', STATE.currentService);
         
         // 调用API
         console.log('正在调用DeepSeek API...');
         const analysisResult = await callDeepSeekAPI(prompt);
         console.log('DeepSeek API调用成功，响应长度:', analysisResult.length);
+        console.log('结果前50字符:', analysisResult.substring(0, 50));
         
         // 保存完整分析结果
         STATE.fullAnalysisResult = analysisResult;
@@ -669,13 +722,17 @@ async function startAnalysis() {
         
         console.log('命理分析完成，结果已显示');
         
-        // 如果有待解锁的支付，立即解锁
+        // ✅ 修改：支付状态检查，确保服务匹配
         const paymentData = PaymentManager.getPaymentData();
-        if (paymentData && paymentData.verified && !STATE.isPaymentUnlocked) {
-            console.log('发现已验证的支付，自动解锁');
-            setTimeout(() => {
-                PaymentManager.unlockContent(paymentData.orderId);
-            }, 500);
+        if (paymentData && paymentData.verified) {
+            // 检查保存的服务是否与当前服务匹配
+            const savedService = localStorage.getItem('last_analysis_service');
+            if (savedService === STATE.currentService && !STATE.isPaymentUnlocked) {
+                console.log('当前服务已支付，自动解锁');
+                setTimeout(() => {
+                    PaymentManager.updateUIAfterPayment();
+                }, 500);
+            }
         }
         
     } catch (error) {
@@ -699,9 +756,26 @@ async function startAnalysis() {
     }
 }
 
-// 下载报告
+// 下载报告 - ✅ 修复：添加状态检查和修复逻辑
 function downloadReport() {
-    console.log('下载报告...');
+    console.log('📥 尝试下载报告...');
+    
+    // ✅ 添加状态检查
+    console.log('状态检查:', {
+        isDownloadLocked: STATE.isDownloadLocked,
+        isPaymentUnlocked: STATE.isPaymentUnlocked,
+        hasUserData: !!STATE.userData,
+        hasAnalysisResult: !!STATE.fullAnalysisResult
+    });
+    
+    // 如果状态不一致，强制修复
+    if (STATE.isPaymentUnlocked && STATE.isDownloadLocked) {
+        console.log('⚠️ 状态不一致，强制解锁下载');
+        STATE.isDownloadLocked = false;
+        if (typeof unlockDownloadButton === 'function') {
+            unlockDownloadButton();
+        }
+    }
     
     // 检查是否已解锁
     if (STATE.isDownloadLocked) {
@@ -812,10 +886,10 @@ function newAnalysis() {
     // 清除当前订单ID
     STATE.currentOrderId = null;
     
-    // 清除保存的分析数据（可选）
-    // localStorage.removeItem('last_analysis_result');
-    // localStorage.removeItem('last_analysis_service');
-    // localStorage.removeItem('last_user_data');
+    // ✅ 可选：清空分析数据（但保留用户数据）
+    STATE.fullAnalysisResult = '';
+    STATE.baziData = null;
+    STATE.partnerBaziData = null;
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
