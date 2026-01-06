@@ -21,15 +21,19 @@ const AlipayCallbackHandler = {
             };
             
             localStorage.setItem('alipay_payment_data', JSON.stringify(paymentData));
-            localStorage.setItem('payment_unlocked', 'true');
-            localStorage.setItem('paid_service', STATE.currentService || localStorage.getItem('last_analysis_service'));
-            
             console.log('支付验证信息已保存到 localStorage');
             
             // 清理URL参数
             this.cleanUrlParams();
             
             return orderId;
+        }
+        
+        // 检查其他可能的支付状态参数
+        const paymentStatus = urlParams.get('payment_status');
+        if (paymentStatus === 'waiting' && orderId) {
+            console.log('⏳ 检测到支付等待状态:', orderId);
+            this.cleanUrlParams();
         }
         
         return null;
@@ -124,7 +128,6 @@ const PaymentManager = {
                 paymentData.verified = true;
                 paymentData.verifiedAt = new Date().toISOString();
                 localStorage.setItem('alipay_payment_data', JSON.stringify(paymentData));
-                localStorage.setItem('payment_unlocked', 'true');
                 
                 return true;
             }
@@ -162,34 +165,38 @@ const PaymentManager = {
         }
     },
     
-    // 解锁内容 - ✅ 修复1：确保下载状态正确
+    // 解锁内容
     async unlockContent(orderId) {
         console.log('🔓 开始解锁内容，订单:', orderId);
         
-        // ✅ 关键修复：确保下载状态正确设置
+        // 更新全局状态
         STATE.isPaymentUnlocked = true;
-        STATE.isDownloadLocked = false;  // 必须设置为false！
+        STATE.isDownloadLocked = false;
+        
+        // 保存当前订单ID
         STATE.currentOrderId = orderId;
         
-        console.log('状态已更新:', {
-            isPaymentUnlocked: STATE.isPaymentUnlocked,
-            isDownloadLocked: STATE.isDownloadLocked,
-            currentOrderId: STATE.currentOrderId
-        });
+        // 尝试恢复分析结果
+        const restored = await this.restoreAnalysis();
         
-        // 保存当前服务为已支付服务
-        const paidService = STATE.currentService || localStorage.getItem('last_analysis_service');
-        if (paidService) {
-            localStorage.setItem('paid_service', paidService);
+        if (restored) {
+            // 恢复成功，解锁UI
+            this.updateUIAfterPayment();
+            
+            // 显示成功消息
+            this.showSuccessMessage();
+            
+            // 滚动到结果区域
+            setTimeout(() => {
+                const resultSection = document.getElementById('analysis-result-section');
+                if (resultSection) {
+                    resultSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 500);
+        } else {
+            console.log('没有找到保存的分析结果，需要用户重新测算');
+            // 可以显示提示，让用户重新测算
         }
-        
-        // 更新UI
-        this.updateUIAfterPayment();
-        
-        // 显示成功消息
-        this.showSuccessMessage();
-        
-        console.log('✅ 解锁完成');
     },
     
     // 恢复分析结果
@@ -238,7 +245,7 @@ const PaymentManager = {
         }
     },
     
-    // 支付后更新UI - ✅ 修复1：确保解锁下载按钮
+    // 支付后更新UI
     updateUIAfterPayment() {
         console.log('🎨 更新支付后UI...');
         
@@ -252,10 +259,9 @@ const PaymentManager = {
             showFullAnalysisContent();
         }
         
-        // ✅ 关键：解锁下载按钮
+        // 解锁下载按钮
         if (typeof unlockDownloadButton === 'function') {
             unlockDownloadButton();
-            console.log('✅ 下载按钮已解锁');
         }
         
         // 关闭支付弹窗（如果开着）
@@ -329,13 +335,6 @@ const PaymentManager = {
             console.error('保存分析数据失败:', error);
             return false;
         }
-    },
-    
-    // 检查当前服务是否已支付
-    isCurrentServicePaid() {
-        const paidService = localStorage.getItem('paid_service');
-        const isPaymentUnlocked = localStorage.getItem('payment_unlocked') === 'true';
-        return isPaymentUnlocked && paidService === STATE.currentService;
     }
 };
 
@@ -529,7 +528,7 @@ function setupEventListeners() {
     }
 }
 
-// 切换服务 - ✅ 修复2：切换服务时重置状态
+// 切换服务
 function switchService(serviceName) {
     console.log('切换服务到:', serviceName, '当前服务:', STATE.currentService);
     
@@ -541,15 +540,11 @@ function switchService(serviceName) {
     // 保存旧服务名称用于比较
     const oldService = STATE.currentService;
     
-    // ✅ 关键修复：切换到不同服务时，重置所有状态
+    // 重置解锁状态（如果切换了不同服务）
     if (oldService !== serviceName) {
-        console.log('切换到不同服务，重置解锁状态');
+        console.log('切换不同服务，重置解锁状态');
         STATE.isPaymentUnlocked = false;
         STATE.isDownloadLocked = true;
-        STATE.fullAnalysisResult = '';
-        STATE.baziData = null;
-        STATE.partnerBaziData = null;
-        STATE.currentOrderId = null;
     }
     
     // 先更新当前服务状态
@@ -568,21 +563,15 @@ function switchService(serviceName) {
     // 锁定下载按钮
     lockDownloadButton();
     
-    // 如果切换到不同服务，隐藏分析结果区域
+    // 如果切换了不同服务，隐藏分析结果区域
     if (oldService !== serviceName) {
         hideAnalysisResult();
-        
-        // 清空免费内容显示区域
-        const freeAnalysisText = UI.freeAnalysisText();
-        if (freeAnalysisText) {
-            freeAnalysisText.innerHTML = '';
-        }
     }
     
     // 滚动到顶部
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
-    console.log('服务切换完成，解锁状态:', STATE.isPaymentUnlocked);
+    console.log('服务切换完成');
 }
 
 // 预加载图片
@@ -714,14 +703,6 @@ async function startAnalysis() {
 function downloadReport() {
     console.log('下载报告...');
     
-    // ✅ 添加状态检查
-    console.log('状态检查:', {
-        isDownloadLocked: STATE.isDownloadLocked,
-        isPaymentUnlocked: STATE.isPaymentUnlocked,
-        hasUserData: !!STATE.userData,
-        hasAnalysisResult: !!STATE.fullAnalysisResult
-    });
-    
     // 检查是否已解锁
     if (STATE.isDownloadLocked) {
         alert('请先解锁完整报告才能下载！');
@@ -831,6 +812,11 @@ function newAnalysis() {
     // 清除当前订单ID
     STATE.currentOrderId = null;
     
+    // 清除保存的分析数据（可选）
+    // localStorage.removeItem('last_analysis_result');
+    // localStorage.removeItem('last_analysis_service');
+    // localStorage.removeItem('last_user_data');
+    
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -848,4 +834,4 @@ window.confirmPayment = confirmPayment;
 window.downloadReport = downloadReport;
 window.newAnalysis = newAnalysis;
 window.handlePaymentSuccess = handlePaymentSuccess;
-window.PaymentManager = PaymentManager;
+window.PaymentManager = PaymentManager; // 导出支付管理器
