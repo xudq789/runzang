@@ -162,11 +162,11 @@ const PaymentManager = {
         }
     },
     
-    // 解锁内容
+    // 解锁内容 - ✅ 修复1：确保下载状态正确
     async unlockContent(orderId) {
         console.log('🔓 开始解锁内容，订单:', orderId);
         
-        // ✅ 关键修复1：确保下载状态正确设置
+        // ✅ 关键修复：确保下载状态正确设置
         STATE.isPaymentUnlocked = true;
         STATE.isDownloadLocked = false;  // 必须设置为false！
         STATE.currentOrderId = orderId;
@@ -238,7 +238,7 @@ const PaymentManager = {
         }
     },
     
-    // 支付后更新UI
+    // 支付后更新UI - ✅ 修复1：确保解锁下载按钮
     updateUIAfterPayment() {
         console.log('🎨 更新支付后UI...');
         
@@ -255,6 +255,7 @@ const PaymentManager = {
         // ✅ 关键：解锁下载按钮
         if (typeof unlockDownloadButton === 'function') {
             unlockDownloadButton();
+            console.log('✅ 下载按钮已解锁');
         }
         
         // 关闭支付弹窗（如果开着）
@@ -528,7 +529,7 @@ function setupEventListeners() {
     }
 }
 
-// 切换服务
+// 切换服务 - ✅ 修复2：切换服务时重置状态
 function switchService(serviceName) {
     console.log('切换服务到:', serviceName, '当前服务:', STATE.currentService);
     
@@ -540,18 +541,15 @@ function switchService(serviceName) {
     // 保存旧服务名称用于比较
     const oldService = STATE.currentService;
     
-    // ✅ 关键修复2：检查当前服务是否已支付
-    const isCurrentServicePaid = PaymentManager.isCurrentServicePaid();
-    
-    // 只有当切换到不同服务且当前服务未支付时，才重置解锁状态
-    if (oldService !== serviceName && !isCurrentServicePaid) {
-        console.log('切换到不同服务且未支付，重置解锁状态');
+    // ✅ 关键修复：切换到不同服务时，重置所有状态
+    if (oldService !== serviceName) {
+        console.log('切换到不同服务，重置解锁状态');
         STATE.isPaymentUnlocked = false;
         STATE.isDownloadLocked = true;
-    } else if (isCurrentServicePaid) {
-        console.log('当前服务已支付，保持解锁状态');
-        STATE.isPaymentUnlocked = true;
-        STATE.isDownloadLocked = false;
+        STATE.fullAnalysisResult = '';
+        STATE.baziData = null;
+        STATE.partnerBaziData = null;
+        STATE.currentOrderId = null;
     }
     
     // 先更新当前服务状态
@@ -564,38 +562,21 @@ function switchService(serviceName) {
     // 更新解锁信息
     updateUnlockInfo();
     
-    // ✅ 关键：根据当前解锁状态重置或保持解锁界面
-    if (STATE.isPaymentUnlocked && isCurrentServicePaid) {
-        console.log('当前服务已支付，显示已解锁界面');
-        // 保持解锁状态
-        if (typeof updateUnlockInterface === 'function') {
-            updateUnlockInterface();
-        }
-        
-        // 解锁下载按钮
-        if (typeof unlockDownloadButton === 'function') {
-            unlockDownloadButton();
-        }
-    } else {
-        console.log('当前服务未支付，重置为锁定界面');
-        resetUnlockInterface();
-        lockDownloadButton();
-        
-        // 清除非当前服务的分析结果
-        STATE.fullAnalysisResult = '';
-        STATE.baziData = null;
-        STATE.partnerBaziData = null;
-        
-        // 重置免费内容显示区域
-        const freeAnalysisText = UI.freeAnalysisText();
-        if (freeAnalysisText) {
-            freeAnalysisText.innerHTML = '';
-        }
-    }
+    // 重置解锁界面
+    resetUnlockInterface();
+    
+    // 锁定下载按钮
+    lockDownloadButton();
     
     // 如果切换到不同服务，隐藏分析结果区域
     if (oldService !== serviceName) {
         hideAnalysisResult();
+        
+        // 清空免费内容显示区域
+        const freeAnalysisText = UI.freeAnalysisText();
+        if (freeAnalysisText) {
+            freeAnalysisText.innerHTML = '';
+        }
     }
     
     // 滚动到顶部
@@ -633,16 +614,12 @@ async function startAnalysis() {
         return;
     }
     
-    // 重置支付解锁状态（除非当前服务已支付）
-    if (!PaymentManager.isCurrentServicePaid()) {
-        STATE.isPaymentUnlocked = false;
-        STATE.isDownloadLocked = true;
-    }
+    // 重置支付解锁状态
+    STATE.isPaymentUnlocked = false;
+    STATE.isDownloadLocked = true;
     
-    // 锁定下载按钮（如果未支付）
-    if (STATE.isDownloadLocked) {
-        lockDownloadButton();
-    }
+    // 锁定下载按钮
+    lockDownloadButton();
     
     // 触发按钮拉伸动画
     animateButtonStretch();
@@ -703,11 +680,12 @@ async function startAnalysis() {
         
         console.log('命理分析完成，结果已显示');
         
-        // 如果当前服务已支付，解锁内容
-        if (PaymentManager.isCurrentServicePaid() && !STATE.isPaymentUnlocked) {
-            console.log('当前服务已支付，自动解锁');
+        // 如果有待解锁的支付，立即解锁
+        const paymentData = PaymentManager.getPaymentData();
+        if (paymentData && paymentData.verified && !STATE.isPaymentUnlocked) {
+            console.log('发现已验证的支付，自动解锁');
             setTimeout(() => {
-                PaymentManager.updateUIAfterPayment();
+                PaymentManager.unlockContent(paymentData.orderId);
             }, 500);
         }
         
@@ -736,22 +714,13 @@ async function startAnalysis() {
 function downloadReport() {
     console.log('下载报告...');
     
-    // ✅ 关键修复3：添加状态检查
+    // ✅ 添加状态检查
     console.log('状态检查:', {
         isDownloadLocked: STATE.isDownloadLocked,
         isPaymentUnlocked: STATE.isPaymentUnlocked,
         hasUserData: !!STATE.userData,
         hasAnalysisResult: !!STATE.fullAnalysisResult
     });
-    
-    // 如果状态不一致，强制修复
-    if (STATE.isPaymentUnlocked && STATE.isDownloadLocked) {
-        console.log('⚠️ 状态不一致，强制解锁下载');
-        STATE.isDownloadLocked = false;
-        if (typeof unlockDownloadButton === 'function') {
-            unlockDownloadButton();
-        }
-    }
     
     // 检查是否已解锁
     if (STATE.isDownloadLocked) {
@@ -840,16 +809,12 @@ ${STATE.fullAnalysisResult}
 function newAnalysis() {
     console.log('重新测算...');
     
-    // 重置支付解锁状态（除非当前服务已支付）
-    if (!PaymentManager.isCurrentServicePaid()) {
-        STATE.isPaymentUnlocked = false;
-        STATE.isDownloadLocked = true;
-    }
+    // 重置支付解锁状态
+    STATE.isPaymentUnlocked = false;
+    STATE.isDownloadLocked = true;
     
-    // 锁定下载按钮（如果未支付）
-    if (STATE.isDownloadLocked) {
-        lockDownloadButton();
-    }
+    // 锁定下载按钮
+    lockDownloadButton();
     
     // 隐藏分析结果区域
     hideAnalysisResult();
@@ -863,15 +828,8 @@ function newAnalysis() {
         freeAnalysisText.innerHTML = '';
     }
     
-    // 清除当前订单ID（如果未支付）
-    if (!PaymentManager.isCurrentServicePaid()) {
-        STATE.currentOrderId = null;
-    }
-    
-    // 清除非当前服务的分析数据
-    STATE.fullAnalysisResult = '';
-    STATE.baziData = null;
-    STATE.partnerBaziData = null;
+    // 清除当前订单ID
+    STATE.currentOrderId = null;
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
