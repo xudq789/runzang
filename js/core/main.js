@@ -1,4 +1,4 @@
-// ============ 【支付状态管理器 - 简化版】 ============
+// ============ 【支付状态管理器】 ============
 const PaymentManager = {
     // 初始化支付检查
     async initPaymentCheck() {
@@ -18,35 +18,10 @@ const PaymentManager = {
                     STATE.currentOrderId = data.orderId;
                     
                     console.log('✅ 支付状态已恢复');
-                    
-                    // 如果当前页面有分析结果，自动解锁
-                    if (STATE.fullAnalysisResult) {
-                        this.unlockUI();
-                    }
                 }
             }
         } catch (error) {
             console.error('检查支付状态失败:', error);
-        }
-    },
-    
-    // 解锁UI
-    unlockUI() {
-        console.log('🎨 解锁UI界面...');
-        
-        // 更新解锁界面
-        if (typeof updateUnlockInterface === 'function') {
-            updateUnlockInterface();
-        }
-        
-        // 显示完整内容
-        if (typeof showFullAnalysisContent === 'function') {
-            showFullAnalysisContent();
-        }
-        
-        // ✅ 关键：解锁下载按钮
-        if (typeof unlockDownloadButton === 'function') {
-            unlockDownloadButton();
         }
     },
     
@@ -68,7 +43,6 @@ const PaymentManager = {
 import { SERVICES, STATE } from './config.js';
 import { checkAPIStatus, parseBaziData, callDeepSeekAPI } from './api.js';
 import {
-    UI,
     initFormOptions,
     setDefaultValues,
     updateServiceDisplay,
@@ -112,18 +86,33 @@ async function initApp() {
     console.log('🚀 应用初始化开始...');
     
     try {
-        // 1. 检查支付状态
+        // 1. 初始化表单选项
+        initFormOptions();
+        
+        // 2. 设置默认值（延迟执行确保DOM已加载）
+        setTimeout(() => {
+            setDefaultValues();
+        }, 100);
+        
+        // 3. 检查支付状态
         await PaymentManager.initPaymentCheck();
         
-        // 2. 常规初始化
-        initFormOptions();
-        setDefaultValues();
+        // 4. 更新UI
         updateServiceDisplay(STATE.currentService);
         updateUnlockInfo();
-        lockDownloadButton();
+        
+        // 5. 根据支付状态设置下载按钮
+        if (STATE.isPaymentUnlocked) {
+            unlockDownloadButton();
+        } else {
+            lockDownloadButton();
+        }
+        
+        // 6. 设置事件监听器
         setupEventListeners();
+        
+        // 7. 检查API状态
         STATE.apiStatus = await checkAPIStatus();
-        preloadImages();
         
         console.log('✅ 应用初始化完成');
         
@@ -146,33 +135,47 @@ function setupEventListeners() {
     });
     
     // 立即测算按钮
-    UI.analyzeBtn().addEventListener('click', startAnalysis);
+    const analyzeBtn = document.getElementById('analyze-btn');
+    if (analyzeBtn) {
+        analyzeBtn.addEventListener('click', startAnalysis);
+    }
     
     // 解锁按钮
-    UI.unlockBtn().addEventListener('click', showPaymentModal);
+    const unlockBtn = document.getElementById('unlock-btn');
+    if (unlockBtn) {
+        unlockBtn.addEventListener('click', showPaymentModal);
+    }
     
     // 下载报告按钮
-    UI.downloadReportBtn().addEventListener('click', downloadReport);
+    const downloadReportBtn = document.getElementById('download-report-btn');
+    if (downloadReportBtn) {
+        downloadReportBtn.addEventListener('click', downloadReport);
+    }
     
     // 重新测算按钮
-    UI.recalculateBtn().addEventListener('click', newAnalysis);
+    const recalculateBtn = document.getElementById('recalculate-btn');
+    if (recalculateBtn) {
+        recalculateBtn.addEventListener('click', newAnalysis);
+    }
     
     // 支付弹窗按钮
-    UI.confirmPaymentBtn().addEventListener('click', confirmPayment);
-    UI.cancelPaymentBtn().addEventListener('click', closePaymentModal);
-    UI.closePaymentBtn().addEventListener('click', closePaymentModal);
+    const confirmPaymentBtn = document.getElementById('confirm-payment-btn');
+    const cancelPaymentBtn = document.getElementById('cancel-payment-btn');
+    const closePaymentBtn = document.getElementById('close-payment');
+    
+    if (confirmPaymentBtn) {
+        confirmPaymentBtn.addEventListener('click', confirmPayment);
+    }
+    if (cancelPaymentBtn) {
+        cancelPaymentBtn.addEventListener('click', closePaymentModal);
+    }
+    if (closePaymentBtn) {
+        closePaymentBtn.addEventListener('click', closePaymentModal);
+    }
     
     // ESC键关闭支付弹窗
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
-            closePaymentModal();
-        }
-    });
-    
-    // 点击模态框外部关闭
-    window.addEventListener('click', function(event) {
-        const paymentModal = UI.paymentModal();
-        if (event.target === paymentModal) {
             closePaymentModal();
         }
     });
@@ -209,16 +212,6 @@ function switchService(serviceName) {
     if (!STATE.isPaymentUnlocked) {
         lockDownloadButton();
         hideAnalysisResult();
-        
-        // 清空显示内容
-        const freeAnalysisText = UI.freeAnalysisText();
-        if (freeAnalysisText) freeAnalysisText.innerHTML = '';
-        
-        const predictorInfoGrid = UI.predictorInfoGrid();
-        if (predictorInfoGrid) predictorInfoGrid.innerHTML = '';
-        
-        const baziGrid = UI.baziGrid();
-        if (baziGrid) baziGrid.innerHTML = '';
     } else {
         // 如果已支付，确保下载按钮解锁
         unlockDownloadButton();
@@ -228,19 +221,6 @@ function switchService(serviceName) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
     console.log('✅ 服务切换完成');
-}
-
-// 预加载图片
-function preloadImages() {
-    console.log('预加载图片...');
-    
-    Object.values(SERVICES).forEach(service => {
-        const heroImg = new Image();
-        heroImg.src = service.heroImage;
-        
-        const detailImg = new Image();
-        detailImg.src = service.detailImage;
-    });
 }
 
 // 开始分析
@@ -281,7 +261,7 @@ async function startAnalysis() {
         console.log('✅ 用户数据收集完成');
         
         // 清空显示区域
-        const freeAnalysisText = UI.freeAnalysisText();
+        const freeAnalysisText = document.getElementById('free-analysis-text');
         if (freeAnalysisText) {
             freeAnalysisText.innerHTML = '<div class="loading-text">正在生成分析结果...</div>';
         }
@@ -371,20 +351,7 @@ function confirmPayment() {
     const confirmed = confirm('如果您已完成支付宝支付，请点击"确定"解锁内容。\n如支付遇到问题，请联系客服微信：runzang888');
     
     if (confirmed) {
-        // 模拟支付成功
         handlePaymentSuccess(STATE.currentOrderId);
-        
-        // 可选：检查真实支付状态
-        fetch(`https://runzang.top/api/payment/status/${STATE.currentOrderId}`)
-            .then(response => response.json())
-            .then(result => {
-                if (result.success && result.data.status === 'paid') {
-                    console.log('后端确认支付成功');
-                }
-            })
-            .catch(error => {
-                console.error('检查支付状态失败:', error);
-            });
     }
 }
 
@@ -419,15 +386,6 @@ function downloadReport() {
         reportContent += `测算服务：${STATE.currentService}\n`;
         reportContent += `测算时间：${new Date().toLocaleString('zh-CN')}\n\n`;
         
-        // 伴侣信息
-        if (STATE.currentService === '八字合婚' && STATE.partnerData) {
-            reportContent += `伴侣信息：\n`;
-            reportContent += `姓名：${STATE.partnerData.partnerName}\n`;
-            reportContent += `性别：${STATE.partnerData.partnerGender}\n`;
-            reportContent += `出生时间：${STATE.partnerData.partnerBirthYear}年${STATE.partnerData.partnerBirthMonth}月${STATE.partnerData.partnerBirthDay}日${STATE.partnerData.partnerBirthHour}时${STATE.partnerData.partnerBirthMinute}分\n`;
-            reportContent += `出生城市：${STATE.partnerData.partnerBirthCity}\n\n`;
-        }
-        
         // 八字排盘
         if (STATE.baziData) {
             reportContent += `八字排盘：\n`;
@@ -443,15 +401,14 @@ function downloadReport() {
         // 页脚
         reportContent += `--- 命理分析服务平台 ---\n`;
         reportContent += `分析时间：${new Date().toLocaleString('zh-CN')}\n`;
-        reportContent += `使用技术：DeepSeek AI命理分析系统\n\n`;
-        reportContent += `重要提示：本报告仅供娱乐参考，请理性对待分析结果。`;
+        reportContent += `使用技术：DeepSeek AI命理分析系统`;
         
         // 创建并下载文件
         const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `命理分析报告_${STATE.userData.name}_${STATE.currentService}_${new Date().toISOString().slice(0, 10)}.txt`;
+        a.download = `命理分析报告_${STATE.userData.name}_${new Date().toISOString().slice(0, 10)}.txt`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -525,20 +482,17 @@ function newAnalysis() {
     // 重置解锁界面
     resetUnlockInterface();
     
-    // 清空显示内容
-    const freeAnalysisText = UI.freeAnalysisText();
-    if (freeAnalysisText) {
-        freeAnalysisText.innerHTML = '';
-    }
-    
     // 滚动到顶部
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ============ 【页面初始化】 ============
 
-// 页面加载完成后初始化
-window.addEventListener('DOMContentLoaded', initApp);
+// 页面完全加载后初始化
+window.addEventListener('load', () => {
+    console.log('📄 页面完全加载，开始初始化应用...');
+    setTimeout(initApp, 100);
+});
 
 // 导出给全局使用
 window.switchService = switchService;
