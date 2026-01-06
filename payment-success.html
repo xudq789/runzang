@@ -1,15 +1,63 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>支付成功 - 润藏八字</title>
     <script>
-        // 提取订单ID并跳转
-        const urlParams = new URLSearchParams(window.location.search);
-        const orderId = urlParams.get('out_trade_no');
-        if (orderId) {
-            // 跳转回报告页面，带上订单ID
-            window.location.href = 'https://xudq789.github.io/runzang/?order=' + orderId;
-        }
+        // 处理支付宝回调
+        window.onload = function() {
+            // 获取订单参数
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderId = urlParams.get('out_trade_no');
+            const tradeNo = urlParams.get('trade_no');
+            const totalAmount = urlParams.get('total_amount');
+            
+            console.log('支付成功回调参数:', { orderId, tradeNo, totalAmount });
+            
+            if (orderId || tradeNo) {
+                // 保存支付信息到 localStorage
+                if (orderId) {
+                    localStorage.setItem('alipay_paid_order', orderId);
+                }
+                if (tradeNo) {
+                    localStorage.setItem('alipay_trade_no', tradeNo);
+                }
+                if (totalAmount) {
+                    localStorage.setItem('payment_amount', totalAmount);
+                }
+                
+                localStorage.setItem('payment_callback_received', 'true');
+                localStorage.setItem('payment_callback_time', new Date().toISOString());
+                
+                console.log('支付信息已保存，跳转回报告页面...');
+                
+                // 跳转回报告页面，并带上参数
+                const redirectUrl = 'https://xudq789.github.io/runzang/?payment_success=true';
+                if (orderId) {
+                    redirectUrl += '&order_id=' + orderId;
+                }
+                
+                // 延迟跳转，确保localStorage保存完成
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 300);
+            } else {
+                // 没有支付参数，直接跳回首页
+                window.location.href = 'https://xudq789.github.io/runzang/';
+            }
+        };
     </script>
 </head>
-<body>处理中...</body>
+<body>
+    <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+        <h2 style="color: #4CAF50;">✅ 支付处理中...</h2>
+        <p>正在验证支付结果，请稍候...</p>
+        <p>页面将在3秒内自动跳转</p>
+        <div style="margin-top: 30px;">
+            <p>如果页面没有自动跳转，请点击：</p>
+            <a href="https://xudq789.github.io/runzang/" style="display: inline-block; padding: 10px 20px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">
+                返回报告页面
+            </a>
+        </div>
+    </div>
+</body>
 </html>
