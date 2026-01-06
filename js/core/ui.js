@@ -208,7 +208,7 @@ export function updateUnlockInfo() {
         // 更新项目数量
         unlockCountElement.textContent = lockedItems.length;
         
-        // ✅ 根据当前解锁状态显示
+        // 根据当前解锁状态显示
         lockedItems.forEach(item => {
             const li = document.createElement('li');
             if (STATE.isPaymentUnlocked) {
@@ -568,7 +568,7 @@ export function processAndDisplayAnalysis(result) {
     }
 }
 
-// ============ 【修改】显示支付弹窗 - 当前窗口支付方案（移除弹窗提示） ============
+// ============ 【修改】显示支付弹窗 - 移除弹窗提示 ============
 export async function showPaymentModal() {
     console.log('调用支付接口...');
     
@@ -646,7 +646,7 @@ export async function showPaymentModal() {
             </span>
         `;
         
-        // 6. 支付按钮点击事件 - ✅ 关键修复：移除弹窗提示，直接跳转
+        // 6. 支付按钮点击事件 - ✅ 修复3：移除弹窗提示，直接跳转
         payBtn.onclick = async () => {
             console.log('跳转到支付宝支付，订单号:', outTradeNo);
             
@@ -671,7 +671,6 @@ export async function showPaymentModal() {
             paymentMethods.innerHTML = '';
             paymentMethods.appendChild(payBtn);
         } else {
-            // 如果没有.payment-methods容器，插入到订单信息下方
             const orderInfo = document.querySelector('.order-info');
             if (orderInfo) {
                 orderInfo.parentNode.insertBefore(payBtn, orderInfo.nextSibling);
@@ -764,7 +763,7 @@ export function lockDownloadButton() {
     }
 }
 
-// 解锁下载按钮
+// 解锁下载按钮 - ✅ 修复1：确保能正确解锁
 export function unlockDownloadButton() {
     const downloadBtn = UI.downloadReportBtn();
     const downloadBtnText = DOM.id('download-btn-text');
@@ -786,64 +785,55 @@ export function unlockDownloadButton() {
     }
 }
 
-// 重置解锁界面
+// 重置解锁界面 - ✅ 修复2：确保切换服务时正确重置
 export function resetUnlockInterface() {
-    console.log('resetUnlockInterface: 重置解锁界面，当前解锁状态=', STATE.isPaymentUnlocked);
+    console.log('resetUnlockInterface: 重置解锁界面');
     
     const lockedOverlay = DOM.id('locked-overlay');
     if (!lockedOverlay) return;
     
-    // ✅ 关键修复：只有在未支付时才重置为锁定状态
-    if (!STATE.isPaymentUnlocked) {
-        console.log('未支付，重置为锁定界面');
+    // 重置标题
+    const unlockHeader = lockedOverlay.querySelector('.unlock-header');
+    if (unlockHeader) {
+        const lockIcon = unlockHeader.querySelector('.lock-icon');
+        const headerTitle = unlockHeader.querySelector('h4');
+        const headerDesc = unlockHeader.querySelector('p');
         
-        // 重置标题
-        const unlockHeader = lockedOverlay.querySelector('.unlock-header');
-        if (unlockHeader) {
-            const lockIcon = unlockHeader.querySelector('.lock-icon');
-            const headerTitle = unlockHeader.querySelector('h4');
-            const headerDesc = unlockHeader.querySelector('p');
+        if (lockIcon) lockIcon.textContent = '🔒';
+        if (headerTitle) headerTitle.textContent = '完整内容已锁定';
+        if (headerDesc) headerDesc.textContent = '解锁完整分析报告，查看全部命理分析内容';
+    }
+    
+    // 重置项目列表
+    const unlockItemsList = UI.unlockItemsList();
+    if (unlockItemsList) {
+        unlockItemsList.innerHTML = '';
+        const serviceConfig = SERVICES[STATE.currentService];
+        if (serviceConfig) {
+            serviceConfig.lockedItems.forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = '<span>🔒 ' + item + '</span>';
+                unlockItemsList.appendChild(li);
+            });
+        }
+    }
+    
+    // 重置解锁按钮
+    const unlockBtnContainer = lockedOverlay.querySelector('.unlock-btn-container');
+    if (unlockBtnContainer) {
+        const unlockBtn = unlockBtnContainer.querySelector('.unlock-btn');
+        const unlockPrice = unlockBtnContainer.querySelector('.unlock-price');
+        
+        const serviceConfig = SERVICES[STATE.currentService];
+        if (serviceConfig && unlockBtn && unlockPrice) {
+            unlockBtn.innerHTML = `解锁完整报告 (¥<span id="unlock-price">${serviceConfig.price}</span>)`;
+            unlockBtn.style.background = 'linear-gradient(135deg, var(--secondary-color), #e6b800)';
+            unlockBtn.style.cursor = 'pointer';
+            unlockBtn.disabled = false;
             
-            if (lockIcon) lockIcon.textContent = '🔒';
-            if (headerTitle) headerTitle.textContent = '完整内容已锁定';
-            if (headerDesc) headerDesc.textContent = '解锁完整分析报告，查看全部命理分析内容';
+            const itemCount = serviceConfig.lockedItems.length;
+            unlockPrice.innerHTML = `共包含 <span id="unlock-count">${itemCount}</span> 项详细分析`;
         }
-        
-        // 重置项目列表
-        const unlockItemsList = UI.unlockItemsList();
-        if (unlockItemsList) {
-            unlockItemsList.innerHTML = '';
-            const serviceConfig = SERVICES[STATE.currentService];
-            if (serviceConfig) {
-                serviceConfig.lockedItems.forEach(item => {
-                    const li = document.createElement('li');
-                    li.innerHTML = '<span>🔒 ' + item + '</span>';
-                    unlockItemsList.appendChild(li);
-                });
-            }
-        }
-        
-        // 重置解锁按钮
-        const unlockBtnContainer = lockedOverlay.querySelector('.unlock-btn-container');
-        if (unlockBtnContainer) {
-            const unlockBtn = unlockBtnContainer.querySelector('.unlock-btn');
-            const unlockPrice = unlockBtnContainer.querySelector('.unlock-price');
-            
-            const serviceConfig = SERVICES[STATE.currentService];
-            if (serviceConfig && unlockBtn && unlockPrice) {
-                unlockBtn.innerHTML = `解锁完整报告 (¥<span id="unlock-price">${serviceConfig.price}</span>)`;
-                unlockBtn.style.background = 'linear-gradient(135deg, var(--secondary-color), #e6b800)';
-                unlockBtn.style.cursor = 'pointer';
-                unlockBtn.disabled = false;
-                
-                const itemCount = serviceConfig.lockedItems.length;
-                unlockPrice.innerHTML = `共包含 <span id="unlock-count">${itemCount}</span> 项详细分析`;
-            }
-        }
-    } else {
-        console.log('已支付，保持解锁界面');
-        // 已支付状态，保持解锁界面不变
-        updateUnlockInterface();
     }
 }
 
