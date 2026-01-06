@@ -40,6 +40,7 @@ const PaymentManager = {
 };
 
 // ============ 【主要应用代码】 ============
+// ✅ 修正：使用正确的相对路径
 import { SERVICES, STATE } from './config.js';
 import { checkAPIStatus, parseBaziData, callDeepSeekAPI } from './api.js';
 import {
@@ -66,6 +67,7 @@ import {
     collectUserData
 } from './ui.js';
 
+// ✅ 修正：根据您的项目结构，模块在 ../modules/ 目录下
 import { CesuanModule } from '../modules/cesuan.js';
 import { YunchengModule } from '../modules/yuncheng.js';
 import { XiangpiModule } from '../modules/xiangpi.js';
@@ -118,6 +120,23 @@ async function initApp() {
         
     } catch (error) {
         console.error('❌ 应用初始化失败:', error);
+        // 显示友好的错误信息
+        setTimeout(() => {
+            const loadingModal = document.getElementById('loading-modal');
+            if (loadingModal) {
+                loadingModal.innerHTML = `
+                    <div class="modal-content" style="text-align: center; padding: 40px 25px;">
+                        <div style="font-size: 48px; color: #f44336;">❌</div>
+                        <div class="loading-text" style="color: #f44336;">应用初始化失败</div>
+                        <p style="color: #7d6e63; margin-top: 15px; font-size: 14px;">${error.message}</p>
+                        <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #1677FF; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            重新加载页面
+                        </button>
+                    </div>
+                `;
+                loadingModal.style.display = 'block';
+            }
+        }, 1000);
     }
 }
 
@@ -489,9 +508,9 @@ function newAnalysis() {
 // ============ 【页面初始化】 ============
 
 // 页面完全加载后初始化
-window.addEventListener('load', () => {
-    console.log('📄 页面完全加载，开始初始化应用...');
-    setTimeout(initApp, 100);
+window.addEventListener('DOMContentLoaded', () => {
+    console.log('📄 DOM加载完成，开始初始化应用...');
+    setTimeout(initApp, 500); // 延迟500ms确保所有DOM元素都已加载
 });
 
 // 导出给全局使用
