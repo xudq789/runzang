@@ -1,6 +1,6 @@
 // UI控制模块
-import { DOM, formatDate, hideElement, showElement, generateOrderId, calculateBazi } from './utils.js';
-import { SERVICES, STATE, PAYMENT_CONFIG } from './config.js';
+import { DOM, formatDate, hideElement, showElement, calculateBazi } from './utils.js';
+import { SERVICES, STATE } from './config.js';
 
 // UI元素集合
 export const UI = {
@@ -130,6 +130,8 @@ export function setDefaultValues() {
 
 // 更新服务显示
 export function updateServiceDisplay(serviceName) {
+    console.log('更新服务显示:', serviceName);
+    
     // 更新导航激活状态
     DOM.getAll('.service-nav a').forEach(link => {
         link.classList.remove('active');
@@ -139,7 +141,10 @@ export function updateServiceDisplay(serviceName) {
     });
     
     // 更新表单标题
-    DOM.id('form-title').textContent = serviceName + '信息填写';
+    const formTitle = DOM.id('form-title');
+    if (formTitle) {
+        formTitle.textContent = serviceName + '信息填写';
+    }
     
     // 更新结果区域标题
     UI.resultServiceName().textContent = serviceName + '分析报告';
@@ -180,15 +185,8 @@ export function updateServiceDisplay(serviceName) {
 
 // 更新解锁价格和项目
 export function updateUnlockInfo() {
-    // 确保使用当前服务
-    const currentService = STATE.currentService;
-    console.log('updateUnlockInfo: 当前服务=', currentService, '解锁状态=', STATE.isPaymentUnlocked);
-    
-    const serviceConfig = SERVICES[currentService];
-    if (!serviceConfig) {
-        console.error('updateUnlockInfo: 未找到服务配置:', currentService);
-        return;
-    }
+    const serviceConfig = SERVICES[STATE.currentService];
+    if (!serviceConfig) return;
     
     // 更新价格
     const unlockPriceElement = UI.unlockPrice();
@@ -283,26 +281,19 @@ export function displayBaziPan() {
         
         const userTitle = document.createElement('h5');
         userTitle.textContent = `${STATE.userData.name} 的八字排盘`;
-        userTitle.style.color = 'var(--primary-color)';
-        userTitle.style.marginBottom = '15px';
-        userTitle.style.textAlign = 'center';
         userSection.appendChild(userTitle);
         
         const userGrid = document.createElement('div');
         userGrid.className = 'bazi-section-grid';
         
-        // 使用解析到的八字数据或计算数据
-        const userBaziData = STATE.baziData || STATE.userBaziData;
-        
-        if (userBaziData) {
+        if (STATE.baziData) {
             const userColumns = [
-                { label: '年柱', value: userBaziData.yearColumn, element: userBaziData.yearElement },
-                { label: '月柱', value: userBaziData.monthColumn, element: userBaziData.monthElement },
-                { label: '日柱', value: userBaziData.dayColumn, element: userBaziData.dayElement },
-                { label: '时柱', value: userBaziData.hourColumn, element: userBaziData.hourElement }
+                { label: '年柱', value: STATE.baziData.yearColumn, element: STATE.baziData.yearElement },
+                { label: '月柱', value: STATE.baziData.monthColumn, element: STATE.baziData.monthElement },
+                { label: '日柱', value: STATE.baziData.dayColumn, element: STATE.baziData.dayElement },
+                { label: '时柱', value: STATE.baziData.hourColumn, element: STATE.baziData.hourElement }
             ];
             
-            // 创建用户八字排盘展示
             userColumns.forEach(col => {
                 const div = document.createElement('div');
                 div.className = 'bazi-column';
@@ -342,26 +333,19 @@ export function displayBaziPan() {
         
         const partnerTitle = document.createElement('h5');
         partnerTitle.textContent = `${STATE.partnerData.partnerName} 的八字排盘`;
-        partnerTitle.style.color = 'var(--primary-color)';
-        partnerTitle.style.marginBottom = '15px';
-        partnerTitle.style.textAlign = 'center';
         partnerSection.appendChild(partnerTitle);
         
         const partnerGrid = document.createElement('div');
         partnerGrid.className = 'bazi-section-grid';
         
-        // 伴侣的八字数据
-        const partnerBaziData = STATE.partnerBaziData || calculatePartnerBazi();
-        
-        if (partnerBaziData) {
+        if (STATE.partnerBaziData) {
             const partnerColumns = [
-                { label: '年柱', value: partnerBaziData.yearColumn, element: partnerBaziData.yearElement },
-                { label: '月柱', value: partnerBaziData.monthColumn, element: partnerBaziData.monthElement },
-                { label: '日柱', value: partnerBaziData.dayColumn, element: partnerBaziData.dayElement },
-                { label: '时柱', value: partnerBaziData.hourColumn, element: partnerBaziData.hourElement }
+                { label: '年柱', value: STATE.partnerBaziData.yearColumn, element: STATE.partnerBaziData.yearElement },
+                { label: '月柱', value: STATE.partnerBaziData.monthColumn, element: STATE.partnerBaziData.monthElement },
+                { label: '日柱', value: STATE.partnerBaziData.dayColumn, element: STATE.partnerBaziData.dayElement },
+                { label: '时柱', value: STATE.partnerBaziData.hourColumn, element: STATE.partnerBaziData.hourElement }
             ];
             
-            // 创建伴侣八字排盘展示
             partnerColumns.forEach(col => {
                 const div = document.createElement('div');
                 div.className = 'bazi-column';
@@ -383,9 +367,6 @@ export function displayBaziPan() {
                 div.appendChild(elementDiv);
                 partnerGrid.appendChild(div);
             });
-            
-            // 保存伴侣八字数据到状态
-            STATE.partnerBaziData = partnerBaziData;
         }
         
         partnerSection.appendChild(partnerGrid);
@@ -393,16 +374,14 @@ export function displayBaziPan() {
         
     } else {
         // 其他服务：只显示用户的八字
-        const baziDataToDisplay = STATE.baziData;
-        
-        if (!baziDataToDisplay) return;
+        if (!STATE.baziData) return;
         
         // 四柱：年柱、月柱、日柱、时柱
         const columns = [
-            { label: '年柱', value: baziDataToDisplay.yearColumn, element: baziDataToDisplay.yearElement },
-            { label: '月柱', value: baziDataToDisplay.monthColumn, element: baziDataToDisplay.monthElement },
-            { label: '日柱', value: baziDataToDisplay.dayColumn, element: baziDataToDisplay.dayElement },
-            { label: '时柱', value: baziDataToDisplay.hourColumn, element: baziDataToDisplay.hourElement }
+            { label: '年柱', value: STATE.baziData.yearColumn, element: STATE.baziData.yearElement },
+            { label: '月柱', value: STATE.baziData.monthColumn, element: STATE.baziData.monthElement },
+            { label: '日柱', value: STATE.baziData.dayColumn, element: STATE.baziData.dayElement },
+            { label: '时柱', value: STATE.baziData.hourColumn, element: STATE.baziData.hourElement }
         ];
         
         // 创建八字排盘展示
@@ -428,22 +407,6 @@ export function displayBaziPan() {
             baziGrid.appendChild(div);
         });
     }
-}
-
-// 计算伴侣八字（辅助函数）
-function calculatePartnerBazi() {
-    if (!STATE.partnerData) return null;
-    
-    // 使用相同的计算函数
-    const partnerDataForCalc = {
-        birthYear: STATE.partnerData.partnerBirthYear,
-        birthMonth: STATE.partnerData.partnerBirthMonth,
-        birthDay: STATE.partnerData.partnerBirthDay,
-        birthHour: STATE.partnerData.partnerBirthHour,
-        birthMinute: STATE.partnerData.partnerBirthMinute
-    };
-    
-    return calculateBazi(partnerDataForCalc);
 }
 
 // 处理并显示分析结果
@@ -487,28 +450,6 @@ export function processAndDisplayAnalysis(result) {
         }
     }
     
-    // 如果分割不理想，使用简单的方法
-    if (freeContent.length < 100) {
-        freeContent = '';
-        // 尝试找到免费部分
-        for (const freeSection of freeSections) {
-            const startIndex = result.indexOf(freeSection);
-            if (startIndex !== -1) {
-                // 找到下一个【或结束
-                let endIndex = result.indexOf('【', startIndex + 1);
-                if (endIndex === -1) {
-                    endIndex = result.length;
-                }
-                freeContent += result.substring(startIndex, endIndex) + '\n\n';
-            }
-        }
-        
-        // 剩余部分作为锁定内容
-        if (freeContent) {
-            lockedContent = result.replace(freeContent, '');
-        }
-    }
-    
     // 显示免费内容
     const freeAnalysisText = UI.freeAnalysisText();
     if (freeAnalysisText) {
@@ -535,7 +476,7 @@ export function processAndDisplayAnalysis(result) {
             }
         });
         
-        freeAnalysisText.innerHTML = formattedContent;
+        freeAnalysisText.innerHTML = formattedContent || '<p>正在生成分析结果...</p>';
     }
     
     // 存储锁定内容
@@ -568,7 +509,7 @@ export function processAndDisplayAnalysis(result) {
     }
 }
 
-// ============ 【修改】显示支付弹窗 - 修复支付逻辑 ============
+// 显示支付弹窗
 export async function showPaymentModal() {
     console.log('调用支付接口...');
     
@@ -576,19 +517,19 @@ export async function showPaymentModal() {
     if (!serviceConfig) return;
     
     try {
-        // 1. 先显示支付弹窗
+        // 显示支付弹窗
         const paymentModal = UI.paymentModal();
         if (paymentModal) {
             showElement(paymentModal);
             document.body.style.overflow = 'hidden';
             
-            // 先显示基本信息
+            // 显示基本信息
             UI.paymentServiceType().textContent = STATE.currentService;
             UI.paymentAmount().textContent = '¥' + serviceConfig.price;
             UI.paymentOrderId().textContent = '生成中...';
         }
         
-        // 2. 调用您的后端支付接口
+        // 调用后端支付接口
         const response = await fetch('https://runzang.top/api/payment/create', {
             method: 'POST',
             headers: {
@@ -612,7 +553,7 @@ export async function showPaymentModal() {
         console.log('支付URL:', paymentUrl);
         console.log('订单号:', outTradeNo);
         
-        // 3. 更新支付弹窗显示真实信息
+        // 更新支付弹窗显示真实信息
         UI.paymentServiceType().textContent = subject || STATE.currentService;
         UI.paymentAmount().textContent = '¥' + amount;
         UI.paymentOrderId().textContent = outTradeNo;
@@ -620,19 +561,17 @@ export async function showPaymentModal() {
         // 保存订单ID到全局状态
         STATE.currentOrderId = outTradeNo;
         
-        // ✅ 关键修复：保存分析结果到 localStorage
+        // 保存分析结果到 localStorage
         if (STATE.fullAnalysisResult) {
-            localStorage.setItem('last_analysis_result', STATE.fullAnalysisResult);
-            localStorage.setItem('last_analysis_service', STATE.currentService);
-            localStorage.setItem('last_user_data', JSON.stringify(STATE.userData || {}));
-            console.log('分析结果已保存到 localStorage');
+            localStorage.setItem('rz_analysis', STATE.fullAnalysisResult);
+            localStorage.setItem('rz_service', STATE.currentService);
         }
         
-        // 4. 清除旧的支付按钮
+        // 清除旧的支付按钮
         const oldBtn = document.getElementById('alipay-redirect-btn');
         if (oldBtn) oldBtn.remove();
         
-        // 5. 创建支付按钮
+        // 创建支付按钮
         const payBtn = document.createElement('button');
         payBtn.id = 'alipay-redirect-btn';
         payBtn.className = 'dynamic-pulse-btn';
@@ -657,24 +596,17 @@ export async function showPaymentModal() {
             </span>
         `;
         
-        // 6. 支付按钮点击事件 - ✅ 关键修复：直接跳转，不显示确认弹窗
+        // 支付按钮点击事件
         payBtn.onclick = async () => {
             console.log('跳转到支付宝支付，订单号:', outTradeNo);
-            
-            // ✅ 直接跳转到支付宝
             window.location.href = paymentUrl;
         };
         
-        // 7. 插入到支付弹窗
+        // 插入到支付弹窗
         const paymentMethods = document.querySelector('.payment-methods');
         if (paymentMethods) {
             paymentMethods.innerHTML = '';
             paymentMethods.appendChild(payBtn);
-        } else {
-            const orderInfo = document.querySelector('.order-info');
-            if (orderInfo) {
-                orderInfo.parentNode.insertBefore(payBtn, orderInfo.nextSibling);
-            }
         }
         
     } catch (error) {
@@ -726,13 +658,13 @@ export function updateUnlockInterface() {
         
         if (unlockBtn) {
             unlockBtn.innerHTML = '✅ 已解锁完整报告';
-            unlockBtn.style.background = 'linear-gradient(135deg, var(--success-color), #28c76f)';
+            unlockBtn.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
             unlockBtn.style.cursor = 'default';
             unlockBtn.disabled = true;
         }
         
         if (unlockPrice) {
-            unlockPrice.innerHTML = '<span style="color: var(--success-color);">✅ 已解锁全部内容</span>';
+            unlockPrice.innerHTML = '<span style="color: #4CAF50;">✅ 已解锁全部内容</span>';
         }
     }
 }
@@ -763,68 +695,46 @@ export function lockDownloadButton() {
     }
 }
 
-// 解锁下载按钮 - ✅ 修复：确保能正确解锁
+// 解锁下载按钮 - ✅ 关键修复
 export function unlockDownloadButton() {
-    console.log('🔓 unlockDownloadButton 被调用');
-    console.log('当前 STATE.isPaymentUnlocked:', STATE.isPaymentUnlocked);
-    console.log('当前 STATE.isDownloadLocked:', STATE.isDownloadLocked);
+    console.log('🔓 解锁下载按钮');
     
-    const downloadBtn = UI.downloadReportBtn();
-    const downloadBtnText = DOM.id('download-btn-text');
-    
-    if (downloadBtn && downloadBtnText) {
-        console.log('找到下载按钮元素');
-        
-        // ✅ 关键修复：彻底移除所有锁定相关的类
-        downloadBtn.classList.remove('download-btn-locked');
-        downloadBtn.classList.remove('locked'); // 移除可能存在的其他锁定类
-        
-        // 确保按钮可用
-        downloadBtn.disabled = false;
-        downloadBtnText.textContent = '下载报告';
-        
-        // 更新状态
-        STATE.isDownloadLocked = false;
-        
-        // ✅ 关键修复：使用更明确的样式覆盖
-        downloadBtn.style.cssText = `
-            background: linear-gradient(135deg, var(--primary-color), #3a7bd5) !important;
-            box-shadow: 0 4px 15px rgba(58, 123, 213, 0.4) !important;
-            cursor: pointer !important;
-            opacity: 1 !important;
-            pointer-events: auto !important;
-        `;
-        
-        console.log('✅ 下载按钮已解锁', {
-            disabled: downloadBtn.disabled,
-            classList: downloadBtn.className,
-            style: downloadBtn.style.cssText
-        });
-    } else {
-        console.error('❌ 找不到下载按钮元素');
-        // 尝试通过其他方式查找
-        const altDownloadBtn = document.getElementById('download-report-btn');
-        if (altDownloadBtn) {
-            console.log('通过备用方式找到下载按钮，强制解锁');
-            altDownloadBtn.disabled = false;
-            altDownloadBtn.classList.remove('download-btn-locked');
-            altDownloadBtn.classList.remove('locked');
-            altDownloadBtn.style.cssText = `
-                background: linear-gradient(135deg, var(--primary-color), #3a7bd5) !important;
-                box-shadow: 0 4px 15px rgba(58, 123, 213, 0.4) !important;
-                cursor: pointer !important;
-                opacity: 1 !important;
-                pointer-events: auto !important;
-            `;
-            STATE.isDownloadLocked = false;
-        }
+    const downloadBtn = document.getElementById('download-report-btn');
+    if (!downloadBtn) {
+        console.error('找不到下载按钮');
+        return;
     }
+    
+    // 彻底清理锁定状态
+    downloadBtn.disabled = false;
+    downloadBtn.classList.remove('download-btn-locked');
+    downloadBtn.classList.remove('locked');
+    
+    // 应用解锁样式
+    downloadBtn.style.cssText = `
+        background: linear-gradient(135deg, var(--primary-color), #3a7bd5) !important;
+        box-shadow: 0 4px 15px rgba(58, 123, 213, 0.4) !important;
+        cursor: pointer !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        color: white !important;
+        border: none !important;
+    `;
+    
+    // 更新文本
+    const downloadBtnText = document.getElementById('download-btn-text');
+    if (downloadBtnText) {
+        downloadBtnText.textContent = '下载报告';
+    }
+    
+    // 更新状态
+    STATE.isDownloadLocked = false;
+    
+    console.log('✅ 下载按钮已解锁');
 }
 
-// 重置解锁界面 - ✅ 修复2：确保切换服务时正确重置
+// 重置解锁界面
 export function resetUnlockInterface() {
-    console.log('resetUnlockInterface: 重置解锁界面');
-    
     const lockedOverlay = DOM.id('locked-overlay');
     if (!lockedOverlay) return;
     
@@ -878,18 +788,10 @@ export function animateButtonStretch() {
     const button = UI.analyzeBtn();
     if (!button) return;
     
-    // 添加拉伸动画类
     button.classList.add('stretching');
     
-    // 动画结束后移除类并恢复初始状态
     setTimeout(() => {
         button.classList.remove('stretching');
-        
-        // 5秒后恢复原始宽度
-        setTimeout(() => {
-            button.style.width = '';
-            button.style.maxWidth = '';
-        }, 5000);
     }, 800);
 }
 
@@ -921,7 +823,9 @@ export function showAnalysisResult() {
         UI.analysisTime().textContent = formatDate();
         
         // 滚动到结果区域
-        analysisResultSection.scrollIntoView({ behavior: 'smooth' });
+        setTimeout(() => {
+            analysisResultSection.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
     }
 }
 
@@ -942,7 +846,6 @@ export function resetFormErrors() {
 
 // 验证表单
 export function validateForm() {
-    console.log('验证表单...');
     let isValid = true;
     
     // 重置错误信息
