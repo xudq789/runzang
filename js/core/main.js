@@ -1,45 +1,283 @@
-// ============ 【支付宝支付回调处理】放在文件最开头 ============
-(function handleAlipayCallback() {
-    console.log('🌐 页面加载，检查URL参数...');
-    
+// ============ 【支付宝支付回调处理模块】 ============
+const AlipayCallbackHandler = {
     // 检查是否是支付宝回调
-    const urlParams = new URLSearchParams(window.location.search);
-    const hasAlipayParams = urlParams.has('out_trade_no') || urlParams.has('trade_no');
-    
-    if (hasAlipayParams) {
-        console.log('🎯 检测到支付宝支付回调！');
+    isAlipayCallback() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.has('out_trade_no') || urlParams.has('trade_no');
+    },
+
+    // 处理支付宝回调
+    async handle() {
+        console.log('🎯 开始处理支付宝回调...');
         
-        // 提取订单信息
+        const urlParams = new URLSearchParams(window.location.search);
         const orderId = urlParams.get('out_trade_no') || urlParams.get('trade_no');
-        console.log('订单号:', orderId);
+        const totalAmount = urlParams.get('total_amount');
+        const tradeNo = urlParams.get('trade_no');
         
-        if (orderId) {
-            // 保存支付信息到 localStorage
-            localStorage.setItem('alipay_paid_order', orderId);
-            localStorage.setItem('payment_callback_received', 'true');
-            localStorage.setItem('payment_callback_time', new Date().toISOString());
-            
-            // 保存其他参数
-            if (urlParams.get('total_amount')) {
-                localStorage.setItem('payment_amount', urlParams.get('total_amount'));
+        if (!orderId) {
+            console.log('未找到订单ID，不是支付宝回调');
+            return false;
+        }
+        
+        console.log('支付宝回调参数:', { orderId, totalAmount, tradeNo });
+        
+        // 保存支付信息到 localStorage
+        this.savePaymentInfo(orderId, totalAmount, tradeNo);
+        
+        // 清理URL参数（避免刷新后重复处理）
+        this.cleanUrlParams();
+        
+        return true;
+    },
+    
+    // 保存支付信息
+    savePaymentInfo(orderId, amount, tradeNo) {
+        const paymentData = {
+            orderId,
+            amount,
+            tradeNo,
+            timestamp: new Date().toISOString(),
+            callbackReceived: true
+        };
+        
+        localStorage.setItem('alipay_payment_data', JSON.stringify(paymentData));
+        console.log('支付信息已保存到 localStorage');
+    },
+    
+    // 清理URL参数
+    cleanUrlParams() {
+        try {
+            if (window.history.replaceState) {
+                const cleanUrl = window.location.pathname + window.location.hash;
+                window.history.replaceState({}, document.title, cleanUrl);
+                console.log('URL参数已清理');
             }
-            
-            console.log('支付信息已保存到 localStorage');
-            
-            // 清理URL参数（避免刷新后重复处理）
-            try {
-                if (window.history.replaceState) {
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                    console.log('URL参数已清理');
-                }
-            } catch (error) {
-                console.log('URL清理失败:', error);
-            }
+        } catch (error) {
+            console.log('URL清理失败:', error);
         }
     }
-})();
+};
 
-// ============ 原有代码开始 ============
+// ============ 【支付状态恢复模块】 ============
+const PaymentRestoreManager = {
+    // 检查并恢复支付状态
+    async checkAndRestore() {
+        console.log('🔍 开始检查支付状态...');
+        
+        // 1. 检查支付宝回调
+        if (AlipayCallbackHandler.isAlipayCallback()) {
+            console.log('检测到支付宝回调URL，先处理回调');
+            await AlipayCallbackHandler.handle();
+        }
+        
+        // 2. 检查已保存的支付信息
+        const paymentData = this.getPaymentData();
+        if (!paymentData) {
+            console.log('没有找到支付记录');
+            return false;
+        }
+        
+        console.log('找到支付记录:', paymentData.orderId);
+        
+        // 3. 验证支付状态
+        const verified = await this.verifyPaymentStatus(paymentData.orderId);
+        if (!verified) {
+            console.log('支付验证失败');
+            return false;
+        }
+        
+        // 4. 恢复支付状态并解锁内容
+        this.restoreAndUnlock();
+        return true;
+    },
+    
+    // 获取支付数据
+    getPaymentData() {
+        try {
+            const data = localStorage.getItem('alipay_payment_data');
+            return data ? JSON.parse(data) : null;
+        } catch (error) {
+            console.error('解析支付数据失败:', error);
+            return null;
+        }
+    },
+    
+    // 验证支付状态
+    async verifyPaymentStatus(orderId) {
+        try {
+            console.log('验证支付状态，订单号:', orderId);
+            const response = await fetch(`https://runzang.top/api/payment/status/${orderId}`);
+            const result = await response.json();
+            
+            console.log('支付验证响应:', result);
+            
+            if (result.success && result.data.status === 'paid') {
+                console.log('✅ 支付验证成功');
+                
+                // 标记为已验证
+                localStorage.setItem('payment_verified', 'true');
+                localStorage.setItem('verified_order_id', orderId);
+                
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('支付验证失败:', error);
+            return false;
+        }
+    },
+    
+    // 恢复并解锁
+    async restoreAndUnlock() {
+        console.log('🔓 开始恢复并解锁内容...');
+        
+        // 1. 检查是否有保存的分析结果
+        const savedResult = localStorage.getItem('last_analysis_result');
+        const savedService = localStorage.getItem('last_analysis_service');
+        const savedUserData = localStorage.getItem('last_user_data');
+        
+        // 2. 如果已经有分析结果显示，直接解锁
+        if (STATE.fullAnalysisResult) {
+            console.log('已有分析结果，直接解锁');
+            this.unlockContent();
+            return;
+        }
+        
+        // 3. 尝试从存储恢复分析结果
+        if (savedResult && savedService) {
+            console.log('从存储恢复分析结果');
+            await this.restoreAnalysis(savedResult, savedService, savedUserData);
+        } else {
+            console.log('没有找到保存的分析结果');
+            // 显示提示信息
+            this.showRestorePrompt();
+        }
+    },
+    
+    // 恢复分析结果
+    async restoreAnalysis(result, serviceName, userData) {
+        try {
+            // 恢复状态
+            STATE.fullAnalysisResult = result;
+            STATE.currentService = serviceName;
+            
+            if (userData) {
+                try {
+                    STATE.userData = JSON.parse(userData);
+                } catch (e) {
+                    console.error('解析用户数据失败:', e);
+                }
+            }
+            
+            // 处理结果
+            const parsedBaziData = parseBaziData(result);
+            STATE.baziData = parsedBaziData.userBazi;
+            
+            // 显示结果
+            displayPredictorInfo();
+            displayBaziPan();
+            processAndDisplayAnalysis(result);
+            showAnalysisResult();
+            
+            // 解锁内容
+            this.unlockContent();
+            
+            // 滚动到结果区域
+            setTimeout(() => {
+                const resultSection = document.getElementById('analysis-result-section');
+                if (resultSection) {
+                    resultSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 500);
+            
+        } catch (error) {
+            console.error('恢复分析失败:', error);
+            this.showRestoreError();
+        }
+    },
+    
+    // 解锁内容
+    unlockContent() {
+        STATE.isPaymentUnlocked = true;
+        STATE.isDownloadLocked = false;
+        
+        // 更新UI
+        if (typeof updateUnlockInterface === 'function') {
+            updateUnlockInterface();
+        }
+        
+        if (typeof showFullAnalysisContent === 'function') {
+            showFullAnalysisContent();
+        }
+        
+        if (typeof unlockDownloadButton === 'function') {
+            unlockDownloadButton();
+        }
+        
+        // 显示成功提示
+        this.showSuccessMessage();
+    },
+    
+    // 显示成功消息
+    showSuccessMessage() {
+        // 避免重复显示
+        if (document.getElementById('payment-success-alert')) return;
+        
+        const alertDiv = document.createElement('div');
+        alertDiv.id = 'payment-success-alert';
+        alertDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            z-index: 10000;
+            box-shadow: 0 4px 20px rgba(76, 175, 80, 0.3);
+            font-size: 16px;
+            font-weight: bold;
+            animation: slideDown 0.5s ease;
+            text-align: center;
+            min-width: 300px;
+            max-width: 90%;
+        `;
+        
+        alertDiv.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <span style="font-size: 20px;">✅</span>
+                <span>支付成功！算命报告已解锁</span>
+            </div>
+            <div style="margin-top: 8px; font-size: 12px; opacity: 0.9;">
+                现在可以查看完整分析和下载报告
+            </div>
+        `;
+        
+        document.body.appendChild(alertDiv);
+        
+        // 5秒后自动移除
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.parentNode.removeChild(alertDiv);
+            }
+        }, 5000);
+    },
+    
+    // 显示恢复提示
+    showRestorePrompt() {
+        // 可以添加一个提示，让用户重新输入信息
+        console.log('需要用户重新输入信息进行测算');
+    },
+    
+    // 显示恢复错误
+    showRestoreError() {
+        alert('恢复分析结果失败，请重新进行测算分析');
+    }
+};
+
+// ============ 【原有主应用代码 - 保持结构清晰】 ============
 // 主入口文件
 import { SERVICES, STATE } from './config.js';
 import { checkAPIStatus, parseBaziData, callDeepSeekAPI } from './api.js';
@@ -81,173 +319,84 @@ const SERVICE_MODULES = {
     '八字合婚': HehunModule
 };
 
-// ============ 【新增】支付解锁功能 ============
+// ============ 【支付相关函数】 ============
 
-// 检查支付状态并解锁
-async function checkAndUnlockPayment() {
-    console.log('🔍 检查支付状态...');
-    
-    const paidOrderId = localStorage.getItem('alipay_paid_order');
-    if (!paidOrderId) {
-        console.log('没有支付记录');
-        return false;
-    }
-    
-    console.log('找到支付订单:', paidOrderId);
-    
-    try {
-        // 验证支付状态
-        const response = await fetch(`https://runzang.top/api/payment/status/${paidOrderId}`);
-        const result = await response.json();
-        
-        console.log('支付验证结果:', result);
-        
-        if (result.success && result.data.status === 'paid') {
-            console.log('✅ 支付验证成功，准备解锁');
-            
-            // 标记为已支付
-            localStorage.setItem('payment_verified', 'true');
-            localStorage.setItem('verified_order_id', paidOrderId);
-            
-            // 解锁内容
-            unlockContentImmediately();
-            
-            return true;
-        } else {
-            console.log('支付状态不是已支付:', result.data?.status);
-            return false;
-        }
-    } catch (error) {
-        console.error('支付验证失败:', error);
-        return false;
-    }
-}
-
-// 立即解锁内容
-function unlockContentImmediately() {
-    console.log('🔓 立即解锁报告内容');
-    
-    if (!STATE.fullAnalysisResult) {
-        console.log('没有分析结果，无法解锁');
-        return;
-    }
-    
-    // 更新全局状态
+// 支付成功处理函数
+function handlePaymentSuccess() {
+    // 设置支付解锁状态
     STATE.isPaymentUnlocked = true;
     STATE.isDownloadLocked = false;
     
-    // 更新UI
-    if (typeof updateUnlockInterface === 'function') {
-        updateUnlockInterface();
-    }
+    // 关闭支付弹窗
+    closePaymentModal();
     
-    if (typeof showFullAnalysisContent === 'function') {
-        showFullAnalysisContent();
-    }
+    // 更新解锁界面
+    updateUnlockInterface();
     
-    if (typeof unlockDownloadButton === 'function') {
-        unlockDownloadButton();
-    }
+    // 显示完整内容
+    showFullAnalysisContent();
+    
+    // 解锁下载按钮
+    unlockDownloadButton();
     
     // 显示成功提示
-    showPaymentSuccessMessage();
-    
-    console.log('✅ 解锁完成');
+    PaymentRestoreManager.showSuccessMessage();
 }
 
-// 显示支付成功消息
-function showPaymentSuccessMessage() {
-    // 避免重复显示
-    if (document.getElementById('payment-success-alert')) return;
+// 确认支付（用户手动点击"我已支付"时调用）
+function confirmPayment() {
+    // 检查是否有订单ID
+    if (!STATE.currentOrderId) {
+        alert('请先点击"前往支付宝支付"按钮完成支付');
+        return;
+    }
     
-    const alertDiv = document.createElement('div');
-    alertDiv.id = 'payment-success-alert';
-    alertDiv.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: linear-gradient(135deg, #4CAF50, #45a049);
-        color: white;
-        padding: 15px 30px;
-        border-radius: 8px;
-        z-index: 10000;
-        box-shadow: 0 4px 20px rgba(76, 175, 80, 0.3);
-        font-size: 16px;
-        font-weight: bold;
-        animation: slideDown 0.5s ease;
-        text-align: center;
-        min-width: 300px;
-        max-width: 90%;
-    `;
+    const confirmed = confirm('如果您已完成支付宝支付，请点击"确定"解锁内容。\n如支付遇到问题，请联系客服微信：runzang888');
     
-    alertDiv.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-            <span style="font-size: 20px;">✅</span>
-            <span>支付成功！算命报告已解锁</span>
-        </div>
-        <div style="margin-top: 8px; font-size: 12px; opacity: 0.9;">
-            现在可以查看完整分析和下载报告
-        </div>
-    `;
-    
-    // 添加动画样式
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideDown {
-            from { top: -100px; opacity: 0; }
-            to { top: 20px; opacity: 1; }
-        }
-    `;
-    document.head.appendChild(style);
-    
-    document.body.appendChild(alertDiv);
-    
-    // 5秒后自动移除
-    setTimeout(() => {
-        if (alertDiv.parentNode) {
-            alertDiv.parentNode.removeChild(alertDiv);
-        }
-    }, 5000);
+    if (confirmed) {
+        // 调用后端接口检查支付状态
+        fetch(`https://runzang.top/api/payment/status/${STATE.currentOrderId}`)
+            .then(response => response.json())
+            .then(result => {
+                if (result.success && result.data.status === 'paid') {
+                    // 支付成功，解锁内容
+                    handlePaymentSuccess();
+                } else {
+                    alert('支付状态未确认，请稍后再试或联系客服');
+                }
+            })
+            .catch(error => {
+                console.error('检查支付状态失败:', error);
+                alert('网络错误，请稍后重试');
+            });
+    }
 }
 
-// ============ 原有初始化函数 ============
+// ============ 【主要应用函数】 ============
 
 // 初始化应用
 async function initApp() {
     console.log('🚀 应用初始化开始...');
     
     try {
-        // ============ 【新增】支付状态检查和解锁 ============
-        // 延迟执行，确保页面完全加载
-        setTimeout(async () => {
-            await checkAndUnlockPayment();
-        }, 1000);
+        // ============ 【第一步：处理支付回调】 ============
+        console.log('1. 检查支付回调...');
+        await PaymentRestoreManager.checkAndRestore();
         
-        // ============ 原有初始化代码 ============
-        // 初始化表单选项
+        // ============ 【第二步：常规初始化】 ============
+        console.log('2. 常规初始化...');
         initFormOptions();
-        
-        // 设置默认值
         setDefaultValues();
-        
-        // 更新服务显示
         updateServiceDisplay(STATE.currentService);
-        
-        // 更新解锁信息
         updateUnlockInfo();
-        
-        // 锁定下载按钮
         lockDownloadButton();
-        
-        // 设置事件监听器
         setupEventListeners();
-        
-        // 检查API状态
         STATE.apiStatus = await checkAPIStatus();
-        
-        // 预加载图片
         preloadImages();
+        
+        // ============ 【第三步：设置支付状态监听】 ============
+        console.log('3. 设置支付状态监听...');
+        setupPaymentListeners();
         
         console.log('✅ 应用初始化完成');
         
@@ -320,24 +469,27 @@ function setupEventListeners() {
             if (placeholder) placeholder.style.display = 'none';
         });
     }
-    
-    // ============ 【新增】支付相关事件监听 ============
-    
+}
+
+// 设置支付状态监听
+function setupPaymentListeners() {
     // 监听页面可见性变化（用户从支付宝返回时）
     document.addEventListener('visibilitychange', function() {
         if (!document.hidden) {
             console.log('页面变为可见，检查支付状态');
             setTimeout(() => {
-                checkAndUnlockPayment();
-            }, 500);
+                PaymentRestoreManager.checkAndRestore();
+            }, 1000);
         }
     });
     
     // 监听storage变化（跨标签页通信）
     window.addEventListener('storage', function(event) {
-        if (event.key === 'alipay_paid_order' && event.newValue) {
+        if (event.key === 'alipay_payment_data' && event.newValue) {
             console.log('检测到storage支付状态变化');
-            checkAndUnlockPayment();
+            setTimeout(() => {
+                PaymentRestoreManager.checkAndRestore();
+            }, 500);
         }
     });
 }
@@ -392,7 +544,6 @@ function switchService(serviceName) {
 function preloadImages() {
     console.log('预加载图片...');
     
-    // 预加载所有服务图片
     Object.values(SERVICES).forEach(service => {
         const heroImg = new Image();
         heroImg.src = service.heroImage;
@@ -435,6 +586,10 @@ async function startAnalysis() {
         // 收集用户数据
         collectUserData();
         
+        // 保存用户数据到 localStorage（用于支付后恢复）
+        localStorage.setItem('last_user_data', JSON.stringify(STATE.userData || {}));
+        localStorage.setItem('last_analysis_service', STATE.currentService);
+        
         // 先显示预测者信息
         displayPredictorInfo();
         
@@ -465,6 +620,10 @@ async function startAnalysis() {
         // 保存完整分析结果
         STATE.fullAnalysisResult = analysisResult;
         
+        // 保存到 localStorage（用于支付后恢复）
+        localStorage.setItem('last_analysis_result', analysisResult);
+        console.log('分析结果已保存到 localStorage');
+        
         // 处理分析结果，提取八字数据
         const parsedBaziData = parseBaziData(analysisResult);
         STATE.baziData = parsedBaziData.userBazi;
@@ -484,12 +643,17 @@ async function startAnalysis() {
         
         console.log('命理分析完成，结果已显示');
         
-        // ============ 【新增】如果有待解锁的支付，立即解锁 ============
-        const hasPaidOrder = localStorage.getItem('alipay_paid_order');
-        if (hasPaidOrder && !STATE.isPaymentUnlocked) {
+        // 如果有待解锁的支付，立即解锁
+        const paymentData = PaymentRestoreManager.getPaymentData();
+        if (paymentData && !STATE.isPaymentUnlocked) {
             console.log('分析完成，检查是否有待解锁的支付');
             setTimeout(() => {
-                checkAndUnlockPayment();
+                PaymentRestoreManager.verifyPaymentStatus(paymentData.orderId)
+                    .then(verified => {
+                        if (verified) {
+                            PaymentRestoreManager.unlockContent();
+                        }
+                    });
             }, 500);
         }
         
@@ -512,57 +676,6 @@ async function startAnalysis() {
         
         alert(errorMessage + '\n\n错误详情：' + error.message);
     }
-}
-
-// 确认支付（用户手动点击"我已支付"时调用）
-function confirmPayment() {
-    // 检查是否有订单ID
-    if (!STATE.currentOrderId) {
-        alert('请先点击"前往支付宝支付"按钮完成支付');
-        return;
-    }
-    
-    const confirmed = confirm('如果您已完成支付宝支付，请点击"确定"解锁内容。\n如支付遇到问题，请联系客服微信：runzang888');
-    
-    if (confirmed) {
-        // 调用后端接口检查支付状态
-        fetch(`https://runzang.top/api/payment/status/${STATE.currentOrderId}`)
-            .then(response => response.json())
-            .then(result => {
-                if (result.success && result.data.status === 'paid') {
-                    // 支付成功，解锁内容
-                    handlePaymentSuccess();
-                } else {
-                    alert('支付状态未确认，请稍后再试或联系客服');
-                }
-            })
-            .catch(error => {
-                console.error('检查支付状态失败:', error);
-                alert('网络错误，请稍后重试');
-            });
-    }
-}
-
-// 支付成功处理函数
-function handlePaymentSuccess() {
-    // 设置支付解锁状态
-    STATE.isPaymentUnlocked = true;
-    STATE.isDownloadLocked = false;
-    
-    // 关闭支付弹窗
-    closePaymentModal();
-    
-    // 更新解锁界面
-    updateUnlockInterface();
-    
-    // 显示完整内容
-    showFullAnalysisContent();
-    
-    // 解锁下载按钮
-    unlockDownloadButton();
-    
-    // 显示成功提示
-    showPaymentSuccessMessage();
 }
 
 // 下载报告
@@ -681,6 +794,8 @@ function newAnalysis() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// ============ 【页面初始化】 ============
+
 // 页面加载完成后初始化
 window.addEventListener('DOMContentLoaded', initApp);
 
@@ -693,5 +808,3 @@ window.confirmPayment = confirmPayment;
 window.downloadReport = downloadReport;
 window.newAnalysis = newAnalysis;
 window.handlePaymentSuccess = handlePaymentSuccess;
-window.checkAndUnlockPayment = checkAndUnlockPayment; // 【新增】导出支付检查函数
-window.unlockContentImmediately = unlockContentImmediately; // 【新增】导出解锁函数
