@@ -182,7 +182,7 @@ export function updateServiceDisplay(serviceName) {
 export function updateUnlockInfo() {
     // 确保使用当前服务
     const currentService = STATE.currentService;
-    console.log('updateUnlockInfo: 当前服务=', currentService);
+    console.log('updateUnlockInfo: 当前服务=', currentService, '解锁状态=', STATE.isPaymentUnlocked);
     
     const serviceConfig = SERVICES[currentService];
     if (!serviceConfig) {
@@ -193,7 +193,6 @@ export function updateUnlockInfo() {
     // 更新价格
     const unlockPriceElement = UI.unlockPrice();
     if (unlockPriceElement) {
-        console.log('updateUnlockInfo: 更新价格=', serviceConfig.price);
         unlockPriceElement.textContent = serviceConfig.price;
     }
     
@@ -202,17 +201,14 @@ export function updateUnlockInfo() {
     const unlockCountElement = UI.unlockCount();
     
     if (unlockItemsList && unlockCountElement) {
-        console.log('updateUnlockInfo: 更新项目列表, 项目数=', serviceConfig.lockedItems.length);
-        
         unlockItemsList.innerHTML = '';
         
         const lockedItems = serviceConfig.lockedItems;
         
         // 更新项目数量
         unlockCountElement.textContent = lockedItems.length;
-        console.log('updateUnlockInfo: 解锁状态=', STATE.isPaymentUnlocked);
         
-        // 创建项目列表 - 根据当前解锁状态显示
+        // ✅ 根据当前解锁状态显示
         lockedItems.forEach(item => {
             const li = document.createElement('li');
             if (STATE.isPaymentUnlocked) {
@@ -572,46 +568,7 @@ export function processAndDisplayAnalysis(result) {
     }
 }
 
-// ============ 【新增】支付状态检查函数 ============
-export async function checkPaymentStatus(orderId) {
-    return new Promise((resolve) => {
-        let checkCount = 0;
-        const maxChecks = 10; // 30秒（10*3秒）
-        
-        const checkInterval = setInterval(async () => {
-            checkCount++;
-            
-            try {
-                const response = await fetch(`https://runzang.top/api/payment/status/${orderId}`);
-                const result = await response.json();
-                
-                console.log(`第${checkCount}次检查支付状态:`, result.data?.status);
-                
-                if (result.success && result.data.status === 'paid') {
-                    clearInterval(checkInterval);
-                    
-                    // ✅ 关键：保存支付状态到 localStorage
-                    localStorage.setItem('paid_order_id', orderId);
-                    localStorage.setItem('payment_verified', 'true');
-                    localStorage.setItem('payment_time', new Date().toISOString());
-                    
-                    resolve({ success: true, data: result.data });
-                } else if (checkCount >= maxChecks) {
-                    clearInterval(checkInterval);
-                    resolve({ success: false, message: '支付超时' });
-                }
-            } catch (error) {
-                console.log('检查支付状态出错:', error.message);
-                if (checkCount >= maxChecks) {
-                    clearInterval(checkInterval);
-                    resolve({ success: false, message: '网络错误' });
-                }
-            }
-        }, 3000); // 3秒检查一次
-    });
-}
-
-// ============ 【修改】显示支付弹窗 - 当前窗口支付方案 ============
+// ============ 【修改】显示支付弹窗 - 当前窗口支付方案（移除弹窗提示） ============
 export async function showPaymentModal() {
     console.log('调用支付接口...');
     
@@ -663,13 +620,7 @@ export async function showPaymentModal() {
         // 4. 清除旧的支付按钮
         const oldBtn = document.getElementById('alipay-redirect-btn');
         if (oldBtn) oldBtn.remove();
-
-        // 在创建支付按钮之前，保存分析数据
-        if (!PaymentManager.saveAnalysisBeforePayment()) {
-            alert('无法保存分析数据，请重新测算');
-            return;
-        }
-
+        
         // 5. 创建支付按钮
         const payBtn = document.createElement('button');
         payBtn.id = 'alipay-redirect-btn';
@@ -695,14 +646,14 @@ export async function showPaymentModal() {
             </span>
         `;
         
-        // 6. 支付按钮点击事件 - 【关键修改：当前窗口支付】
+        // 6. 支付按钮点击事件 - ✅ 关键修复：移除弹窗提示，直接跳转
         payBtn.onclick = async () => {
             console.log('跳转到支付宝支付，订单号:', outTradeNo);
             
             // 保存订单ID到全局状态
             STATE.currentOrderId = outTradeNo;
             
-            // ✅ 关键：保存分析结果到 localStorage（防止丢失）
+            // ✅ 保存分析结果到 localStorage（防止丢失）
             if (STATE.fullAnalysisResult) {
                 localStorage.setItem('last_analysis_result', STATE.fullAnalysisResult);
                 localStorage.setItem('last_analysis_service', STATE.currentService);
@@ -710,22 +661,8 @@ export async function showPaymentModal() {
                 console.log('分析结果已保存到 localStorage');
             }
             
-            // ✅ 显示重要提示
-            const confirmed = confirm(
-                '重要提示：\n\n' +
-                '1. 即将跳转到支付宝完成支付\n' +
-                '2. 支付完成后会自动返回本页面\n' +
-                '3. 返回后会看到已解锁的完整报告\n' +
-                '4. 请不要关闭当前窗口\n\n' +
-                '点击"确定"继续支付'
-            );
-            
-            if (confirmed) {
-                // ✅ 关键：在当前窗口打开支付宝（不是新窗口！）
-                window.location.href = paymentUrl;
-                
-                // 注意：不需要 closePaymentModal()，因为页面会跳转
-            }
+            // ✅ 直接跳转到支付宝，不显示弹窗提示
+            window.location.href = paymentUrl;
         };
         
         // 7. 插入到支付弹窗
@@ -823,6 +760,7 @@ export function lockDownloadButton() {
         downloadBtn.classList.add('download-btn-locked');
         downloadBtnText.textContent = '下载报告';
         STATE.isDownloadLocked = true;
+        console.log('🔒 下载按钮已锁定');
     }
 }
 
@@ -832,22 +770,34 @@ export function unlockDownloadButton() {
     const downloadBtnText = DOM.id('download-btn-text');
     
     if (downloadBtn && downloadBtnText) {
+        console.log('🔓 开始解锁下载按钮...');
         downloadBtn.disabled = false;
         downloadBtn.classList.remove('download-btn-locked');
         downloadBtnText.textContent = '下载报告';
         STATE.isDownloadLocked = false;
+        
+        // 添加视觉反馈
+        downloadBtn.style.background = 'linear-gradient(135deg, var(--primary-color), #3a7bd5)';
+        downloadBtn.style.boxShadow = '0 4px 15px rgba(58, 123, 213, 0.4)';
+        
+        console.log('✅ 下载按钮已解锁');
+    } else {
+        console.error('❌ 找不到下载按钮元素');
     }
 }
 
 // 重置解锁界面
 export function resetUnlockInterface() {
-    console.log('resetUnlockInterface: 重置解锁界面');
+    console.log('resetUnlockInterface: 重置解锁界面，当前解锁状态=', STATE.isPaymentUnlocked);
     
     const lockedOverlay = DOM.id('locked-overlay');
     if (!lockedOverlay) return;
     
-    // 重置标题 - 只在未解锁时重置
+    // ✅ 关键修复：只有在未支付时才重置为锁定状态
     if (!STATE.isPaymentUnlocked) {
+        console.log('未支付，重置为锁定界面');
+        
+        // 重置标题
         const unlockHeader = lockedOverlay.querySelector('.unlock-header');
         if (unlockHeader) {
             const lockIcon = unlockHeader.querySelector('.lock-icon');
@@ -858,10 +808,22 @@ export function resetUnlockInterface() {
             if (headerTitle) headerTitle.textContent = '完整内容已锁定';
             if (headerDesc) headerDesc.textContent = '解锁完整分析报告，查看全部命理分析内容';
         }
-    }
-    
-    // 重置解锁按钮 - 只在未解锁时重置
-    if (!STATE.isPaymentUnlocked) {
+        
+        // 重置项目列表
+        const unlockItemsList = UI.unlockItemsList();
+        if (unlockItemsList) {
+            unlockItemsList.innerHTML = '';
+            const serviceConfig = SERVICES[STATE.currentService];
+            if (serviceConfig) {
+                serviceConfig.lockedItems.forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerHTML = '<span>🔒 ' + item + '</span>';
+                    unlockItemsList.appendChild(li);
+                });
+            }
+        }
+        
+        // 重置解锁按钮
         const unlockBtnContainer = lockedOverlay.querySelector('.unlock-btn-container');
         if (unlockBtnContainer) {
             const unlockBtn = unlockBtnContainer.querySelector('.unlock-btn');
@@ -878,6 +840,10 @@ export function resetUnlockInterface() {
                 unlockPrice.innerHTML = `共包含 <span id="unlock-count">${itemCount}</span> 项详细分析`;
             }
         }
+    } else {
+        console.log('已支付，保持解锁界面');
+        // 已支付状态，保持解锁界面不变
+        updateUnlockInterface();
     }
 }
 
@@ -1023,4 +989,3 @@ export function collectUserData() {
         };
     }
 }
-
