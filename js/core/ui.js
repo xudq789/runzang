@@ -568,7 +568,7 @@ export function processAndDisplayAnalysis(result) {
     }
 }
 
-// ============ 【修改】显示支付弹窗 - 修复支付逻辑 ============
+// ============ 【修改】显示支付弹窗 - 移除弹窗提示 ============
 export async function showPaymentModal() {
     console.log('调用支付接口...');
     
@@ -617,17 +617,6 @@ export async function showPaymentModal() {
         UI.paymentAmount().textContent = '¥' + amount;
         UI.paymentOrderId().textContent = outTradeNo;
         
-        // 保存订单ID到全局状态
-        STATE.currentOrderId = outTradeNo;
-        
-        // ✅ 关键修复：保存分析结果到 localStorage
-        if (STATE.fullAnalysisResult) {
-            localStorage.setItem('last_analysis_result', STATE.fullAnalysisResult);
-            localStorage.setItem('last_analysis_service', STATE.currentService);
-            localStorage.setItem('last_user_data', JSON.stringify(STATE.userData || {}));
-            console.log('分析结果已保存到 localStorage');
-        }
-        
         // 4. 清除旧的支付按钮
         const oldBtn = document.getElementById('alipay-redirect-btn');
         if (oldBtn) oldBtn.remove();
@@ -657,11 +646,22 @@ export async function showPaymentModal() {
             </span>
         `;
         
-        // 6. 支付按钮点击事件 - ✅ 关键修复：直接跳转，不显示确认弹窗
+        // 6. 支付按钮点击事件 - ✅ 修复3：移除弹窗提示，直接跳转
         payBtn.onclick = async () => {
             console.log('跳转到支付宝支付，订单号:', outTradeNo);
             
-            // ✅ 直接跳转到支付宝
+            // 保存订单ID到全局状态
+            STATE.currentOrderId = outTradeNo;
+            
+            // ✅ 保存分析结果到 localStorage（防止丢失）
+            if (STATE.fullAnalysisResult) {
+                localStorage.setItem('last_analysis_result', STATE.fullAnalysisResult);
+                localStorage.setItem('last_analysis_service', STATE.currentService);
+                localStorage.setItem('last_user_data', JSON.stringify(STATE.userData || {}));
+                console.log('分析结果已保存到 localStorage');
+            }
+            
+            // ✅ 直接跳转到支付宝，不显示弹窗提示
             window.location.href = paymentUrl;
         };
         
@@ -763,17 +763,13 @@ export function lockDownloadButton() {
     }
 }
 
-// 解锁下载按钮 - ✅ 修复：确保能正确解锁
+// 解锁下载按钮 - ✅ 修复1：确保能正确解锁
 export function unlockDownloadButton() {
-    console.log('🔓 unlockDownloadButton 被调用');
-    console.log('当前 STATE.isPaymentUnlocked:', STATE.isPaymentUnlocked);
-    console.log('当前 STATE.isDownloadLocked:', STATE.isDownloadLocked);
-    
     const downloadBtn = UI.downloadReportBtn();
     const downloadBtnText = DOM.id('download-btn-text');
     
     if (downloadBtn && downloadBtnText) {
-        console.log('找到下载按钮元素');
+        console.log('🔓 开始解锁下载按钮...');
         downloadBtn.disabled = false;
         downloadBtn.classList.remove('download-btn-locked');
         downloadBtnText.textContent = '下载报告';
