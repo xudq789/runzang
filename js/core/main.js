@@ -395,16 +395,9 @@ const SERVICE_MODULES = {
 
 // 支付成功处理函数
 function handlePaymentSuccess() {
-    console.log('🔄 handlePaymentSuccess 被调用');
-    
-    // ✅ 确保状态正确设置
+    // 设置支付解锁状态
     STATE.isPaymentUnlocked = true;
     STATE.isDownloadLocked = false;
-    
-    console.log('支付后状态:', {
-        isPaymentUnlocked: STATE.isPaymentUnlocked,
-        isDownloadLocked: STATE.isDownloadLocked
-    });
     
     // 关闭支付弹窗
     closePaymentModal();
@@ -415,20 +408,8 @@ function handlePaymentSuccess() {
     // 显示完整内容
     showFullAnalysisContent();
     
-    // ✅ 确保下载按钮解锁
-    if (typeof unlockDownloadButton === 'function') {
-        console.log('调用 unlockDownloadButton');
-        unlockDownloadButton();
-    } else {
-        console.error('unlockDownloadButton 函数未定义');
-        // 备选方案
-        const downloadBtn = document.getElementById('download-report-btn');
-        if (downloadBtn) {
-            downloadBtn.disabled = false;
-            downloadBtn.classList.remove('download-btn-locked');
-            STATE.isDownloadLocked = false;
-        }
-    }
+    // 解锁下载按钮
+    unlockDownloadButton();
     
     // 显示成功提示
     PaymentManager.showSuccessMessage();
@@ -445,20 +426,20 @@ function confirmPayment() {
     const confirmed = confirm('如果您已完成支付宝支付，请点击"确定"解锁内容。\n如支付遇到问题，请联系客服微信：runzang888');
     
     if (confirmed) {
-        // 直接调用支付成功处理函数
-        console.log('用户确认支付完成，手动解锁内容');
-        handlePaymentSuccess();
-        
-        // 可选：同时向后端查询状态
+        // 调用后端接口检查支付状态
         fetch(`https://runzang.top/api/payment/status/${STATE.currentOrderId}`)
             .then(response => response.json())
             .then(result => {
                 if (result.success && result.data.status === 'paid') {
-                    console.log('后端确认支付成功');
+                    // 支付成功，解锁内容
+                    handlePaymentSuccess();
+                } else {
+                    alert('支付状态未确认，请稍后再试或联系客服');
                 }
             })
             .catch(error => {
                 console.error('检查支付状态失败:', error);
+                alert('网络错误，请稍后重试');
             });
     }
 }
