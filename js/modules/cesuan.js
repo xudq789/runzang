@@ -11,7 +11,7 @@ export class CesuanModule {
                 '性格分析',
                 '职业推荐',
                 '富贵层次评估',
-                '过往大运营凶分析',
+                '过往大运吉凶分析',
                 '过往关键流年验证',
                 '专业建议与指导'
             ]
@@ -27,7 +27,7 @@ export class CesuanModule {
 出生时间：${userData.birthYear}年${userData.birthMonth}月${userData.birthDay}日${userData.birthHour}时${userData.birthMinute}分
 出生城市：${userData.birthCity}
 
-请先进行八字排盘，大运排盘应准确排出起运岁数并检查有无明显逻辑错误，男命阳顺阴逆，女命阳逆阴顺，然后用以下格式输出结果：
+请先进行八字排盘，大运排盘应准确排出起运岁数并检查有无明显逻辑错误（三日一年），男命阳顺阴逆，女命阳逆阴顺，然后用以下格式输出结果：
 
 【八字排盘】
 年柱：[年柱干支] ([五行属性])
@@ -55,7 +55,7 @@ export class CesuanModule {
 【富贵层次评估】
 评估用户的富贵层次，包括财富、事业和社会地位等方面的潜力。
 
-【过往大运营凶分析】
+【过往大运吉凶分析】
 分析用户过往大运的吉凶情况，指出关键时期和转折点。
 
 【过往关键流年验证】
@@ -76,5 +76,6 @@ export class CesuanModule {
         return calculateBazi(userData);
     }
 }
+
 
 
