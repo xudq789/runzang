@@ -355,55 +355,6 @@
 
     <!-- 模块化JavaScript文件 -->
     <script src="js/core/main.js" type="module"></script>
-
-    <script>
-    // 页面加载时检查支付状态
-    window.addEventListener('load', function() {
-        console.log('页面加载完成，检查支付状态');
-    
-        // 从URL检查支付回调
-        const urlParams = new URLSearchParams(window.location.search);
-        const paymentSuccess = urlParams.get('payment_success');
-        const orderId = urlParams.get('order_id');
-    
-        if (paymentSuccess === 'true' && orderId) {
-            console.log('检测到支付成功回调，订单:', orderId);
-        
-            // 清理URL参数
-            window.history.replaceState({}, '', window.location.pathname);
-        
-            // 保存支付状态
-            localStorage.setItem('paid_order_' + orderId, 'true');
-            localStorage.setItem('last_paid_order', orderId);
-        
-            // 显示解锁提示
-            setTimeout(function() {
-                alert('支付成功！内容已解锁，您现在可以下载报告了。');
-            
-                // 如果已生成报告，自动解锁下载
-                if (typeof unlockDownloadButton === 'function') {
-                    unlockDownloadButton();
-                }
-            }, 1000);
-        }
-    });
-
-    // 每隔5秒检查一次支付状态（应急用）
-    setInterval(function() {
-        if (window.STATE && window.STATE.isPaymentUnlocked && window.STATE.isDownloadLocked) {
-            console.log('状态不一致：已支付但下载锁定，自动修复');
-            window.STATE.isDownloadLocked = false;
-        
-            const downloadBtn = document.getElementById('download-report-btn');
-            if (downloadBtn && downloadBtn.disabled) {
-                downloadBtn.disabled = false;
-                downloadBtn.classList.remove('download-btn-locked');
-                downloadBtn.style.background = 'linear-gradient(135deg, var(--primary-color), #3a7bd5)';
-                downloadBtn.style.boxShadow = '0 4px 15px rgba(58, 123, 213, 0.4)';
-            }
-        }
-    }, 5000);
-    </script>
 </body>
 </html>
 
@@ -466,8 +417,3 @@ emergencyBtn.addEventListener('click', function() {
 // 页面加载后检查
 window.addEventListener('load', checkEmergency);
 </script>
-
-
-
-
-
