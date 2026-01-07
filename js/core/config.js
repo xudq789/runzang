@@ -18,7 +18,7 @@ export const SERVICES = {
 出生时间：{birthYear}年{birthMonth}月{birthDay}日{birthHour}时{birthMinute}分
 出生城市：{birthCity}
 
-请先进行八字排盘，大运排盘应准确排出起运岁数并检查是否有明细错误，男命阳顺阴逆，女命阳逆阴顺，然后用以下格式输出结果：
+请先进行八字排盘，大运排盘应准确排出起运岁数并检查有无明显逻辑错误，男命阳顺阴逆，女命阳逆阴顺，然后用以下格式输出结果：
 
 【八字排盘】
 年柱：[年柱干支] ([五行属性])
@@ -82,7 +82,7 @@ export const SERVICES = {
 出生时间：{birthYear}年{birthMonth}月{birthDay}日{birthHour}时{birthMinute}分
 出生城市：{birthCity}
 
-请先进行八字排盘，大运排盘应准确排出起运岁数并检查是否有明细错误，男命阳顺阴逆，女命阳逆阴顺，然后用以下格式输出结果：
+请先进行八字排盘，大运排盘应准确排出起运岁数并检查有无明显逻辑错误，男命阳顺阴逆，女命阳逆阴顺，然后用以下格式输出结果：
 
 【八字排盘】
 年柱：[年柱干支] ([五行属性])
@@ -153,7 +153,7 @@ export const SERVICES = {
 出生时间：{birthYear}年{birthMonth}月{birthDay}日{birthHour}时{birthMinute}分
 出生城市：{birthCity}
 
-请先进行八字排盘，大运排盘应准确排出起运岁数并检查是否有明细错误，男命阳顺阴逆，女命阳逆阴顺，然后用以下格式输出结果：
+请先进行八字排盘，大运排盘应准确排出起运岁数并检查有无明显逻辑错误，男命阳顺阴逆，女命阳逆阴顺，然后用以下格式输出结果：
 
 【八字排盘】
 年柱：[年柱干支] ([五行属性])
@@ -231,7 +231,7 @@ export const SERVICES = {
 出生时间：{partnerBirthYear}年{partnerBirthMonth}月{partnerBirthDay}日{partnerBirthHour}时{partnerBirthMinute}分
 出生城市：{partnerBirthCity}
 
-请先进行八字排盘，大运排盘应准确排出起运岁数并检查是否有明细错误，男命阳顺阴逆，女命阳逆阴顺，然后用以下格式输出结果：
+请先进行八字排盘，大运排盘应准确排出起运岁数并检查有无明显逻辑错误，男命阳顺阴逆，女命阳逆阴顺，然后用以下格式输出结果：
 
 【用户八字排盘】
 年柱：[年柱干支] ([五行属性])
@@ -309,11 +309,3 @@ export const PAYMENT_CONFIG = {
   GATEWAY_URL: 'https://runzang.top/api/payment'  // 只有这一行就够了
   // 删除其他复杂的配置
 };
-
-
-
-
-
-
-
-
