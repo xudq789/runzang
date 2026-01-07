@@ -384,7 +384,8 @@ const emergencyBtn = document.getElementById('emergency-unlock-btn');
 function checkEmergency() {
   const urlParams = new URLSearchParams(window.location.search);
   const hasAlipayCallback = urlParams.has('out_trade_no');
-  const isLocked = document.querySelector('#locked-overlay')?.style.display !== 'none';
+  const lockedOverlay = document.getElementById('locked-overlay');
+  const isLocked = lockedOverlay && lockedOverlay.style.display !== 'none';
   
   if (hasAlipayCallback && isLocked) {
     emergencyBtn.style.display = 'block';
@@ -401,8 +402,15 @@ emergencyBtn.addEventListener('click', function() {
     // 标记为已支付
     localStorage.setItem('paid_order_id', orderId);
     
-    // 解锁内容
-    unlockAllContent();
+    // 检查 PaymentManager 是否已定义
+    if (typeof window.PaymentManager !== 'undefined' && 
+        typeof window.PaymentManager.unlockContent === 'function') {
+      // 使用全局的 PaymentManager 解锁
+      window.PaymentManager.unlockContent(orderId);
+    } else {
+      // 直接解锁内容（简化版）
+      unlockAllContent();
+    }
     
     // 清理URL
     window.history.replaceState({}, '', window.location.pathname);
@@ -414,6 +422,46 @@ emergencyBtn.addEventListener('click', function() {
   }
 });
 
+// 直接解锁内容的函数（当 PaymentManager 不可用时）
+function unlockAllContent() {
+  // 设置状态
+  if (typeof window.STATE !== 'undefined') {
+    window.STATE.isPaymentUnlocked = true;
+    window.STATE.isDownloadLocked = false;
+  }
+  
+  // 解锁界面
+  const lockedOverlay = document.getElementById('locked-overlay');
+  if (lockedOverlay) {
+    // 更新解锁界面
+    const lockIcon = lockedOverlay.querySelector('.lock-icon');
+    const headerTitle = lockedOverlay.querySelector('h4');
+    const headerDesc = lockedOverlay.querySelector('p');
+    
+    if (lockIcon) lockIcon.textContent = '✅';
+    if (headerTitle) headerTitle.textContent = '完整报告已解锁';
+    if (headerDesc) headerDesc.textContent = '您可以查看全部命理分析内容';
+    
+    // 解锁下载按钮
+    const downloadBtn = document.getElementById('download-report-btn');
+    if (downloadBtn) {
+      downloadBtn.disabled = false;
+      downloadBtn.classList.remove('download-btn-locked');
+      const downloadBtnText = document.getElementById('download-btn-text');
+      if (downloadBtnText) downloadBtnText.textContent = '下载报告';
+    }
+    
+    // 显示完整内容
+    const lockedAnalysisText = document.getElementById('locked-analysis-text');
+    const freeAnalysisText = document.getElementById('free-analysis-text');
+    if (lockedAnalysisText && lockedAnalysisText.textContent.trim() && freeAnalysisText) {
+      const currentContent = freeAnalysisText.innerHTML;
+      freeAnalysisText.innerHTML = currentContent + lockedAnalysisText.innerHTML;
+    }
+  }
+}
+
 // 页面加载后检查
 window.addEventListener('load', checkEmergency);
 </script>
+
