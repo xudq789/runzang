@@ -6,7 +6,7 @@ export const SERVICES = {
         price: 0.08,
         lockedItems: [
             '富贵层次评估',
-            '过往大运营凶分析',
+            '过往大运吉凶分析',
             '过往关键流年验证', 
             '专业建议与指导'
         ],
@@ -46,7 +46,7 @@ export const SERVICES = {
 【富贵层次评估】
 评估用户的富贵层次，包括财富、事业和社会地位等方面的潜力。
 
-【过往大运营凶分析】
+【过往大运吉凶分析】
 分析用户过往大运的吉凶情况，指出关键时期和转折点。
 
 【过往关键流年验证】
@@ -309,6 +309,7 @@ export const PAYMENT_CONFIG = {
   GATEWAY_URL: 'https://runzang.top/api/payment'  // 只有这一行就够了
   // 删除其他复杂的配置
 };
+
 
 
 
