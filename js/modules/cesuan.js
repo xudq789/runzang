@@ -27,7 +27,7 @@ export class CesuanModule {
 出生时间：${userData.birthYear}年${userData.birthMonth}月${userData.birthDay}日${userData.birthHour}时${userData.birthMinute}分
 出生城市：${userData.birthCity}
 
-请先进行八字排盘，大运排盘应准确排出起运岁数并检查，男命阳顺阴逆，女命阳逆阴顺，然后用以下格式输出结果：
+请先进行八字排盘，大运排盘应准确排出起运岁数并检查是否有明细错误，男命阳顺阴逆，女命阳逆阴顺，然后用以下格式输出结果：
 
 【八字排盘】
 年柱：[年柱干支] ([五行属性])
@@ -76,3 +76,4 @@ export class CesuanModule {
         return calculateBazi(userData);
     }
 }
+
