@@ -585,7 +585,7 @@ export function processAndDisplayAnalysis(result) {
     }
 }
 
-// ============ 【修改】显示支付弹窗 - 移除弹窗提示 ============
+// ============ 【完整版】支付弹窗 - 支持支付宝和微信支付 ============
 export async function showPaymentModal() {
     console.log('调用支付接口...');
     
@@ -605,7 +605,14 @@ export async function showPaymentModal() {
             UI.paymentOrderId().textContent = '生成中...';
         }
         
-        // 2. 调用您的后端支付接口 - 修复：添加所有必填参数
+        // 2. 显示支付方式选择
+        const selectedMethod = await showPaymentMethodSelection();
+        if (!selectedMethod) {
+            closePaymentModal();
+            return;
+        }
+        
+        // 3. 调用后端支付接口
         const frontendOrderId = 'RUNZ-FRONT-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
         
         const response = await fetch('https://runzang.top/api/payment/create', {
@@ -616,9 +623,9 @@ export async function showPaymentModal() {
             },
             body: JSON.stringify({
                 serviceType: STATE.currentService,
-                amount: serviceConfig.price,  // ✅ 必填：金额
-                frontendOrderId: frontendOrderId,  // ✅ 必填：前端订单ID
-                paymentMethod: 'alipay'  // ✅ 必填：支付方式
+                amount: parseFloat(serviceConfig.price).toFixed(2),  // 确保两位小数
+                frontendOrderId: frontendOrderId,
+                paymentMethod: selectedMethod  // 用户选择的支付方式
             })
         });
         
@@ -630,21 +637,167 @@ export async function showPaymentModal() {
             return;
         }
         
-        const { paymentUrl, outTradeNo, amount, subject } = result.data;
+        const { paymentUrl, qrCode, outTradeNo, amount, subject } = result.data;
         
-        console.log('支付URL:', paymentUrl);
-        console.log('订单号:', outTradeNo);
+        console.log('支付响应:', result.data);
         
-        // 3. 更新支付弹窗显示真实信息
+        // 4. 更新支付弹窗显示真实信息
         UI.paymentServiceType().textContent = subject || STATE.currentService;
         UI.paymentAmount().textContent = '¥' + amount;
         UI.paymentOrderId().textContent = outTradeNo;
         
-        // 4. 清除旧的支付按钮
-        const oldBtn = document.getElementById('alipay-redirect-btn');
-        if (oldBtn) oldBtn.remove();
+        // 5. 根据支付方式显示不同支付界面
+        displayPaymentInterface(result.data, selectedMethod);
         
-        // 5. 创建支付按钮
+    } catch (error) {
+        console.error('支付失败:', error);
+        alert('网络连接失败，请检查网络后重试');
+        closePaymentModal();
+    }
+}
+
+// ============ 支付方式选择弹窗 ============
+function showPaymentMethodSelection() {
+    return new Promise((resolve) => {
+        // 创建支付方式选择容器
+        const selectionHTML = `
+            <div class="payment-methods-selection">
+                <div class="selection-title">选择支付方式</div>
+                
+                <div class="payment-option active" data-method="alipay">
+                    <div class="option-icon">💰</div>
+                    <div class="option-info">
+                        <div class="option-name">支付宝支付</div>
+                        <div class="option-desc">推荐使用，支付更方便</div>
+                    </div>
+                    <div class="option-check">✓</div>
+                </div>
+                
+                <div class="payment-option" data-method="wechatpay">
+                    <div class="option-icon">💳</div>
+                    <div class="option-info">
+                        <div class="option-name">微信支付</div>
+                        <div class="option-desc">扫码支付，安全快捷</div>
+                    </div>
+                    <div class="option-check">✓</div>
+                </div>
+                
+                <button id="confirm-payment-btn" class="confirm-btn">
+                    确认支付方式
+                </button>
+            </div>
+        `;
+        
+        // 更新支付方式区域
+        const paymentMethods = document.querySelector('.payment-methods');
+        if (paymentMethods) {
+            paymentMethods.innerHTML = selectionHTML;
+            
+            // 添加CSS样式
+            const style = document.createElement('style');
+            style.textContent = `
+                .payment-methods-selection {
+                    padding: 20px;
+                }
+                .selection-title {
+                    font-size: 18px;
+                    font-weight: bold;
+                    margin-bottom: 20px;
+                    text-align: center;
+                    color: #333;
+                }
+                .payment-option {
+                    display: flex;
+                    align-items: center;
+                    padding: 15px;
+                    margin: 10px 0;
+                    border: 2px solid #e0e0e0;
+                    border-radius: 12px;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    background: white;
+                }
+                .payment-option.active {
+                    border-color: #1677FF;
+                    background: #f0f7ff;
+                }
+                .option-icon {
+                    font-size: 28px;
+                    margin-right: 15px;
+                }
+                .option-info {
+                    flex: 1;
+                }
+                .option-name {
+                    font-weight: bold;
+                    font-size: 16px;
+                    color: #333;
+                }
+                .option-desc {
+                    font-size: 14px;
+                    color: #666;
+                    margin-top: 4px;
+                }
+                .option-check {
+                    color: #1677FF;
+                    font-size: 20px;
+                    opacity: 0;
+                    transition: opacity 0.3s;
+                }
+                .payment-option.active .option-check {
+                    opacity: 1;
+                }
+                .confirm-btn {
+                    margin-top: 25px;
+                    width: 100%;
+                    padding: 15px;
+                    background: linear-gradient(135deg, #1677FF, #4096ff);
+                    color: white;
+                    border: none;
+                    border-radius: 25px;
+                    font-size: 16px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                }
+                .confirm-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 5px 15px rgba(22, 119, 255, 0.3);
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // 选择支付方式
+            let selectedMethod = 'alipay';
+            document.querySelectorAll('.payment-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    document.querySelectorAll('.payment-option').forEach(el => {
+                        el.classList.remove('active');
+                    });
+                    option.classList.add('active');
+                    selectedMethod = option.dataset.method;
+                });
+            });
+            
+            // 确认按钮
+            document.getElementById('confirm-payment-btn').addEventListener('click', () => {
+                resolve(selectedMethod);
+            }, { once: true });
+        } else {
+            resolve('alipay'); // 默认支付宝
+        }
+    });
+}
+
+// ============ 显示支付界面 ============
+function displayPaymentInterface(paymentData, method) {
+    const paymentMethods = document.querySelector('.payment-methods');
+    if (!paymentMethods) return;
+    
+    paymentMethods.innerHTML = '';
+    
+    if (method === 'alipay') {
+        // 支付宝支付 - 跳转按钮
         const payBtn = document.createElement('button');
         payBtn.id = 'alipay-redirect-btn';
         payBtn.className = 'dynamic-pulse-btn';
@@ -669,41 +822,87 @@ export async function showPaymentModal() {
             </span>
         `;
         
-        // 6. 支付按钮点击事件 - ✅ 修复3：移除弹窗提示，直接跳转
-        payBtn.onclick = async () => {
-            console.log('跳转到支付宝支付，订单号:', outTradeNo);
+        payBtn.onclick = () => {
+            // 保存订单信息
+            STATE.currentOrderId = paymentData.outTradeNo;
+            saveAnalysisData();
             
-            // 保存订单ID到全局状态
-            STATE.currentOrderId = outTradeNo;
-            
-            // ✅ 保存分析结果到 localStorage（防止丢失）
-            if (STATE.fullAnalysisResult) {
-                localStorage.setItem('last_analysis_result', STATE.fullAnalysisResult);
-                localStorage.setItem('last_analysis_service', STATE.currentService);
-                localStorage.setItem('last_user_data', JSON.stringify(STATE.userData || {}));
-                console.log('分析结果已保存到 localStorage');
-            }
-            
-            // ✅ 直接跳转到支付宝，不显示弹窗提示
-            window.location.href = paymentUrl;
+            // 直接跳转
+            window.location.href = paymentData.paymentUrl;
         };
         
-        // 7. 插入到支付弹窗
-        const paymentMethods = document.querySelector('.payment-methods');
-        if (paymentMethods) {
-            paymentMethods.innerHTML = '';
-            paymentMethods.appendChild(payBtn);
-        } else {
-            const orderInfo = document.querySelector('.order-info');
-            if (orderInfo) {
-                orderInfo.parentNode.insertBefore(payBtn, orderInfo.nextSibling);
-            }
-        }
+        paymentMethods.appendChild(payBtn);
         
-    } catch (error) {
-        console.error('支付失败:', error);
-        alert('网络连接失败，请检查网络后重试');
-        closePaymentModal();
+    } else if (method === 'wechatpay') {
+        // 微信支付 - 显示二维码
+        if (paymentData.qrCode) {
+            const qrContainer = document.createElement('div');
+            qrContainer.className = 'wechat-qr-container';
+            qrContainer.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #333;">
+                        微信扫码支付
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 10px; display: inline-block;">
+                        <img src="${paymentData.qrCode}" 
+                             alt="微信支付二维码" 
+                             style="width: 200px; height: 200px; border: 1px solid #eee;">
+                        <div style="margin-top: 10px; color: #666; font-size: 14px;">
+                            支付金额：¥${paymentData.amount}
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; color: #999; font-size: 14px;">
+                        请使用微信扫一扫扫描二维码
+                    </div>
+                </div>
+            `;
+            
+            paymentMethods.appendChild(qrContainer);
+        } else {
+            // 没有二维码则显示跳转按钮
+            const payBtn = document.createElement('button');
+            payBtn.id = 'wechat-redirect-btn';
+            payBtn.className = 'dynamic-pulse-btn';
+            payBtn.style.cssText = `
+                margin: 20px auto;
+                display: block;
+                max-width: 250px;
+                background: linear-gradient(135deg, #09BB07, #2DC100);
+                color: white;
+                border: none;
+                padding: 15px 30px;
+                border-radius: 25px;
+                font-size: 16px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s;
+            `;
+            payBtn.innerHTML = `
+                <span style="display: flex; align-items: center; justify-content: center;">
+                    <span style="margin-right: 8px;">💳</span>
+                    前往微信支付
+                </span>
+            `;
+            
+            payBtn.onclick = () => {
+                STATE.currentOrderId = paymentData.outTradeNo;
+                saveAnalysisData();
+                window.location.href = paymentData.paymentUrl;
+            };
+            
+            paymentMethods.appendChild(payBtn);
+        }
+    }
+}
+
+// ============ 保存分析数据 ============
+function saveAnalysisData() {
+    if (STATE.fullAnalysisResult) {
+        localStorage.setItem('last_analysis_result', STATE.fullAnalysisResult);
+        localStorage.setItem('last_analysis_service', STATE.currentService);
+        localStorage.setItem('last_user_data', JSON.stringify(STATE.userData || {}));
+        localStorage.setItem('last_order_id', STATE.currentOrderId);
+        console.log('分析结果已保存到 localStorage');
     }
 }
 
@@ -1002,6 +1201,7 @@ export function collectUserData() {
         };
     }
 }
+
 
 
 
