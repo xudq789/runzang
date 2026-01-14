@@ -605,15 +605,20 @@ export async function showPaymentModal() {
             UI.paymentOrderId().textContent = '生成中...';
         }
         
-        // 2. 调用您的后端支付接口
+        // 2. 调用您的后端支付接口 - 修复：添加所有必填参数
+        const frontendOrderId = 'RUNZ-FRONT-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
+        
         const response = await fetch('https://runzang.top/api/payment/create', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-API-Key': 'runzang-payment-key-2025'  // 添加这行
+                'X-API-Key': 'runzang-payment-key-2025'
             },
             body: JSON.stringify({
-                serviceType: STATE.currentService
+                serviceType: STATE.currentService,
+                amount: serviceConfig.price,  // ✅ 必填：金额
+                frontendOrderId: frontendOrderId,  // ✅ 必填：前端订单ID
+                paymentMethod: 'alipay'  // ✅ 必填：支付方式
             })
         });
         
@@ -997,4 +1002,5 @@ export function collectUserData() {
         };
     }
 }
+
 
