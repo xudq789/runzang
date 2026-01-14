@@ -461,7 +461,7 @@ function confirmPayment() {
     
     if (confirmed) {
         // 调用后端接口检查支付状态
-        fetch(`/api/payment/status/${STATE.currentOrderId}`)
+        fetch(`http://localhost:3002/api/payment/status/${STATE.currentOrderId}`)
             .then(response => response.json())
             .then(result => {
                 if (result.success && result.data.status === 'paid') {
@@ -965,5 +965,6 @@ if (typeof STATE !== 'undefined') {
     window.STATE = STATE;
 
 }
+
 
 
