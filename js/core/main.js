@@ -115,7 +115,7 @@ const PaymentManager = {
     verifyPaymentStatus: async function(orderId) {
         try {
             console.log('🔐 验证支付状态，订单号:', orderId);
-            const response = await fetch(`/api/payment/status/${orderId}`);
+            const response = await fetch(`http://localhost:3002/api/payment/status/${orderId}`);
             const result = await response.json();
             
             console.log('支付状态响应:', result);
@@ -965,3 +965,4 @@ if (typeof STATE !== 'undefined') {
     window.STATE = STATE;
 
 }
+
