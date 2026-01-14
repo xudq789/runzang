@@ -610,6 +610,7 @@ export async function showPaymentModal() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-API-Key': 'runzang-payment-key-2025'  // 添加这行
             },
             body: JSON.stringify({
                 serviceType: STATE.currentService
@@ -996,3 +997,4 @@ export function collectUserData() {
         };
     }
 }
+
