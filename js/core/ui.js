@@ -615,7 +615,7 @@ export async function showPaymentModal() {
         // 3. 调用后端支付接口
         const frontendOrderId = 'RUNZ-FRONT-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
         
-        const response = await fetch('https://runzang.top/api/payment/create', {
+        const response = await fetch('/api/payment/create', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1201,6 +1201,7 @@ export function collectUserData() {
         };
     }
 }
+
 
 
 
