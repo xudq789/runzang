@@ -982,8 +982,8 @@ if (typeof PaymentManager !== 'undefined') {
 // ✅ 确保 STATE 在全局可用（如果需要）
 if (typeof STATE !== 'undefined') {
     window.STATE = STATE;
-
 }
+
 
 
 
