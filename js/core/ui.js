@@ -623,7 +623,7 @@ console.log('请求数据:', {
     paymentMethod: selectedMethod
 });
 
-const response = await fetch('https://runzang.top/payment-api/create', {
+const response = await fetch('https://runzang.top/api/payment/create', {
     method: 'POST',
     mode: 'cors',  // 添加CORS模式
     headers: {
@@ -1210,6 +1210,7 @@ export function collectUserData() {
         };
     }
 }
+
 
 
 
