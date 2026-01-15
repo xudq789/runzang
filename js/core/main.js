@@ -115,7 +115,7 @@ const PaymentManager = {
 verifyPaymentStatus: async function(orderId) {
     try {
         console.log('🔐 验证支付状态，订单号:', orderId);
-        const apiUrl = `https://runzang.top/payment-api/status/${orderId}`;
+        const apiUrl = `https://runzang.top/api/payment/status/${orderId}`;
         console.log('查询URL:', apiUrl);
         
         const response = await fetch(apiUrl, {
@@ -472,7 +472,7 @@ function confirmPayment() {
     if (confirmed) {
         // 调用后端接口检查支付状态
 console.log('检查支付状态，订单:', STATE.currentOrderId);
-fetch(`https://runzang.top/payment-api/status/${STATE.currentOrderId}`, {
+fetch(`https://runzang.top/api/payment/status/${STATE.currentOrderId}`, {
     mode: 'cors'  // 添加CORS模式
 })
     .then(response => {
@@ -983,6 +983,7 @@ if (typeof PaymentManager !== 'undefined') {
 if (typeof STATE !== 'undefined') {
     window.STATE = STATE;
 }
+
 
 
 
