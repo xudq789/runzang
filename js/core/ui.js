@@ -613,21 +613,30 @@ export async function showPaymentModal() {
         }
         
         // 3. 调用后端支付接口
-        const frontendOrderId = 'RUNZ-FRONT-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
-        
-        const response = await fetch('http://localhost:3002/api/payment/create', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-API-Key': 'runzang-payment-security-key-2025-1234567890'
-            },
-            body: JSON.stringify({
-                serviceType: STATE.currentService,
-                amount: parseFloat(serviceConfig.price).toFixed(2),  // 确保两位小数
-                frontendOrderId: frontendOrderId,
-                paymentMethod: selectedMethod  // 用户选择的支付方式
-            })
-        });
+const frontendOrderId = 'RUNZ-FRONT-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
+
+console.log('🔗 调用支付API: http://119.29.160.189:3002/api/payment/create');
+console.log('请求数据:', {
+    serviceType: STATE.currentService,
+    amount: parseFloat(serviceConfig.price).toFixed(2),
+    frontendOrderId: frontendOrderId,
+    paymentMethod: selectedMethod
+});
+
+const response = await fetch('http://119.29.160.189:3002/api/payment/create', {
+    method: 'POST',
+    mode: 'cors',  // 添加CORS模式
+    headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': 'runzang-payment-security-key-2025-1234567890'
+    },
+    body: JSON.stringify({
+        serviceType: STATE.currentService,
+        amount: parseFloat(serviceConfig.price).toFixed(2),
+        frontendOrderId: frontendOrderId,
+        paymentMethod: selectedMethod
+    })
+});
         
         const result = await response.json();
         
@@ -1201,6 +1210,7 @@ export function collectUserData() {
         };
     }
 }
+
 
 
 
