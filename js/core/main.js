@@ -112,33 +112,43 @@ const PaymentManager = {
     },
     
     // 验证支付状态
-    verifyPaymentStatus: async function(orderId) {
-        try {
-            console.log('🔐 验证支付状态，订单号:', orderId);
-            const response = await fetch(`http://localhost:3002/api/payment/status/${orderId}`);
-            const result = await response.json();
-            
-            console.log('支付状态响应:', result);
-            
-            if (result.success && result.data.status === 'paid') {
-                console.log('✅ 支付验证成功');
-                
-                // 更新支付数据
-                const paymentData = this.getPaymentData() || {};
-                paymentData.verified = true;
-                paymentData.verifiedAt = new Date().toISOString();
-                localStorage.setItem('alipay_payment_data', JSON.stringify(paymentData));
-                
-                return true;
-            }
-            
-            return false;
-            
-        } catch (error) {
-            console.error('支付验证失败:', error);
+verifyPaymentStatus: async function(orderId) {
+    try {
+        console.log('🔐 验证支付状态，订单号:', orderId);
+        const apiUrl = `http://119.29.160.189:3002/api/payment/status/${orderId}`;
+        console.log('查询URL:', apiUrl);
+        
+        const response = await fetch(apiUrl, {
+            mode: 'cors'  // 添加CORS模式
+        });
+        
+        if (!response.ok) {
+            console.error('HTTP错误:', response.status);
             return false;
         }
-    },
+        
+        const result = await response.json();
+        console.log('支付状态响应:', result);
+        
+        if (result.success && result.data.status === 'paid') {
+            console.log('✅ 支付验证成功');
+            
+            // 更新支付数据
+            const paymentData = this.getPaymentData() || {};
+            paymentData.verified = true;
+            paymentData.verifiedAt = new Date().toISOString();
+            localStorage.setItem('alipay_payment_data', JSON.stringify(paymentData));
+            
+            return true;
+        }
+        
+        return false;
+        
+    } catch (error) {
+        console.error('支付验证失败:', error);
+        return false;
+    }
+},
     
     // 验证并解锁
     verifyAndUnlock: async function(orderId, isBackendVerified = false) {
@@ -461,20 +471,29 @@ function confirmPayment() {
     
     if (confirmed) {
         // 调用后端接口检查支付状态
-        fetch(`http://localhost:3002/api/payment/status/${STATE.currentOrderId}`)
-            .then(response => response.json())
-            .then(result => {
-                if (result.success && result.data.status === 'paid') {
-                    // 支付成功，解锁内容
-                    handlePaymentSuccess();
-                } else {
-                    alert('支付状态未确认，请稍后再试或联系客服');
-                }
-            })
-            .catch(error => {
-                console.error('检查支付状态失败:', error);
-                alert('网络错误，请稍后重试');
-            });
+console.log('检查支付状态，订单:', STATE.currentOrderId);
+fetch(`http://119.29.160.189:3002/api/payment/status/${STATE.currentOrderId}`, {
+    mode: 'cors'  // 添加CORS模式
+})
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(result => {
+        console.log('支付状态结果:', result);
+        if (result.success && result.data.status === 'paid') {
+            // 支付成功，解锁内容
+            handlePaymentSuccess();
+        } else {
+            alert('支付状态未确认，请稍后再试或联系客服');
+        }
+    })
+    .catch(error => {
+        console.error('检查支付状态失败:', error);
+        alert(`网络错误: ${error.message}\n请稍后重试或联系客服`);
+    });
     }
 }
 
@@ -965,6 +984,7 @@ if (typeof STATE !== 'undefined') {
     window.STATE = STATE;
 
 }
+
 
 
 
