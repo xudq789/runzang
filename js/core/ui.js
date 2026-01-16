@@ -615,7 +615,7 @@ export async function showPaymentModal() {
         // 3. 调用后端支付接口
 const frontendOrderId = 'RUNZ-FRONT-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
 
-console.log('🔗 调用支付API: http://119.29.160.189:3002/api/payment/create');
+console.log('🔗 调用支付API: http://runzang.top/api/payment/create');
 console.log('请求数据:', {
     serviceType: STATE.currentService,
     amount: parseFloat(serviceConfig.price).toFixed(2),
@@ -1210,6 +1210,7 @@ export function collectUserData() {
         };
     }
 }
+
 
 
 
