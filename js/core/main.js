@@ -112,43 +112,43 @@ const PaymentManager = {
     },
     
     // 验证支付状态
-verifyPaymentStatus: async function(orderId) {
-    try {
-        console.log('🔐 验证支付状态，订单号:', orderId);
-        const apiUrl = `https://runzang.top/api/payment/status/${orderId}`;
-        console.log('查询URL:', apiUrl);
-        
-        const response = await fetch(apiUrl, {
-            mode: 'cors'  // 添加CORS模式
-        });
-        
-        if (!response.ok) {
-            console.error('HTTP错误:', response.status);
+    verifyPaymentStatus: async function(orderId) {
+        try {
+            console.log('🔐 验证支付状态，订单号:', orderId);
+            const apiUrl = `https://runzang.top/api/payment/status/${orderId}`;
+            console.log('查询URL:', apiUrl);
+            
+            const response = await fetch(apiUrl, {
+                mode: 'cors'  // 添加CORS模式
+            });
+            
+            if (!response.ok) {
+                console.error('HTTP错误:', response.status);
+                return false;
+            }
+            
+            const result = await response.json();
+            console.log('支付状态响应:', result);
+            
+            if (result.success && result.data.status === 'paid') {
+                console.log('✅ 支付验证成功');
+                
+                // 更新支付数据
+                const paymentData = this.getPaymentData() || {};
+                paymentData.verified = true;
+                paymentData.verifiedAt = new Date().toISOString();
+                localStorage.setItem('alipay_payment_data', JSON.stringify(paymentData));
+                
+                return true;
+            }
+            
+            return false;
+            
+        } catch (error) {
+            console.error('支付验证失败:', error);
             return false;
         }
-        
-        const result = await response.json();
-        console.log('支付状态响应:', result);
-        
-        if (result.success && result.data.status === 'paid') {
-            console.log('✅ 支付验证成功');
-            
-            // 更新支付数据
-            const paymentData = this.getPaymentData() || {};
-            paymentData.verified = true;
-            paymentData.verifiedAt = new Date().toISOString();
-            localStorage.setItem('alipay_payment_data', JSON.stringify(paymentData));
-            
-            return true;
-        }
-        
-        return false;
-        
-    } catch (error) {
-        console.error('支付验证失败:', error);
-        return false;
-    }
-},
+    },
     
     // 验证并解锁
     verifyAndUnlock: async function(orderId, isBackendVerified = false) {
@@ -434,7 +434,12 @@ function checkPaymentSuccessFromURL() {
     }
 }
 
-// ============ 【原有主应用代码】 ============
+// ============ 【新增：两阶段分析状态管理】 ============
+let isFirstPhaseComplete = false;
+let isSecondPhaseInProgress = false;
+let fullAnalysisPromise = null;
+
+// ============ 【原有主应用代码 - 修改版】 ============
 // 主入口文件
 import { SERVICES, STATE } from './config.js';
 import { checkAPIStatus, parseBaziData, callDeepSeekAPI } from './api.js';
@@ -476,6 +481,378 @@ const SERVICE_MODULES = {
     '八字合婚': HehunModule
 };
 
+// ============ 【新增：第一阶段分析函数】 ============
+async function startFirstPhaseAnalysis() {
+    console.log('🚀 第一阶段：快速生成关键内容');
+    
+    try {
+        // 获取当前服务的模块
+        const serviceModule = SERVICE_MODULES[STATE.currentService];
+        if (!serviceModule) {
+            throw new Error(`未找到服务模块: ${STATE.currentService}`);
+        }
+        
+        // 获取原始提示词（完全保持原有）
+        let originalPrompt;
+        try {
+            originalPrompt = serviceModule.getPrompt(STATE.userData, STATE.partnerData);
+        } catch (error) {
+            console.error('生成提示词失败:', error);
+            throw error;
+        }
+        
+        // 创建第一阶段提示词：要求AI先输出免费部分
+        const phase1Prompt = originalPrompt + `
+
+重要提示：请按照以下顺序输出：
+1. 先完整输出【八字排盘】、【大运排盘】、【八字喜用分析】、【性格特点】、【适宜行业职业推荐】这五个部分
+2. 确保这五个部分完整、详细、符合所有格式要求
+3. 然后再继续生成剩余部分内容
+4. 请优先保证前五个部分的响应速度和质量`;
+
+        console.log('第一阶段提示词生成完成');
+        
+        // 设置较短超时（20秒）
+        const phase1Result = await callDeepSeekAPIWithTimeout(phase1Prompt, 20000);
+        
+        console.log('第一阶段API响应成功，长度:', phase1Result.length);
+        
+        // 处理第一阶段结果
+        processFirstPhaseResults(phase1Result);
+        
+        // 标记第一阶段完成
+        isFirstPhaseComplete = true;
+        console.log('✅ 第一阶段完成');
+        
+        return true;
+        
+    } catch (error) {
+        console.error('第一阶段分析失败:', error);
+        return false;
+    }
+}
+
+// ============ 【新增：第二阶段分析函数】 ============
+function startSecondPhaseAnalysis() {
+    if (isSecondPhaseInProgress) {
+        console.log('第二阶段已在进行中');
+        return;
+    }
+    
+    console.log('🔄 第二阶段：后台生成完整报告');
+    isSecondPhaseInProgress = true;
+    
+    // 显示后台进度提示
+    showBackgroundProgress();
+    
+    // 获取当前服务的模块
+    const serviceModule = SERVICE_MODULES[STATE.currentService];
+    if (!serviceModule) {
+        console.error('未找到服务模块');
+        return;
+    }
+    
+    // 获取完全相同的原始提示词
+    let originalPrompt;
+    try {
+        originalPrompt = serviceModule.getPrompt(STATE.userData, STATE.partnerData);
+    } catch (error) {
+        console.error('生成提示词失败:', error);
+        hideBackgroundProgress();
+        return;
+    }
+    
+    console.log('第二阶段使用完全相同的原始提示词');
+    
+    // 完全相同的API调用
+    fullAnalysisPromise = callDeepSeekAPI(originalPrompt)
+        .then(fullResult => {
+            console.log('✅ 完整报告生成完成，字数:', fullResult.length);
+            
+            // 保存完整的分析结果（与原来完全一样）
+            STATE.fullAnalysisResult = fullResult;
+            
+            // 隐藏进度提示
+            hideBackgroundProgress();
+            
+            // 如果用户已经支付，立即显示完整内容
+            if (STATE.isPaymentUnlocked) {
+                console.log('用户已支付，显示完整内容');
+                showFullAnalysisContent();
+            }
+            
+            // 保存到本地存储
+            try {
+                localStorage.setItem('last_analysis_result', fullResult);
+                localStorage.setItem('last_analysis_service', STATE.currentService);
+                localStorage.setItem('last_user_data', JSON.stringify(STATE.userData || {}));
+                console.log('完整报告已保存到本地存储');
+            } catch (e) {
+                console.error('保存到本地存储失败:', e);
+            }
+            
+            return fullResult;
+        })
+        .catch(error => {
+            console.error('第二阶段分析失败:', error);
+            hideBackgroundProgress();
+            
+            // 显示错误提示
+            const lockedOverlay = document.getElementById('locked-overlay');
+            if (lockedOverlay) {
+                const errorDiv = document.createElement('div');
+                errorDiv.style.cssText = `
+                    text-align: center;
+                    padding: 15px;
+                    background: rgba(220, 53, 69, 0.1);
+                    border-radius: 10px;
+                    margin: 15px 0;
+                    font-size: 14px;
+                    color: var(--error-color);
+                `;
+                errorDiv.innerHTML = `
+                    <div>⚠️ 完整报告生成失败，请点击"重新测算"按钮重试</div>
+                `;
+                
+                const unlockBtnContainer = lockedOverlay.querySelector('.unlock-btn-container');
+                if (unlockBtnContainer) {
+                    lockedOverlay.insertBefore(errorDiv, unlockBtnContainer);
+                }
+            }
+            
+            throw error;
+        });
+}
+
+// ============ 【新增：处理第一阶段结果】 ============
+function processFirstPhaseResults(result) {
+    console.log('处理第一阶段结果...');
+    
+    try {
+        // 解析八字数据（使用原有函数）
+        const parsedBaziData = parseBaziData(result);
+        STATE.baziData = parsedBaziData.userBazi;
+        
+        // 显示八字排盘（使用原有函数）
+        displayBaziPan();
+        
+        // 提取并显示免费部分内容
+        extractAndDisplayFreeContent(result);
+        
+    } catch (error) {
+        console.error('处理第一阶段结果失败:', error);
+        throw error;
+    }
+}
+
+// ============ 【新增：提取并显示免费内容】 ============
+function extractAndDisplayFreeContent(result) {
+    const freeAnalysisText = UI.freeAnalysisText();
+    if (!freeAnalysisText) return;
+    
+    // 使用与原来完全相同的免费部分定义
+    const freeSections = [
+        '【八字排盘】',
+        '【大运排盘】',
+        '【八字喜用分析】',
+        '【性格特点】',
+        '【适宜行业职业推荐】'
+    ];
+    
+    let freeContent = '';
+    
+    // 与原来完全相同的分割逻辑
+    const sections = result.split('【');
+    
+    for (let i = 1; i < sections.length; i++) {
+        const section = '【' + sections[i];
+        const sectionTitle = section.split('】')[0] + '】';
+        
+        // 八字排盘已经单独显示，跳过
+        if (sectionTitle === '【八字排盘】') continue;
+        
+        if (freeSections.includes(sectionTitle)) {
+            freeContent += section + '\n\n';
+        }
+        
+        // 找到第一个付费部分时停止（保持与原来相同的逻辑）
+        if (!freeSections.includes(sectionTitle) && sectionTitle.includes('【')) {
+            break;
+        }
+    }
+    
+    // 使用与原来完全相同的格式化逻辑
+    let formattedContent = '';
+    const freeSectionsArray = freeContent.split('\n\n');
+    
+    freeSectionsArray.forEach(section => {
+        if (section.trim()) {
+            const titleMatch = section.match(/【([^】]+)】/);
+            if (titleMatch) {
+                const title = titleMatch[1];
+                const content = section.replace(titleMatch[0], '').trim();
+                
+                // 与原来完全相同的HTML结构
+                formattedContent += `
+                <div class="analysis-section">
+                    <h5>${title}</h5>
+                    <div class="analysis-content">${content.replace(/\n/g, '<br>')}</div>
+                </div>`;
+            }
+        }
+    });
+    
+    freeAnalysisText.innerHTML = formattedContent;
+    console.log('免费内容显示完成');
+}
+
+// ============ 【新增：带超时的API调用】 ============
+async function callDeepSeekAPIWithTimeout(prompt, timeout = 20000) {
+    console.log('带超时的API调用，超时:', timeout, 'ms');
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+        console.log('API调用超时');
+        controller.abort();
+    }, timeout);
+    
+    try {
+        const response = await fetch(window.APP_CONFIG.DEEPSEEK_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${window.APP_CONFIG.DEEPSEEK_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: 'deepseek-chat',
+                messages: [
+                    {
+                        role: 'system',
+                        content: '你是一位职业的命理大师，精通梁湘润论命体系。请优先保证前五个部分的响应速度和质量。'
+                    },
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                max_tokens: 4000,
+                temperature: 0.7,
+                stream: false
+            }),
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            throw new Error(`API请求失败: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+            return data.choices[0].message.content;
+        } else {
+            throw new Error('API返回数据格式错误');
+        }
+        
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            throw new Error('API调用超时，请稍后重试');
+        }
+        throw error;
+    }
+}
+
+// ============ 【新增：显示后台进度】 ============
+function showBackgroundProgress() {
+    const lockedOverlay = document.getElementById('locked-overlay');
+    if (lockedOverlay) {
+        // 移除可能已存在的进度提示
+        const existingProgress = document.getElementById('background-progress');
+        if (existingProgress && existingProgress.parentNode) {
+            existingProgress.parentNode.removeChild(existingProgress);
+        }
+        
+        const progressDiv = document.createElement('div');
+        progressDiv.id = 'background-progress';
+        progressDiv.style.cssText = `
+            text-align: center;
+            padding: 15px;
+            background: rgba(212, 175, 55, 0.1);
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 14px;
+            color: var(--secondary-color);
+        `;
+        progressDiv.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <div class="spinner" style="width: 20px; height: 20px; border-width: 2px; border-color: rgba(212, 175, 55, 0.2); border-top-color: var(--secondary-color);"></div>
+                <span>正在后台生成完整分析报告...</span>
+            </div>
+            <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                您可以在阅读免费内容的同时，系统继续为您准备完整报告
+            </div>
+        `;
+        
+        // 插入到解锁按钮之前
+        const unlockBtnContainer = lockedOverlay.querySelector('.unlock-btn-container');
+        if (unlockBtnContainer) {
+            lockedOverlay.insertBefore(progressDiv, unlockBtnContainer);
+        }
+    }
+}
+
+// ============ 【新增：隐藏后台进度】 ============
+function hideBackgroundProgress() {
+    const progressDiv = document.getElementById('background-progress');
+    if (progressDiv && progressDiv.parentNode) {
+        progressDiv.parentNode.removeChild(progressDiv);
+    }
+}
+
+// ============ 【新增：降级方案】 ============
+async function fallbackToFullAnalysis() {
+    console.log('执行降级方案：完整分析');
+    
+    try {
+        // 获取当前服务的模块
+        const serviceModule = SERVICE_MODULES[STATE.currentService];
+        if (!serviceModule) {
+            throw new Error(`未找到服务模块: ${STATE.currentService}`);
+        }
+        
+        // 获取完全相同的原始提示词
+        const originalPrompt = serviceModule.getPrompt(STATE.userData, STATE.partnerData);
+        
+        console.log('降级方案：使用完整提示词');
+        
+        // 完整API调用
+        const analysisResult = await callDeepSeekAPI(originalPrompt);
+        
+        // 保存完整结果
+        STATE.fullAnalysisResult = analysisResult;
+        console.log('降级方案分析完成，字数:', analysisResult.length);
+        
+        // 处理八字数据
+        const parsedBaziData = parseBaziData(analysisResult);
+        STATE.baziData = parsedBaziData.userBazi;
+        
+        // 显示八字排盘
+        displayBaziPan();
+        
+        // 使用原有的processAndDisplayAnalysis函数（保持完全相同格式）
+        processAndDisplayAnalysis(analysisResult);
+        
+        return true;
+        
+    } catch (error) {
+        console.error('降级方案失败:', error);
+        throw error;
+    }
+}
+
 // ============ 【支付相关函数】 ============
 
 // 支付成功处理函数
@@ -491,13 +868,92 @@ function handlePaymentSuccess() {
     updateUnlockInterface();
     
     // 显示完整内容
-    showFullAnalysisContent();
+    if (STATE.fullAnalysisResult) {
+        // 如果完整报告已生成，直接显示
+        showFullAnalysisContent();
+    } else if (fullAnalysisPromise) {
+        // 如果还在生成中，等待完成
+        showPaymentWaitingHint();
+        fullAnalysisPromise.then(() => {
+            hidePaymentWaitingHint();
+            showFullAnalysisContent();
+        }).catch(() => {
+            hidePaymentWaitingHint();
+            showPaymentErrorHint();
+        });
+    } else {
+        // 如果没有开始生成，现在开始
+        startSecondPhaseAnalysis();
+        showPaymentWaitingHint();
+    }
     
     // 解锁下载按钮
     unlockDownloadButton();
     
     // 显示成功提示
     PaymentManager.showSuccessMessage();
+}
+
+// 新增：显示支付等待提示
+function showPaymentWaitingHint() {
+    const lockedOverlay = document.getElementById('locked-overlay');
+    if (lockedOverlay) {
+        const waitingDiv = document.createElement('div');
+        waitingDiv.id = 'payment-waiting-hint';
+        waitingDiv.style.cssText = `
+            text-align: center;
+            padding: 15px;
+            background: rgba(76, 175, 80, 0.1);
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 14px;
+            color: var(--success-color);
+        `;
+        waitingDiv.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <div class="spinner" style="width: 20px; height: 20px; border-width: 2px; border-color: rgba(76, 175, 80, 0.2); border-top-color: var(--success-color);"></div>
+                <span>正在为您准备完整分析内容，请稍候...</span>
+            </div>
+        `;
+        
+        const unlockBtnContainer = lockedOverlay.querySelector('.unlock-btn-container');
+        if (unlockBtnContainer) {
+            lockedOverlay.insertBefore(waitingDiv, unlockBtnContainer);
+        }
+    }
+}
+
+// 新增：隐藏支付等待提示
+function hidePaymentWaitingHint() {
+    const waitingDiv = document.getElementById('payment-waiting-hint');
+    if (waitingDiv && waitingDiv.parentNode) {
+        waitingDiv.parentNode.removeChild(waitingDiv);
+    }
+}
+
+// 新增：显示支付错误提示
+function showPaymentErrorHint() {
+    const lockedOverlay = document.getElementById('locked-overlay');
+    if (lockedOverlay) {
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+            text-align: center;
+            padding: 15px;
+            background: rgba(220, 53, 69, 0.1);
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 14px;
+            color: var(--error-color);
+        `;
+        errorDiv.innerHTML = `
+            <div>⚠️ 内容生成失败，请点击"重新测算"按钮重试</div>
+        `;
+        
+        const unlockBtnContainer = lockedOverlay.querySelector('.unlock-btn-container');
+        if (unlockBtnContainer) {
+            lockedOverlay.insertBefore(errorDiv, unlockBtnContainer);
+        }
+    }
 }
 
 // 确认支付（用户手动点击"我已支付"时调用）
@@ -512,29 +968,29 @@ function confirmPayment() {
     
     if (confirmed) {
         // 调用后端接口检查支付状态
-console.log('检查支付状态，订单:', STATE.currentOrderId);
-fetch(`https://runzang.top/api/payment/status/${STATE.currentOrderId}`, {
-    mode: 'cors'  // 添加CORS模式
-})
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(result => {
-        console.log('支付状态结果:', result);
-        if (result.success && result.data.status === 'paid') {
-            // 支付成功，解锁内容
-            handlePaymentSuccess();
-        } else {
-            alert('支付状态未确认，请稍后再试或联系客服');
-        }
-    })
-    .catch(error => {
-        console.error('检查支付状态失败:', error);
-        alert(`网络错误: ${error.message}\n请稍后重试或联系客服`);
-    });
+        console.log('检查支付状态，订单:', STATE.currentOrderId);
+        fetch(`https://runzang.top/api/payment/status/${STATE.currentOrderId}`, {
+            mode: 'cors'  // 添加CORS模式
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(result => {
+            console.log('支付状态结果:', result);
+            if (result.success && result.data.status === 'paid') {
+                // 支付成功，解锁内容
+                handlePaymentSuccess();
+            } else {
+                alert('支付状态未确认，请稍后再试或联系客服');
+            }
+        })
+        .catch(error => {
+            console.error('检查支付状态失败:', error);
+            alert(`网络错误: ${error.message}\n请稍后重试或联系客服`);
+        });
     }
 }
 
@@ -567,6 +1023,11 @@ async function initApp() {
         setupEventListeners();
         STATE.apiStatus = await checkAPIStatus();
         preloadImages();
+        
+        // 重置两阶段状态
+        isFirstPhaseComplete = false;
+        isSecondPhaseInProgress = false;
+        fullAnalysisPromise = null;
         
         console.log('✅ 应用初始化完成');
         
@@ -669,6 +1130,11 @@ function switchService(serviceName) {
         STATE.userData = null;
         STATE.partnerData = null;
         
+        // 重置两阶段状态
+        isFirstPhaseComplete = false;
+        isSecondPhaseInProgress = false;
+        fullAnalysisPromise = null;
+        
         console.log('✅ 所有状态已重置');
     }
     
@@ -707,6 +1173,10 @@ function switchService(serviceName) {
         if (baziGrid) {
             baziGrid.innerHTML = '';
         }
+        
+        // 隐藏后台进度提示
+        hideBackgroundProgress();
+        hidePaymentWaitingHint();
     }
     
     // 滚动到顶部
@@ -728,7 +1198,7 @@ function preloadImages() {
     });
 }
 
-// 开始分析 - ✅ 修复：确保每次都是全新分析
+// 开始分析 - 修改版：两阶段分析
 async function startAnalysis() {
     console.log('开始命理分析...');
     
@@ -760,6 +1230,11 @@ async function startAnalysis() {
     STATE.isPaymentUnlocked = false;
     STATE.isDownloadLocked = true;
     
+    // 重置两阶段状态
+    isFirstPhaseComplete = false;
+    isSecondPhaseInProgress = false;
+    fullAnalysisPromise = null;
+    
     // 锁定下载按钮
     lockDownloadButton();
     
@@ -776,59 +1251,44 @@ async function startAnalysis() {
         // ✅ 清空显示区域，确保显示新内容
         const freeAnalysisText = UI.freeAnalysisText();
         if (freeAnalysisText) {
-            freeAnalysisText.innerHTML = '<div class="loading-text">正在生成分析结果...</div>';
+            freeAnalysisText.innerHTML = '<div class="loading-text">正在为您快速生成命理分析...</div>';
         }
         
-        // 先显示预测者信息
+        // 显示预测者信息
         displayPredictorInfo();
         
-        // 获取当前服务的模块
-        const serviceModule = SERVICE_MODULES[STATE.currentService];
-        if (!serviceModule) {
-            throw new Error(`未找到服务模块: ${STATE.currentService}`);
-        }
+        // 第一阶段：快速获取免费内容
+        const firstPhaseSuccess = await startFirstPhaseAnalysis();
         
-        // 获取提示词
-        let prompt;
-        try {
-            prompt = serviceModule.getPrompt(STATE.userData, STATE.partnerData);
-        } catch (error) {
-            console.error('生成提示词失败:', error);
-            alert(error.message);
+        if (firstPhaseSuccess) {
+            // 隐藏加载弹窗
             hideLoadingModal();
-            return;
+            
+            // 显示分析结果区域
+            showAnalysisResult();
+            
+            console.log('第一阶段完成，显示免费内容');
+            
+            // 第二阶段：后台获取完整报告
+            startSecondPhaseAnalysis();
+            
+        } else {
+            // 第一阶段失败，降级到完整分析
+            console.log('第一阶段失败，降级到完整分析');
+            const fallbackSuccess = await fallbackToFullAnalysis();
+            
+            if (fallbackSuccess) {
+                // 隐藏加载弹窗
+                hideLoadingModal();
+                
+                // 显示分析结果区域
+                showAnalysisResult();
+                
+                console.log('降级方案成功，显示完整内容');
+            } else {
+                throw new Error('所有分析方案均失败');
+            }
         }
-        
-        console.log('生成的分析提示词长度:', prompt.length);
-        console.log('当前服务:', STATE.currentService);
-        
-        // 调用API
-        console.log('正在调用DeepSeek API...');
-        const analysisResult = await callDeepSeekAPI(prompt);
-        console.log('DeepSeek API调用成功，响应长度:', analysisResult.length);
-        console.log('结果前50字符:', analysisResult.substring(0, 50));
-        
-        // 保存完整分析结果
-        STATE.fullAnalysisResult = analysisResult;
-        
-        // 处理分析结果，提取八字数据
-        const parsedBaziData = parseBaziData(analysisResult);
-        STATE.baziData = parsedBaziData.userBazi;
-        STATE.partnerBaziData = parsedBaziData.partnerBazi;
-        
-        // 显示八字排盘
-        displayBaziPan();
-        
-        // 处理并显示分析结果
-        processAndDisplayAnalysis(analysisResult);
-        
-        // 隐藏加载弹窗
-        hideLoadingModal();
-        
-        // 显示分析结果区域
-        showAnalysisResult();
-        
-        console.log('命理分析完成，结果已显示');
         
         // ✅ 修改：支付状态检查，确保服务匹配
         const paymentData = PaymentManager.getPaymentData();
@@ -982,6 +1442,11 @@ function newAnalysis() {
     STATE.isPaymentUnlocked = false;
     STATE.isDownloadLocked = true;
     
+    // 重置两阶段状态
+    isFirstPhaseComplete = false;
+    isSecondPhaseInProgress = false;
+    fullAnalysisPromise = null;
+    
     // 锁定下载按钮
     lockDownloadButton();
     
@@ -990,6 +1455,10 @@ function newAnalysis() {
     
     // 重置解锁界面
     resetUnlockInterface();
+    
+    // 隐藏所有提示
+    hideBackgroundProgress();
+    hidePaymentWaitingHint();
     
     // 重置免费内容
     const freeAnalysisText = UI.freeAnalysisText();
@@ -1032,15 +1501,3 @@ if (typeof PaymentManager !== 'undefined') {
 if (typeof STATE !== 'undefined') {
     window.STATE = STATE;
 }
-
-
-
-
-
-
-
-
-
-
-
-
