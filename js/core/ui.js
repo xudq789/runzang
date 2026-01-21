@@ -665,243 +665,213 @@ const response = await fetch('https://runzang.top/api/payment/create', {
     }
 }
 
-// ============ 支付方式选择弹窗 ============
+// ============ 【修改后】支付方式选择弹窗 - 移除手动选择 ============
 function showPaymentMethodSelection() {
-    return new Promise((resolve) => {
-        // 创建支付方式选择容器
-        const selectionHTML = `
-            <div class="payment-methods-selection">
-                <div class="selection-title">选择支付方式</div>
-                
-                <div class="payment-option active" data-method="alipay">
-                    <div class="option-icon">💰</div>
-                    <div class="option-info">
-                        <div class="option-name">支付宝支付</div>
-                        <div class="option-desc">推荐使用，支付更方便</div>
-                    </div>
-                    <div class="option-check">✓</div>
-                </div>
-                
-                <div class="payment-option" data-method="wechatpay">
-                    <div class="option-icon">💳</div>
-                    <div class="option-info">
-                        <div class="option-name">微信支付</div>
-                        <div class="option-desc">扫码支付，安全快捷</div>
-                    </div>
-                    <div class="option-check">✓</div>
-                </div>
-                
-                <button id="confirm-payment-btn" class="confirm-btn">
-                    确认支付方式
-                </button>
-            </div>
-        `;
-        
-        // 更新支付方式区域
-        const paymentMethods = document.querySelector('.payment-methods');
-        if (paymentMethods) {
-            paymentMethods.innerHTML = selectionHTML;
-            
-            // 添加CSS样式
-            const style = document.createElement('style');
-            style.textContent = `
-                .payment-methods-selection {
-                    padding: 20px;
-                }
-                .selection-title {
-                    font-size: 18px;
-                    font-weight: bold;
-                    margin-bottom: 20px;
-                    text-align: center;
-                    color: #333;
-                }
-                .payment-option {
-                    display: flex;
-                    align-items: center;
-                    padding: 15px;
-                    margin: 10px 0;
-                    border: 2px solid #e0e0e0;
-                    border-radius: 12px;
-                    cursor: pointer;
-                    transition: all 0.3s;
-                    background: white;
-                }
-                .payment-option.active {
-                    border-color: #1677FF;
-                    background: #f0f7ff;
-                }
-                .option-icon {
-                    font-size: 28px;
-                    margin-right: 15px;
-                }
-                .option-info {
-                    flex: 1;
-                }
-                .option-name {
-                    font-weight: bold;
-                    font-size: 16px;
-                    color: #333;
-                }
-                .option-desc {
-                    font-size: 14px;
-                    color: #666;
-                    margin-top: 4px;
-                }
-                .option-check {
-                    color: #1677FF;
-                    font-size: 20px;
-                    opacity: 0;
-                    transition: opacity 0.3s;
-                }
-                .payment-option.active .option-check {
-                    opacity: 1;
-                }
-                .confirm-btn {
-                    margin-top: 25px;
-                    width: 100%;
-                    padding: 15px;
-                    background: linear-gradient(135deg, #1677FF, #4096ff);
-                    color: white;
-                    border: none;
-                    border-radius: 25px;
-                    font-size: 16px;
-                    font-weight: bold;
-                    cursor: pointer;
-                    transition: all 0.3s;
-                }
-                .confirm-btn:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 5px 15px rgba(22, 119, 255, 0.3);
-                }
-            `;
-            document.head.appendChild(style);
-            
-            // 选择支付方式
-            let selectedMethod = 'alipay';
-            document.querySelectorAll('.payment-option').forEach(option => {
-                option.addEventListener('click', () => {
-                    document.querySelectorAll('.payment-option').forEach(el => {
-                        el.classList.remove('active');
-                    });
-                    option.classList.add('active');
-                    selectedMethod = option.dataset.method;
-                });
-            });
-            
-            // 确认按钮
-            document.getElementById('confirm-payment-btn').addEventListener('click', () => {
-                resolve(selectedMethod);
-            }, { once: true });
-        } else {
-            resolve('alipay'); // 默认支付宝
-        }
+  return new Promise((resolve) => {
+    // 直接根据设备类型决定支付方式
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isMobile = /mobile|iphone|android/i.test(userAgent);
+    
+    // 规则：电脑端用微信native，手机端用支付宝H5
+    const selectedMethod = isMobile ? 'alipay' : 'wechatpay';
+    
+    console.log('设备检测:', {
+      userAgent: userAgent.substring(0, 100),
+      isMobile: isMobile,
+      selectedMethod: selectedMethod
     });
+    
+    // 显示支付方式提示
+    const paymentMethods = document.querySelector('.payment-methods');
+    if (paymentMethods) {
+      const paymentHint = isMobile ? 
+        '📱 检测到移动设备，将使用支付宝H5支付' :
+        '💻 检测到电脑设备，将使用微信扫码支付';
+      
+      paymentMethods.innerHTML = `
+        <div class="payment-auto-selection">
+          <div class="device-detect-result">
+            <div class="device-icon">${isMobile ? '📱' : '💻'}</div>
+            <div class="device-info">
+              <div class="device-type">${isMobile ? '移动设备' : '电脑设备'}</div>
+              <div class="payment-method">${isMobile ? '支付宝H5支付' : '微信扫码支付'}</div>
+            </div>
+          </div>
+          <p style="text-align: center; color: #666; margin-top: 15px; font-size: 14px;">
+            ${paymentHint}
+          </p>
+        </div>
+      `;
+      
+      // 添加样式
+      const style = document.createElement('style');
+      style.textContent = `
+        .payment-auto-selection {
+          padding: 20px;
+          text-align: center;
+        }
+        .device-detect-result {
+          display: inline-flex;
+          align-items: center;
+          background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+          padding: 20px 30px;
+          border-radius: 15px;
+          margin: 10px 0;
+          border: 2px solid ${isMobile ? '#1677FF' : '#07C160'};
+        }
+        .device-icon {
+          font-size: 40px;
+          margin-right: 20px;
+        }
+        .device-info {
+          text-align: left;
+        }
+        .device-type {
+          font-size: 16px;
+          font-weight: bold;
+          color: #333;
+          margin-bottom: 5px;
+        }
+        .payment-method {
+          font-size: 18px;
+          font-weight: bold;
+          color: ${isMobile ? '#1677FF' : '#07C160'};
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    // 直接返回检测结果
+    setTimeout(() => resolve(selectedMethod), 300);
+  });
 }
 
-// ============ 显示支付界面 ============
+// ============ 【修改后】显示支付界面 ============
 function displayPaymentInterface(paymentData, method) {
-    const paymentMethods = document.querySelector('.payment-methods');
-    if (!paymentMethods) return;
+  const paymentMethods = document.querySelector('.payment-methods');
+  if (!paymentMethods) return;
+  
+  paymentMethods.innerHTML = '';
+  
+  // 更新支付弹窗的标题
+  const paymentTitle = document.querySelector('.order-info p:last-child strong');
+  if (paymentTitle) {
+    const methodName = method === 'alipay' ? '支付宝H5支付' : '微信扫码支付';
+    paymentTitle.textContent = methodName;
+  }
+  
+  // 更新支付状态文本
+  const statusText = document.getElementById('payment-status-text');
+  if (statusText) {
+    statusText.textContent = method === 'alipay' ? 
+      '请在新打开的支付宝页面完成支付' : 
+      '请使用微信扫码完成支付';
+  }
+  
+  if (method === 'alipay') {
+    // 支付宝支付 - 跳转按钮
+    const payBtn = document.createElement('button');
+    payBtn.id = 'alipay-redirect-btn';
+    payBtn.className = 'dynamic-pulse-btn';
+    payBtn.style.cssText = `
+      margin: 20px auto;
+      display: block;
+      max-width: 250px;
+      background: linear-gradient(135deg, #1677FF, #4096ff);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    `;
+    payBtn.innerHTML = `
+      <span style="display: flex; align-items: center; justify-content: center;">
+        <span style="margin-right: 8px;">💰</span>
+        前往支付宝支付
+      </span>
+    `;
     
-    paymentMethods.innerHTML = '';
+    payBtn.onclick = () => {
+      // 保存订单信息
+      STATE.currentOrderId = paymentData.outTradeNo;
+      saveAnalysisData();
+      
+      // 直接跳转
+      window.location.href = paymentData.paymentUrl;
+    };
     
-    if (method === 'alipay') {
-        // 支付宝支付 - 跳转按钮
-        const payBtn = document.createElement('button');
-        payBtn.id = 'alipay-redirect-btn';
-        payBtn.className = 'dynamic-pulse-btn';
-        payBtn.style.cssText = `
-            margin: 20px auto;
-            display: block;
-            max-width: 250px;
-            background: linear-gradient(135deg, #1677FF, #4096ff);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-        `;
-        payBtn.innerHTML = `
-            <span style="display: flex; align-items: center; justify-content: center;">
-                <span style="margin-right: 8px;">💰</span>
-                前往支付宝支付
-            </span>
-        `;
-        
-        payBtn.onclick = () => {
-            // 保存订单信息
-            STATE.currentOrderId = paymentData.outTradeNo;
-            saveAnalysisData();
-            
-            // 直接跳转
-            window.location.href = paymentData.paymentUrl;
-        };
-        
-        paymentMethods.appendChild(payBtn);
-        
-    } else if (method === 'wechatpay') {
-        // 微信支付 - 显示二维码
-        if (paymentData.qrCode) {
-            const qrContainer = document.createElement('div');
-            qrContainer.className = 'wechat-qr-container';
-            qrContainer.innerHTML = `
-                <div style="text-align: center; padding: 20px;">
-                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #333;">
-                        微信扫码支付
-                    </div>
-                    <div style="background: white; padding: 15px; border-radius: 10px; display: inline-block;">
-                        <img src="${paymentData.qrCode}" 
-                             alt="微信支付二维码" 
-                             style="width: 200px; height: 200px; border: 1px solid #eee;">
-                        <div style="margin-top: 10px; color: #666; font-size: 14px;">
-                            支付金额：¥${paymentData.amount}
-                        </div>
-                    </div>
-                    <div style="margin-top: 15px; color: #999; font-size: 14px;">
-                        请使用微信扫一扫扫描二维码
-                    </div>
-                </div>
-            `;
-            
-            paymentMethods.appendChild(qrContainer);
-        } else {
-            // 没有二维码则显示跳转按钮
-            const payBtn = document.createElement('button');
-            payBtn.id = 'wechat-redirect-btn';
-            payBtn.className = 'dynamic-pulse-btn';
-            payBtn.style.cssText = `
-                margin: 20px auto;
-                display: block;
-                max-width: 250px;
-                background: linear-gradient(135deg, #09BB07, #2DC100);
-                color: white;
-                border: none;
-                padding: 15px 30px;
-                border-radius: 25px;
-                font-size: 16px;
-                font-weight: bold;
-                cursor: pointer;
-                transition: all 0.3s;
-            `;
-            payBtn.innerHTML = `
-                <span style="display: flex; align-items: center; justify-content: center;">
-                    <span style="margin-right: 8px;">💳</span>
-                    前往微信支付
-                </span>
-            `;
-            
-            payBtn.onclick = () => {
-                STATE.currentOrderId = paymentData.outTradeNo;
-                saveAnalysisData();
-                window.location.href = paymentData.paymentUrl;
-            };
-            
-            paymentMethods.appendChild(payBtn);
-        }
+    paymentMethods.appendChild(payBtn);
+    
+  } else if (method === 'wechatpay') {
+    // 微信支付 - 显示二维码
+    if (paymentData.qrCodeUrl || paymentData.codeUrl) {
+      const qrContainer = document.createElement('div');
+      qrContainer.className = 'wechat-qr-container';
+      const qrCode = paymentData.qrCodeUrl || 
+        `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(paymentData.codeUrl)}`;
+      
+      qrContainer.innerHTML = `
+        <div style="text-align: center; padding: 20px;">
+          <div style="font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #07C160;">
+            <span style="margin-right: 8px;">💳</span>
+            微信扫码支付
+          </div>
+          <div style="background: white; padding: 20px; border-radius: 10px; display: inline-block; border: 2px solid #07C160;">
+            <img src="${qrCode}" 
+                 alt="微信支付二维码" 
+                 style="width: 200px; height: 200px; border: 1px solid #eee;">
+            <div style="margin-top: 15px; color: #333; font-size: 14px;">
+              <div>支付金额：¥${paymentData.amount}</div>
+              <div style="color: #666; font-size: 13px; margin-top: 5px;">订单号：${paymentData.outTradeNo}</div>
+            </div>
+          </div>
+          <div style="margin-top: 15px; color: #999; font-size: 14px;">
+            请使用微信扫一扫扫描二维码
+            <br>
+            <span style="color: #07C160; font-size: 12px;">扫码后请在微信内完成支付</span>
+          </div>
+        </div>
+      `;
+      
+      paymentMethods.appendChild(qrContainer);
+    } else if (paymentData.paymentUrl) {
+      // 如果有支付链接，显示跳转按钮（备用）
+      const payBtn = document.createElement('button');
+      payBtn.id = 'wechat-redirect-btn';
+      payBtn.className = 'dynamic-pulse-btn';
+      payBtn.style.cssText = `
+        margin: 20px auto;
+        display: block;
+        max-width: 250px;
+        background: linear-gradient(135deg, #09BB07, #2DC100);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 25px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+      `;
+      payBtn.innerHTML = `
+        <span style="display: flex; align-items: center; justify-content: center;">
+          <span style="margin-right: 8px;">💳</span>
+          前往微信支付
+        </span>
+      `;
+      
+      payBtn.onclick = () => {
+        STATE.currentOrderId = paymentData.outTradeNo;
+        saveAnalysisData();
+        window.location.href = paymentData.paymentUrl;
+      };
+      
+      paymentMethods.appendChild(payBtn);
     }
+  }
 }
 
 // ============ 保存分析数据 ============
@@ -1210,6 +1180,7 @@ export function collectUserData() {
         };
     }
 }
+
 
 
 
