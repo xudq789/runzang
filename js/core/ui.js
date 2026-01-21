@@ -588,8 +588,17 @@ export function processAndDisplayAnalysis(result) {
 // ============ 【完整版】支付弹窗 - 支持支付宝和微信支付 ============
 export async function showPaymentModal() {
     console.log('调用支付接口...');
-    
-    const serviceConfig = SERVICES[STATE.currentService];
+
+    // 检查完整分析是否已完成
+    if (!STATE.fullAnalysisResult) {
+        const confirmed = confirm('完整分析报告还在生成中，可能需要额外1-2分钟。\n\n建议您先阅读免费部分内容，支付后将立即解锁完整报告。\n\n是否继续支付？');
+        
+        if (!confirmed) {
+            return;
+        }
+    }
+
+        const serviceConfig = SERVICES[STATE.currentService];
     if (!serviceConfig) return;
     
     try {
@@ -1180,6 +1189,7 @@ export function collectUserData() {
         };
     }
 }
+
 
 
 
