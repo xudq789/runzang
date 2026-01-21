@@ -499,31 +499,65 @@ fetch(`https://runzang.top/api/payment/status/${STATE.currentOrderId}`, {
 
 // ============ 【主要应用函数】 ============
 
-// 初始化应用
-async function initApp() {
-    console.log('🚀 应用初始化开始...');
+// 在 main.js 的 initApp 函数开始处添加
+function checkPaymentSuccess() {
+  // 检查URL中是否有支付成功参数
+  const urlParams = new URLSearchParams(window.location.search);
+  const paymentSuccess = urlParams.get('payment_success');
+  const orderId = urlParams.get('order_id');
+  
+  if (paymentSuccess === 'true' && orderId) {
+    console.log('检测到支付成功回调，订单:', orderId);
     
-    try {
-        // ============ 【第一步：检查支付状态】 ============
-        console.log('1. 检查支付状态...');
-        await PaymentManager.initPaymentCheck();
-        
-        // ============ 【第二步：常规初始化】 ============
-        console.log('2. 常规初始化...');
-        initFormOptions();
-        setDefaultValues();
-        updateServiceDisplay(STATE.currentService);
-        updateUnlockInfo();
-        lockDownloadButton();
-        setupEventListeners();
-        STATE.apiStatus = await checkAPIStatus();
-        preloadImages();
-        
-        console.log('✅ 应用初始化完成');
-        
-    } catch (error) {
-        console.error('❌ 应用初始化失败:', error);
+    // 保存订单信息
+    localStorage.setItem('paid_order_id', orderId);
+    
+    // 如果 PaymentManager 可用，解锁内容
+    if (window.PaymentManager && typeof window.PaymentManager.unlockContent === 'function') {
+      window.PaymentManager.unlockContent(orderId);
+    } else {
+      // 直接解锁内容
+      unlockAllContent();
     }
+    
+    // 清理URL参数
+    try {
+      window.history.replaceState({}, '', window.location.pathname);
+    } catch (e) {
+      console.log('URL清理失败:', e);
+    }
+    
+    return true;
+  }
+  return false;
+}
+
+// 修改 initApp 函数
+async function initApp() {
+  console.log('🚀 应用初始化开始...');
+  
+  try {
+    // ============ 【第一步：检查支付回调】 ============
+    console.log('1. 检查支付回调参数...');
+    const hasPaymentCallback = checkPaymentSuccess();
+    
+    if (hasPaymentCallback) {
+      console.log('✅ 检测到支付成功回调，已处理');
+    }
+    
+    // ============ 【第二步：检查支付状态】 ============
+    console.log('2. 检查支付状态...');
+    if (window.PaymentManager) {
+      await window.PaymentManager.initPaymentCheck();
+    }
+    
+    // ============ 【第三步：常规初始化】 ============
+    console.log('3. 常规初始化...');
+    // ... 原有的初始化代码 ...
+    
+  } catch (error) {
+    console.error('❌ 应用初始化失败:', error);
+  }
 }
 
 // 设置事件监听器
@@ -983,6 +1017,7 @@ if (typeof PaymentManager !== 'undefined') {
 if (typeof STATE !== 'undefined') {
     window.STATE = STATE;
 }
+
 
 
 
