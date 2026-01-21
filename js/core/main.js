@@ -392,6 +392,39 @@ restoreAnalysis: async function() {
     }
 };
 
+// ============ 【新增：URL支付回调检测函数】 ============
+function checkPaymentSuccessFromURL() {
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const paymentSuccess = urlParams.get('payment_success');
+        const orderId = urlParams.get('order_id');
+        
+        if (paymentSuccess === 'true' && orderId) {
+            console.log('✅ 检测到URL支付成功回调，订单:', orderId);
+            
+            // 保存到localStorage，让PaymentManager后续处理
+            localStorage.setItem('paid_order_id', orderId);
+            
+            // 清理URL参数（避免重复检测）
+            try {
+                if (window.history.replaceState) {
+                    const cleanUrl = window.location.pathname + window.location.hash;
+                    window.history.replaceState({}, document.title, cleanUrl);
+                    console.log('URL支付参数已清理');
+                }
+            } catch (e) {
+                console.log('URL清理失败:', e);
+            }
+            
+            return orderId;
+        }
+        
+        return null;
+    } catch (error) {
+        console.error('检查支付回调失败:', error);
+        return null;
+    }
+}
 
 // ============ 【原有主应用代码】 ============
 // 主入口文件
@@ -991,6 +1024,7 @@ if (typeof PaymentManager !== 'undefined') {
 if (typeof STATE !== 'undefined') {
     window.STATE = STATE;
 }
+
 
 
 
