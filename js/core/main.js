@@ -764,6 +764,263 @@ const SERVICE_MODULES = {
     '八字合婚': HehunModule
 };
 
+// ============ 【新增：优化八字排盘显示函数】 ============
+function displayBaziPan() {
+    const baziGrid = UI.baziGrid();
+    if (!baziGrid) return;
+    
+    baziGrid.innerHTML = '';
+    
+    // 检查是否有八字数据
+    if (!STATE.baziData) {
+        console.log('暂无八字数据');
+        return;
+    }
+    
+    // 创建八字排盘容器
+    const baziContainer = document.createElement('div');
+    baziContainer.className = 'bazi-pan-display';
+    
+    // 如果是八字合婚服务，需要显示用户和伴侣的八字
+    if (STATE.currentService === '八字合婚' && STATE.partnerData) {
+        // 用户八字排盘
+        const userBaziCard = createBaziCard(
+            `${STATE.userData.name} 八字排盘`,
+            STATE.baziData,
+            true
+        );
+        baziContainer.appendChild(userBaziCard);
+        
+        // 伴侣八字排盘
+        if (STATE.partnerBaziData) {
+            const partnerBaziCard = createBaziCard(
+                `${STATE.partnerData.partnerName} 八字排盘`,
+                STATE.partnerBaziData,
+                false
+            );
+            baziContainer.appendChild(partnerBaziCard);
+        }
+    } else {
+        // 其他服务：只显示用户的八字
+        const baziCard = createBaziCard('八字排盘结果', STATE.baziData, true);
+        baziContainer.appendChild(baziCard);
+    }
+    
+    baziGrid.appendChild(baziContainer);
+    
+    // 立即显示，不需要等待
+    console.log('八字排盘已显示');
+}
+
+// 创建八字卡片
+function createBaziCard(title, baziData, includeDayun = true) {
+    const card = document.createElement('div');
+    card.className = 'bazi-card';
+    
+    // 标题
+    const titleElement = document.createElement('h5');
+    titleElement.textContent = title;
+    titleElement.style.cssText = `
+        color: var(--primary-color);
+        margin-bottom: 15px;
+        text-align: center;
+        font-size: 18px;
+        border-bottom: 2px solid var(--secondary-color);
+        padding-bottom: 8px;
+    `;
+    
+    // 八字四柱网格
+    const baziGrid = document.createElement('div');
+    baziGrid.className = 'bazi-columns-grid';
+    baziGrid.style.cssText = `
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+    `;
+    
+    // 八字四柱
+    const columns = [
+        { label: '年柱', value: baziData.yearColumn || '--', element: baziData.yearElement || '' },
+        { label: '月柱', value: baziData.monthColumn || '--', element: baziData.monthElement || '' },
+        { label: '日柱', value: baziData.dayColumn || '--', element: baziData.dayElement || '' },
+        { label: '时柱', value: baziData.hourColumn || '--', element: baziData.hourElement || '' }
+    ];
+    
+    columns.forEach(col => {
+        const columnDiv = document.createElement('div');
+        columnDiv.className = 'bazi-column-item';
+        columnDiv.style.cssText = `
+            background: linear-gradient(135deg, #f9f5f0, #f0e6d6);
+            border: 2px solid var(--secondary-color);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+        `;
+        
+        const labelDiv = document.createElement('div');
+        labelDiv.className = 'bazi-label';
+        labelDiv.textContent = col.label;
+        labelDiv.style.cssText = `
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 14px;
+        `;
+        
+        const valueDiv = document.createElement('div');
+        valueDiv.className = 'bazi-value';
+        valueDiv.textContent = col.value;
+        valueDiv.style.cssText = `
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--dark-color);
+            margin-bottom: 4px;
+        `;
+        
+        const elementDiv = document.createElement('div');
+        elementDiv.className = 'bazi-element';
+        elementDiv.textContent = col.element;
+        elementDiv.style.cssText = `
+            font-size: 12px;
+            color: #7d6e63;
+            font-style: italic;
+        `;
+        
+        columnDiv.appendChild(labelDiv);
+        columnDiv.appendChild(valueDiv);
+        columnDiv.appendChild(elementDiv);
+        baziGrid.appendChild(columnDiv);
+    });
+    
+    card.appendChild(titleElement);
+    card.appendChild(baziGrid);
+    
+    // 如果包含大运排盘，添加大运信息
+    if (includeDayun && STATE.fullAnalysisResult) {
+        const dayunInfo = extractDayunInfo(STATE.fullAnalysisResult);
+        if (dayunInfo) {
+            const dayunCard = createDayunCard(dayunInfo);
+            card.appendChild(dayunCard);
+        }
+    }
+    
+    return card;
+}
+
+// 提取大运信息
+function extractDayunInfo(analysisResult) {
+    try {
+        const lines = analysisResult.split('\n');
+        let qiyunText = '';
+        let dayunText = [];
+        let inDayunSection = false;
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            
+            if (line.includes('起运岁数') || line.includes('起运时间')) {
+                qiyunText = line;
+            }
+            
+            if (line.includes('大运详细') || line.includes('第1步大运')) {
+                inDayunSection = true;
+                continue;
+            }
+            
+            if (inDayunSection) {
+                if (line.includes('【') || line.includes('要求：') || line === '') {
+                    break;
+                }
+                if (line && line.includes('大运')) {
+                    dayunText.push(line);
+                }
+            }
+        }
+        
+        return {
+            qiyun: qiyunText,
+            dayun: dayunText.slice(0, 6) // 只显示前6步大运
+        };
+    } catch (error) {
+        console.error('提取大运信息失败:', error);
+        return null;
+    }
+}
+
+// 创建大运卡片
+function createDayunCard(dayunInfo) {
+    const card = document.createElement('div');
+    card.className = 'dayun-card';
+    card.style.cssText = `
+        background: linear-gradient(135deg, #f0f5ff, #e6ecff);
+        border: 2px solid #3a7bd5;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+    `;
+    
+    const title = document.createElement('h6');
+    title.textContent = '大运排盘';
+    title.style.cssText = `
+        color: #3a7bd5;
+        margin-bottom: 10px;
+        font-size: 16px;
+        text-align: center;
+        border-bottom: 1px solid #3a7bd5;
+        padding-bottom: 5px;
+    `;
+    
+    const content = document.createElement('div');
+    content.className = 'dayun-content';
+    
+    if (dayunInfo.qiyun) {
+        const qiyunDiv = document.createElement('div');
+        qiyunDiv.style.cssText = `
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: var(--dark-color);
+            padding: 8px;
+            background: rgba(58, 123, 213, 0.1);
+            border-radius: 4px;
+        `;
+        qiyunDiv.textContent = dayunInfo.qiyun;
+        content.appendChild(qiyunDiv);
+    }
+    
+    if (dayunInfo.dayun && dayunInfo.dayun.length > 0) {
+        const dayunList = document.createElement('div');
+        dayunList.className = 'dayun-list';
+        dayunList.style.cssText = `
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        `;
+        
+        dayunInfo.dayun.forEach(dayun => {
+            const dayunItem = document.createElement('div');
+            dayunItem.style.cssText = `
+                background: white;
+                padding: 8px;
+                border-radius: 4px;
+                border-left: 3px solid #3a7bd5;
+                font-size: 13px;
+                color: var(--dark-color);
+            `;
+            dayunItem.textContent = dayun;
+            dayunList.appendChild(dayunItem);
+        });
+        
+        content.appendChild(dayunList);
+    }
+    
+    card.appendChild(title);
+    card.appendChild(content);
+    
+    return card;
+}
+
 // ============ 【支付相关函数】 ============
 function handlePaymentSuccess() {
     STATE.isPaymentUnlocked = true;
@@ -1212,4 +1469,5 @@ if (typeof PaymentManager !== 'undefined') {
 if (typeof STATE !== 'undefined') {
     window.STATE = STATE;
 }
+
 
