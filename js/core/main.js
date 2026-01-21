@@ -392,31 +392,39 @@ restoreAnalysis: async function() {
     }
 };
 
-// ============ 【新增：URL支付回调检测函数】 ============
+// ============ 【新增：简化版URL支付回调检测函数】 ============
 function checkPaymentSuccessFromURL() {
     try {
         const urlParams = new URLSearchParams(window.location.search);
         const paymentSuccess = urlParams.get('payment_success');
-        const orderId = urlParams.get('order_id');
+        const from = urlParams.get('from');
         
-        if (paymentSuccess === 'true' && orderId) {
-            console.log('✅ 检测到URL支付成功回调，订单:', orderId);
+        // 只处理支付宝的回调
+        if (paymentSuccess === 'true' && from === 'alipay') {
+            console.log('✅ 检测到支付宝支付成功回调');
             
-            // 保存到localStorage，让PaymentManager后续处理
-            localStorage.setItem('paid_order_id', orderId);
+            // 获取订单号（支付宝回调可能会带 out_trade_no）
+            const orderId = urlParams.get('out_trade_no') || 
+                            urlParams.get('order_id') || 
+                            localStorage.getItem('paid_order_id');
             
-            // 清理URL参数（避免重复检测）
-            try {
-                if (window.history.replaceState) {
+            if (orderId) {
+                console.log('订单ID:', orderId);
+                
+                // 保存到localStorage
+                localStorage.setItem('paid_order_id', orderId);
+                
+                // 清理URL参数
+                try {
                     const cleanUrl = window.location.pathname + window.location.hash;
                     window.history.replaceState({}, document.title, cleanUrl);
-                    console.log('URL支付参数已清理');
+                    console.log('URL参数已清理');
+                } catch (e) {
+                    console.log('URL清理失败:', e);
                 }
-            } catch (e) {
-                console.log('URL清理失败:', e);
+                
+                return orderId;
             }
-            
-            return orderId;
         }
         
         return null;
@@ -1024,6 +1032,7 @@ if (typeof PaymentManager !== 'undefined') {
 if (typeof STATE !== 'undefined') {
     window.STATE = STATE;
 }
+
 
 
 
