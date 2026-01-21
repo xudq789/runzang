@@ -504,12 +504,20 @@ async function initApp() {
     console.log('🚀 应用初始化开始...');
     
     try {
-        // ============ 【第一步：检查支付状态】 ============
-        console.log('1. 检查支付状态...');
+        // ============ 【第一步：检查URL支付回调参数】 ============
+        console.log('1. 检查URL支付回调参数...');
+        const urlOrderId = checkPaymentSuccessFromURL();
+        if (urlOrderId) {
+            console.log('✅ 检测到URL支付回调，订单ID:', urlOrderId);
+            // 标记有支付回调，但不立即处理，等PaymentManager统一处理
+        }
+        
+        // ============ 【第二步：原有代码 - 检查支付状态】 ============
+        console.log('2. 初始化支付状态检查...');
         await PaymentManager.initPaymentCheck();
         
-        // ============ 【第二步：常规初始化】 ============
-        console.log('2. 常规初始化...');
+        // ============ 【第三步：原有代码 - 常规初始化】 ============
+        console.log('3. 常规初始化...');
         initFormOptions();
         setDefaultValues();
         updateServiceDisplay(STATE.currentService);
@@ -983,6 +991,7 @@ if (typeof PaymentManager !== 'undefined') {
 if (typeof STATE !== 'undefined') {
     window.STATE = STATE;
 }
+
 
 
 
