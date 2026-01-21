@@ -532,6 +532,30 @@ fetch(`https://runzang.top/api/payment/status/${STATE.currentOrderId}`, {
 
 // ============ 【主要应用函数】 ============
 
+
+// 在 main.js 的 initApp 函数开始处添加：
+window.addEventListener('DOMContentLoaded', function() {
+    // 检查URL中是否有支付成功参数
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentSuccess = urlParams.get('payment_success');
+    const orderId = urlParams.get('order_id');
+    
+    if (paymentSuccess === 'true' && orderId) {
+        console.log('检测到支付成功回调，订单:', orderId);
+        
+        // 调用支付管理器解锁内容
+        if (window.PaymentManager && window.PaymentManager.unlockContent) {
+            window.PaymentManager.unlockContent(orderId);
+        }
+        
+        // 清理URL参数
+        window.history.replaceState({}, '', window.location.pathname);
+    }
+    
+    // 继续原有的初始化逻辑
+    initApp();
+});
+
 // 初始化应用
 async function initApp() {
     console.log('🚀 应用初始化开始...');
@@ -1024,6 +1048,7 @@ if (typeof PaymentManager !== 'undefined') {
 if (typeof STATE !== 'undefined') {
     window.STATE = STATE;
 }
+
 
 
 
