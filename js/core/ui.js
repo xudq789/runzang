@@ -287,6 +287,11 @@ export function displayPredictorInfo() {
 
 // 显示八字排盘结果
 export function displayBaziPan() {
+    
+    if (typeof window.displayBaziPan === 'function') {
+        window.displayBaziPan();
+    } else {
+    
     const baziGrid = UI.baziGrid();
     if (!baziGrid) return;
     
@@ -1189,6 +1194,7 @@ export function collectUserData() {
         };
     }
 }
+
 
 
 
