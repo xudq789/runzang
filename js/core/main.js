@@ -54,7 +54,7 @@ export const AlipayCallbackHandler = {
 };
 
 // ============ 【支付状态管理器】 ============
-const PaymentManager = {
+export const PaymentManager = {
     // 初始化支付检查
     initPaymentCheck: async function() {
         console.log('🔍 初始化支付状态检查...');
@@ -256,10 +256,7 @@ const PaymentManager = {
                 }
             }
             
-            // 需要从 api.js 导入 parseBaziData 函数
-            import { parseBaziData } from './api.js';
-
-            // ... 然后才能使用
+            // 这里调用了 parseBaziData
             const parsedBaziData = parseBaziData(savedResult);
             STATE.baziData = parsedBaziData.userBazi;
             
@@ -746,10 +743,10 @@ function checkPaymentSuccessFromURL() {
     }
 }
 
-// 导入核心模块
+// ============ 【导入核心模块】 ============
 import { SERVICES, STATE } from './config.js';
 import { checkAPIStatus, parseBaziData, callDeepSeekAPI } from './api.js';
-import { 
+import {
     UI,
     initFormOptions,
     setDefaultValues,
@@ -1248,4 +1245,3 @@ window.StreamingAnalysisManager = StreamingAnalysisManager;
 
 // ✅ 也导出UI对象（如果需要在其他地方使用）
 window.UI = UI;
-
