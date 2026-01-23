@@ -30,7 +30,7 @@ export class XiangpiModule {
 出生时间：${userData.birthYear}年${userData.birthMonth}月${userData.birthDay}日${userData.birthHour}时${userData.birthMinute}分
 出生城市：${userData.birthCity}
 
-请先进行八字排盘，大运排盘应准确排出起运岁数并检查有无明显逻辑错误（三日一年），男命阳顺阴逆，女命阳逆阴顺，然后用以下格式输出结果：
+请先进行八字排盘，大运排盘应准确排出起运岁数并检查有无明显逻辑错误（先确认出生当日离前后节气的时间，男命阳顺阴逆，女命阳逆阴顺，三年一日推算起运岁数），然后用以下格式输出结果：
 
 【八字排盘】
 年柱：[年柱干支] ([五行属性])
@@ -88,6 +88,7 @@ export class XiangpiModule {
         return calculateBazi(userData);
     }
 }
+
 
 
 
