@@ -1221,9 +1221,11 @@ function newAnalysis() {
 // ============ 【页面初始化】 ============
 window.addEventListener('DOMContentLoaded', initApp);
 
-// 导出给全局使用
+// 导出给全局使用 - 创建包装函数
 window.switchService = switchService;
 window.startAnalysis = startAnalysis;
+
+// ✅ 修改这里：显式地将导入的函数赋值给window
 window.showPaymentModal = showPaymentModal;
 window.closePaymentModal = closePaymentModal;
 window.confirmPayment = confirmPayment;
@@ -1238,3 +1240,8 @@ if (typeof PaymentManager !== 'undefined') {
 if (typeof STATE !== 'undefined') {
     window.STATE = STATE;
 }
+
+window.StreamingAnalysisManager = StreamingAnalysisManager;
+
+// ✅ 也导出UI对象（如果需要在其他地方使用）
+window.UI = UI;
