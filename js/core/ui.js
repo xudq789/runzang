@@ -709,6 +709,10 @@ export function processAndDisplayAnalysis(result) {
         
         lockedAnalysisText.innerHTML = formattedLockedContent;
     }
+
+// 在 processAndDisplayAnalysis 函数最后添加：
+displayDayunPan();
+
 }
 
 // ============ 【完整版】支付弹窗 - 支持支付宝和微信支付 ============
@@ -1351,5 +1355,6 @@ export function displayDayunPan() {
         }
     }
 }
+
 
 
