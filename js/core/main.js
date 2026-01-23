@@ -486,33 +486,44 @@ const StreamingAnalysisManager = {
     },
     
     // 处理流式数据块
-    processStreamChunk(content) {
-        // 累积完整内容
-        this.fullContent += content;
-        
-        // 检测八字排盘数据
-        this.detectAndUpdateBazi(content);
-        
-        // 检测是否到达免费部分结束
-        if (!this.isFreeContentComplete()) {
-            this.freeContent += content;
-            
-            // 实时更新免费内容显示
-            this.updateFreeContentDisplay();
-        }
-    },
+processStreamChunk(content) {
+    // 累积完整内容
+    this.fullContent += content;
     
-    // 修改后的八字检测和更新函数
-    detectAndUpdateBazi(content) {
-        // 实时检测八字数据并更新显示
-        const baziData = parseBaziData(this.fullContent);
-        if (baziData.userBazi && this.hasValidBaziData(baziData.userBazi)) {
-            STATE.baziData = baziData.userBazi;
-            
-            // 立即更新显示
-            displayBaziPan();
-        }
-    },
+    // 检测八字排盘数据
+    this.detectAndUpdateBazi(content);
+    
+    // 检测是否到达免费部分结束
+    if (!this.isFreeContentComplete()) {
+        this.freeContent += content;
+        
+        // 使用防抖更新免费内容显示，减少闪烁
+        clearTimeout(this.updateTimer);
+        this.updateTimer = setTimeout(() => {
+            this.updateFreeContentDisplay();
+        }, 100); // 100ms防抖
+    }
+}
+
+// 修改后的八字检测和更新函数
+detectAndUpdateBazi(content) {
+    // 只在实际检测到八字数据时更新
+    if (content.includes('年柱：') || content.includes('月柱：') || content.includes('日柱：') || content.includes('时柱：')) {
+        // 使用防抖减少频繁更新
+        clearTimeout(this.baziUpdateTimer);
+        this.baziUpdateTimer = setTimeout(() => {
+            const baziData = parseBaziData(this.fullContent);
+            if (baziData.userBazi && this.hasValidBaziData(baziData.userBazi)) {
+                STATE.baziData = baziData.userBazi;
+                
+                // 使用requestAnimationFrame平滑更新
+                requestAnimationFrame(() => {
+                    displayBaziPan();
+                });
+            }
+        }, 300);
+    }
+}
     
     // 检查八字数据是否有效
     hasValidBaziData(baziData) {
@@ -1245,3 +1256,4 @@ window.StreamingAnalysisManager = StreamingAnalysisManager;
 
 // ✅ 也导出UI对象（如果需要在其他地方使用）
 window.UI = UI;
+
