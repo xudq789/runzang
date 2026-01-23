@@ -1389,3 +1389,239 @@ input:focus, select:focus {
         transform: translateY(0);
     }
 }
+
+/* ============ 八字排盘优化样式 ============ */
+.bazi-card {
+    animation: fadeInUp 0.6s ease-out;
+    position: relative;
+}
+
+.bazi-title {
+    position: relative;
+    padding-bottom: 15px;
+}
+
+.bazi-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+    border-radius: 2px;
+}
+
+.bazi-grid-container {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.bazi-column-item {
+    animation: fadeInUp 0.6s ease-out;
+    animation-fill-mode: both;
+}
+
+.bazi-column-item:nth-child(1) { animation-delay: 0.1s; }
+.bazi-column-item:nth-child(2) { animation-delay: 0.2s; }
+.bazi-column-item:nth-child(3) { animation-delay: 0.3s; }
+.bazi-column-item:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 加载动画 */
+.loading-bazi {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .bazi-grid-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .bazi-column-item {
+        padding: 15px 10px;
+    }
+    
+    .bazi-value {
+        font-size: 22px !important;
+    }
+    
+    .bazi-title {
+        font-size: 18px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .bazi-grid-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .bazi-card {
+        padding: 20px 15px !important;
+    }
+    
+    .bazi-value {
+        font-size: 20px !important;
+    }
+}
+
+/* ============ 流式输出防闪烁样式 ============ */
+.streaming-analysis-section {
+    will-change: opacity, transform;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ============ 平滑滚动样式 ============ */
+.bazi-container {
+    will-change: opacity, transform;
+}
+
+/* ============ 大运排盘样式 ============ */
+.dayun-pan-card {
+    background: linear-gradient(135deg, #f0f5ff, #e6ecff);
+    border: 2px solid #3a7bd5;
+    border-radius: 12px;
+    padding: 25px;
+    margin-top: 25px;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.dayun-pan-card h6 {
+    color: #3a7bd5;
+    margin-bottom: 15px;
+    font-size: 18px;
+    text-align: center;
+    position: relative;
+    padding-bottom: 12px;
+    font-weight: 700;
+}
+
+.dayun-pan-card h6::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 3px;
+    background: linear-gradient(to right, #3a7bd5, #5a8de8);
+    border-radius: 2px;
+}
+
+.dayun-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.dayun-list div {
+    background: white;
+    padding: 12px 15px;
+    border-radius: 8px;
+    border-left: 4px solid #3a7bd5;
+    font-size: 14px;
+    color: var(--dark-color);
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 8px rgba(58, 123, 213, 0.1);
+}
+
+.dayun-list div:hover {
+    transform: translateX(3px);
+    box-shadow: 0 5px 15px rgba(58, 123, 213, 0.2);
+    border-left: 4px solid #5a8de8;
+}
+
+/* ============ 分析内容样式优化 ============ */
+.analysis-section {
+    will-change: opacity, transform;
+    animation: fadeInUp 0.5s ease-out;
+    animation-fill-mode: both;
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-left: 4px solid var(--secondary-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.analysis-section h5 {
+    color: var(--primary-color);
+    font-size: 18px;
+    margin-bottom: 12px;
+    padding-left: 12px;
+    border-left: 4px solid var(--secondary-color);
+    position: relative;
+}
+
+.analysis-section h5::before {
+    content: '▶';
+    position: absolute;
+    left: -5px;
+    color: var(--secondary-color);
+    font-size: 14px;
+}
+
+.analysis-content {
+    line-height: 1.8;
+    color: var(--text-color);
+    padding: 10px 0;
+    font-size: 15px;
+    text-align: justify;
+}
+
+.analysis-content br {
+    content: '';
+    display: block;
+    margin-bottom: 8px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .analysis-section {
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .analysis-section h5 {
+        font-size: 16px;
+    }
+    
+    .analysis-content {
+        font-size: 14px;
+        line-height: 1.7;
+    }
+    
+    .dayun-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .analysis-section {
+        padding: 12px;
+    }
+    
+    .analysis-content {
+        font-size: 14px;
+        line-height: 1.6;
+    }
+}
