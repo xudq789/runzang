@@ -742,307 +742,46 @@ function checkPaymentSuccessFromURL() {
     }
 }
 
-// ============ 【原有主应用代码 - 修改版】 ============
-// 注意：这里假设导入的模块在您的实际项目中存在
-// import { SERVICES, STATE } from './config.js';
-// import { checkAPIStatus, parseBaziData, callDeepSeekAPI } from './api.js';
-// import {
-//     UI,
-//     initFormOptions,
-//     setDefaultValues,
-//     updateServiceDisplay,
-//     updateUnlockInfo,
-//     displayPredictorInfo,
-//     displayBaziPan,
-//     processAndDisplayAnalysis,
-//     showPaymentModal,
-//     closePaymentModal,
-//     updateUnlockInterface,
-//     showFullAnalysisContent,
-//     lockDownloadButton,
-//     unlockDownloadButton,
-//     resetUnlockInterface,
-//     animateButtonStretch,
-//     showLoadingModal,
-//     hideLoadingModal,
-//     showAnalysisResult,
-//     hideAnalysisResult,
-//     validateForm,
-//     collectUserData
-// } from './ui.js';
+// ============ 【原有主应用代码 - 仅修复语法，不修改逻辑】 ============
+// 注意：这里使用原始导入语句，假设这些模块在您的项目中存在
+import { SERVICES, STATE } from './config.js';
+import { checkAPIStatus, parseBaziData, callDeepSeekAPI } from './api.js';
+import {
+    UI,
+    initFormOptions,
+    setDefaultValues,
+    updateServiceDisplay,
+    updateUnlockInfo,
+    displayPredictorInfo,
+    displayBaziPan,
+    processAndDisplayAnalysis,
+    showPaymentModal,
+    closePaymentModal,
+    updateUnlockInterface,
+    showFullAnalysisContent,
+    lockDownloadButton,
+    unlockDownloadButton,
+    resetUnlockInterface,
+    animateButtonStretch,
+    showLoadingModal,
+    hideLoadingModal,
+    showAnalysisResult,
+    hideAnalysisResult,
+    validateForm,
+    collectUserData
+} from './ui.js';
 
-// import { CesuanModule } from '../modules/cesuan.js';
-// import { YunchengModule } from '../modules/yuncheng.js';
-// import { XiangpiModule } from '../modules/xiangpi.js';
-// import { HehunModule } from '../modules/hehun.js';
+import { CesuanModule } from '../modules/cesuan.js';
+import { YunchengModule } from '../modules/yuncheng.js';
+import { XiangpiModule } from '../modules/xiangpi.js';
+import { HehunModule } from '../modules/hehun.js';
 
-// 为测试目的，临时定义变量
-const STATE = window.STATE || {};
-const UI = window.UI || {};
-const SERVICES = window.SERVICES || {};
 const SERVICE_MODULES = {
-    '测算验证': window.CesuanModule || {},
-    '流年运程': window.YunchengModule || {},
-    '人生详批': window.XiangpiModule || {},
-    '八字合婚': window.HehunModule || {}
+    '测算验证': CesuanModule,
+    '流年运程': YunchengModule,
+    '人生详批': XiangpiModule,
+    '八字合婚': HehunModule
 };
-
-// ============ 【新增：优化八字排盘显示函数】 ============
-function displayBaziPan() {
-    const baziGrid = UI.baziGrid ? UI.baziGrid() : document.querySelector('.bazi-grid');
-    if (!baziGrid) return;
-    
-    baziGrid.innerHTML = '';
-    
-    // 检查是否有八字数据
-    if (!STATE.baziData) {
-        console.log('暂无八字数据');
-        return;
-    }
-    
-    // 创建八字排盘容器
-    const baziContainer = document.createElement('div');
-    baziContainer.className = 'bazi-pan-display';
-    
-    // 如果是八字合婚服务，需要显示用户和伴侣的八字
-    if (STATE.currentService === '八字合婚' && STATE.partnerData) {
-        // 用户八字排盘
-        const userBaziCard = createBaziCard(
-            `${STATE.userData.name} 八字排盘`,
-            STATE.baziData,
-            true
-        );
-        baziContainer.appendChild(userBaziCard);
-        
-        // 伴侣八字排盘
-        if (STATE.partnerBaziData) {
-            const partnerBaziCard = createBaziCard(
-                `${STATE.partnerData.partnerName} 八字排盘`,
-                STATE.partnerBaziData,
-                false
-            );
-            baziContainer.appendChild(partnerBaziCard);
-        }
-    } else {
-        // 其他服务：只显示用户的八字
-        const baziCard = createBaziCard('八字排盘结果', STATE.baziData, true);
-        baziContainer.appendChild(baziCard);
-    }
-    
-    baziGrid.appendChild(baziContainer);
-    
-    // 立即显示，不需要等待
-    console.log('八字排盘已显示');
-}
-
-// 创建八字卡片
-function createBaziCard(title, baziData, includeDayun = true) {
-    const card = document.createElement('div');
-    card.className = 'bazi-card';
-    
-    // 标题
-    const titleElement = document.createElement('h5');
-    titleElement.textContent = title;
-    titleElement.style.cssText = `
-        color: var(--primary-color);
-        margin-bottom: 15px;
-        text-align: center;
-        font-size: 18px;
-        border-bottom: 2px solid var(--secondary-color);
-        padding-bottom: 8px;
-    `;
-    
-    // 八字四柱网格
-    const baziGrid = document.createElement('div');
-    baziGrid.className = 'bazi-columns-grid';
-    baziGrid.style.cssText = `
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-        margin-bottom: 20px;
-    `;
-    
-    // 八字四柱
-    const columns = [
-        { label: '年柱', value: baziData.yearColumn || '--', element: baziData.yearElement || '' },
-        { label: '月柱', value: baziData.monthColumn || '--', element: baziData.monthElement || '' },
-        { label: '日柱', value: baziData.dayColumn || '--', element: baziData.dayElement || '' },
-        { label: '时柱', value: baziData.hourColumn || '--', element: baziData.hourElement || '' }
-    ];
-    
-    columns.forEach(col => {
-        const columnDiv = document.createElement('div');
-        columnDiv.className = 'bazi-column-item';
-        columnDiv.style.cssText = `
-            background: linear-gradient(135deg, #f9f5f0, #f0e6d6);
-            border: 2px solid var(--secondary-color);
-            border-radius: 8px;
-            padding: 12px;
-            text-align: center;
-            transition: all 0.3s ease;
-        `;
-        
-        const labelDiv = document.createElement('div');
-        labelDiv.className = 'bazi-label';
-        labelDiv.textContent = col.label;
-        labelDiv.style.cssText = `
-            color: var(--primary-color);
-            font-weight: 600;
-            margin-bottom: 6px;
-            font-size: 14px;
-        `;
-        
-        const valueDiv = document.createElement('div');
-        valueDiv.className = 'bazi-value';
-        valueDiv.textContent = col.value;
-        valueDiv.style.cssText = `
-            font-size: 18px;
-            font-weight: bold;
-            color: var(--dark-color);
-            margin-bottom: 4px;
-        `;
-        
-        const elementDiv = document.createElement('div');
-        elementDiv.className = 'bazi-element';
-        elementDiv.textContent = col.element;
-        elementDiv.style.cssText = `
-            font-size: 12px;
-            color: #7d6e63;
-            font-style: italic;
-        `;
-        
-        columnDiv.appendChild(labelDiv);
-        columnDiv.appendChild(valueDiv);
-        columnDiv.appendChild(elementDiv);
-        baziGrid.appendChild(columnDiv);
-    });
-    
-    card.appendChild(titleElement);
-    card.appendChild(baziGrid);
-    
-    // 如果包含大运排盘，添加大运信息
-    if (includeDayun && STATE.fullAnalysisResult) {
-        const dayunInfo = extractDayunInfo(STATE.fullAnalysisResult);
-        if (dayunInfo) {
-            const dayunCard = createDayunCard(dayunInfo);
-            card.appendChild(dayunCard);
-        }
-    }
-    
-    return card;
-}
-
-// 提取大运信息
-function extractDayunInfo(analysisResult) {
-    try {
-        const lines = analysisResult.split('\n');
-        let qiyunText = '';
-        let dayunText = [];
-        let inDayunSection = false;
-        
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-            
-            if (line.includes('起运岁数') || line.includes('起运时间')) {
-                qiyunText = line;
-            }
-            
-            if (line.includes('大运详细') || line.includes('第1步大运')) {
-                inDayunSection = true;
-                continue;
-            }
-            
-            if (inDayunSection) {
-                if (line.includes('【') || line.includes('要求：') || line === '') {
-                    break;
-                }
-                if (line && line.includes('大运')) {
-                    dayunText.push(line);
-                }
-            }
-        }
-        
-        return {
-            qiyun: qiyunText,
-            dayun: dayunText.slice(0, 6) // 只显示前6步大运
-        };
-    } catch (error) {
-        console.error('提取大运信息失败:', error);
-        return null;
-    }
-}
-
-// 创建大运卡片
-function createDayunCard(dayunInfo) {
-    const card = document.createElement('div');
-    card.className = 'dayun-card';
-    card.style.cssText = `
-        background: linear-gradient(135deg, #f0f5ff, #e6ecff);
-        border: 2px solid #3a7bd5;
-        border-radius: 8px;
-        padding: 15px;
-        margin-top: 15px;
-    `;
-    
-    const title = document.createElement('h6');
-    title.textContent = '大运排盘';
-    title.style.cssText = `
-        color: #3a7bd5;
-        margin-bottom: 10px;
-        font-size: 16px;
-        text-align: center;
-        border-bottom: 1px solid #3a7bd5;
-        padding-bottom: 5px;
-    `;
-    
-    const content = document.createElement('div');
-    content.className = 'dayun-content';
-    
-    if (dayunInfo.qiyun) {
-        const qiyunDiv = document.createElement('div');
-        qiyunDiv.style.cssText = `
-            margin-bottom: 10px;
-            font-size: 14px;
-            color: var(--dark-color);
-            padding: 8px;
-            background: rgba(58, 123, 213, 0.1);
-            border-radius: 4px;
-        `;
-        qiyunDiv.textContent = dayunInfo.qiyun;
-        content.appendChild(qiyunDiv);
-    }
-    
-    if (dayunInfo.dayun && dayunInfo.dayun.length > 0) {
-        const dayunList = document.createElement('div');
-        dayunList.className = 'dayun-list';
-        dayunList.style.cssText = `
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-        `;
-        
-        dayunInfo.dayun.forEach(dayun => {
-            const dayunItem = document.createElement('div');
-            dayunItem.style.cssText = `
-                background: white;
-                padding: 8px;
-                border-radius: 4px;
-                border-left: 3px solid #3a7bd5;
-                font-size: 13px;
-                color: var(--dark-color);
-            `;
-            dayunItem.textContent = dayun;
-            dayunList.appendChild(dayunItem);
-        });
-        
-        content.appendChild(dayunList);
-    }
-    
-    card.appendChild(title);
-    card.appendChild(content);
-    
-    return card;
-}
 
 // ============ 【支付相关函数】 ============
 function handlePaymentSuccess() {
@@ -1102,13 +841,13 @@ async function initApp() {
         await PaymentManager.initPaymentCheck();
         
         console.log('3. 常规初始化...');
-        if (typeof initFormOptions === 'function') initFormOptions();
-        if (typeof setDefaultValues === 'function') setDefaultValues();
-        if (typeof updateServiceDisplay === 'function') updateServiceDisplay(STATE.currentService);
-        if (typeof updateUnlockInfo === 'function') updateUnlockInfo();
-        if (typeof lockDownloadButton === 'function') lockDownloadButton();
+        initFormOptions();
+        setDefaultValues();
+        updateServiceDisplay(STATE.currentService);
+        updateUnlockInfo();
+        lockDownloadButton();
         setupEventListeners();
-        if (typeof checkAPIStatus === 'function') STATE.apiStatus = await checkAPIStatus();
+        STATE.apiStatus = await checkAPIStatus();
         preloadImages();
         
         console.log('✅ 应用初始化完成');
@@ -1129,33 +868,13 @@ function setupEventListeners() {
         });
     });
     
-    if (UI.analyzeBtn && typeof UI.analyzeBtn === 'function') {
-        UI.analyzeBtn().addEventListener('click', startAnalysis);
-    }
-    
-    if (UI.unlockBtn && typeof UI.unlockBtn === 'function') {
-        UI.unlockBtn().addEventListener('click', showPaymentModal);
-    }
-    
-    if (UI.downloadReportBtn && typeof UI.downloadReportBtn === 'function') {
-        UI.downloadReportBtn().addEventListener('click', downloadReport);
-    }
-    
-    if (UI.recalculateBtn && typeof UI.recalculateBtn === 'function') {
-        UI.recalculateBtn().addEventListener('click', newAnalysis);
-    }
-    
-    if (UI.confirmPaymentBtn && typeof UI.confirmPaymentBtn === 'function') {
-        UI.confirmPaymentBtn().addEventListener('click', confirmPayment);
-    }
-    
-    if (UI.cancelPaymentBtn && typeof UI.cancelPaymentBtn === 'function') {
-        UI.cancelPaymentBtn().addEventListener('click', closePaymentModal);
-    }
-    
-    if (UI.closePaymentBtn && typeof UI.closePaymentBtn === 'function') {
-        UI.closePaymentBtn().addEventListener('click', closePaymentModal);
-    }
+    UI.analyzeBtn().addEventListener('click', startAnalysis);
+    UI.unlockBtn().addEventListener('click', showPaymentModal);
+    UI.downloadReportBtn().addEventListener('click', downloadReport);
+    UI.recalculateBtn().addEventListener('click', newAnalysis);
+    UI.confirmPaymentBtn().addEventListener('click', confirmPayment);
+    UI.cancelPaymentBtn().addEventListener('click', closePaymentModal);
+    UI.closePaymentBtn().addEventListener('click', closePaymentModal);
     
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
@@ -1164,14 +883,14 @@ function setupEventListeners() {
     });
     
     window.addEventListener('click', function(event) {
-        const paymentModal = UI.paymentModal ? UI.paymentModal() : document.getElementById('payment-modal');
+        const paymentModal = UI.paymentModal();
         if (event.target === paymentModal) {
             closePaymentModal();
         }
     });
     
-    const heroImage = UI.heroImage ? UI.heroImage() : document.querySelector('.hero-image img');
-    const detailImage = UI.detailImage ? UI.detailImage() : document.querySelector('.detail-image img');
+    const heroImage = UI.heroImage();
+    const detailImage = UI.detailImage();
     
     if (heroImage) {
         heroImage.addEventListener('load', function() {
@@ -1219,25 +938,25 @@ function switchService(serviceName) {
     }
     
     STATE.currentService = serviceName;
-    if (typeof updateServiceDisplay === 'function') updateServiceDisplay(serviceName);
-    if (typeof updateUnlockInfo === 'function') updateUnlockInfo();
-    if (typeof resetUnlockInterface === 'function') resetUnlockInterface();
-    if (typeof lockDownloadButton === 'function') lockDownloadButton();
+    updateServiceDisplay(serviceName);
+    updateUnlockInfo();
+    resetUnlockInterface();
+    lockDownloadButton();
     
     if (oldService !== serviceName) {
-        if (typeof hideAnalysisResult === 'function') hideAnalysisResult();
+        hideAnalysisResult();
         
-        const freeAnalysisText = UI.freeAnalysisText ? UI.freeAnalysisText() : document.getElementById('free-analysis-text');
+        const freeAnalysisText = UI.freeAnalysisText();
         if (freeAnalysisText) {
             freeAnalysisText.innerHTML = '';
         }
         
-        const predictorInfoGrid = UI.predictorInfoGrid ? UI.predictorInfoGrid() : document.querySelector('.predictor-info-grid');
+        const predictorInfoGrid = UI.predictorInfoGrid();
         if (predictorInfoGrid) {
             predictorInfoGrid.innerHTML = '';
         }
         
-        const baziGrid = UI.baziGrid ? UI.baziGrid() : document.querySelector('.bazi-grid');
+        const baziGrid = UI.baziGrid();
         if (baziGrid) {
             baziGrid.innerHTML = '';
         }
@@ -1268,7 +987,7 @@ async function startAnalysis() {
         return;
     }
     
-    if (typeof validateForm === 'function' && !validateForm()) {
+    if (!validateForm()) {
         alert('请填写完整的个人信息');
         return;
     }
@@ -1286,23 +1005,23 @@ async function startAnalysis() {
     STATE.isPaymentUnlocked = false;
     STATE.isDownloadLocked = true;
     
-    if (typeof lockDownloadButton === 'function') lockDownloadButton();
-    if (typeof animateButtonStretch === 'function') animateButtonStretch();
+    lockDownloadButton();
+    animateButtonStretch();
     
     // 不显示传统加载弹窗
     // showLoadingModal();
     
     try {
-        if (typeof collectUserData === 'function') collectUserData();
+        collectUserData();
         
         // 立即显示预测者信息
-        if (typeof displayPredictorInfo === 'function') displayPredictorInfo();
+        displayPredictorInfo();
         
         // 立即显示分析结果区域（空内容）
-        if (typeof showAnalysisResult === 'function') showAnalysisResult();
+        showAnalysisResult();
 
         // 在八字区域显示加载状态
-        const baziGrid = UI.baziGrid ? UI.baziGrid() : document.querySelector('.bazi-grid');
+        const baziGrid = UI.baziGrid();
         if (baziGrid) {
             baziGrid.innerHTML = `
                 <div class="loading-bazi">
@@ -1338,9 +1057,7 @@ async function startAnalysis() {
             console.log('流式分析成功');
             
             // 使用原有函数显示完整分析结果（保持相同格式）
-            if (typeof processAndDisplayAnalysis === 'function') {
-                processAndDisplayAnalysis(STATE.fullAnalysisResult);
-            }
+            processAndDisplayAnalysis(STATE.fullAnalysisResult);
             
             // 检查支付状态
             const paymentData = PaymentManager.getPaymentData();
@@ -1368,38 +1085,31 @@ async function startAnalysis() {
 async function fallbackToTraditionalAnalysis() {
     console.log('执行降级方案：使用传统API');
     
-    if (typeof showLoadingModal === 'function') showLoadingModal();
+    showLoadingModal();
     
     try {
         const serviceModule = SERVICE_MODULES[STATE.currentService];
         const prompt = serviceModule.getPrompt(STATE.userData, STATE.partnerData);
         
         console.log('调用传统API...');
-        let analysisResult;
-        if (typeof callDeepSeekAPI === 'function') {
-            analysisResult = await callDeepSeekAPI(prompt);
-        } else {
-            throw new Error('传统API函数不可用');
-        }
+        const analysisResult = await callDeepSeekAPI(prompt);
         
         STATE.fullAnalysisResult = analysisResult;
         
-        let parsedBaziData;
-        if (typeof parseBaziData === 'function') {
-            parsedBaziData = parseBaziData(analysisResult);
-            STATE.baziData = parsedBaziData.userBazi;
-        }
+        const parsedBaziData = parseBaziData(analysisResult);
+        STATE.baziData = parsedBaziData.userBazi;
         
-        if (typeof displayBaziPan === 'function') displayBaziPan();
-        if (typeof processAndDisplayAnalysis === 'function') processAndDisplayAnalysis(analysisResult);
-        if (typeof hideLoadingModal === 'function') hideLoadingModal();
-        if (typeof showAnalysisResult === 'function') showAnalysisResult();
+        displayBaziPan();
+        processAndDisplayAnalysis(analysisResult);
+        
+        hideLoadingModal();
+        showAnalysisResult();
         
         console.log('传统API分析完成');
         
     } catch (error) {
         console.error('降级方案失败:', error);
-        if (typeof hideLoadingModal === 'function') hideLoadingModal();
+        hideLoadingModal();
         
         let errorMessage = '命理分析失败，请稍后再试。';
         if (error.message.includes('401')) {
@@ -1491,11 +1201,11 @@ function newAnalysis() {
     
     StreamingAnalysisManager.stopStreaming();
     
-    if (typeof lockDownloadButton === 'function') lockDownloadButton();
-    if (typeof hideAnalysisResult === 'function') hideAnalysisResult();
-    if (typeof resetUnlockInterface === 'function') resetUnlockInterface();
+    lockDownloadButton();
+    hideAnalysisResult();
+    resetUnlockInterface();
     
-    const freeAnalysisText = UI.freeAnalysisText ? UI.freeAnalysisText() : document.getElementById('free-analysis-text');
+    const freeAnalysisText = UI.freeAnalysisText();
     if (freeAnalysisText) {
         freeAnalysisText.innerHTML = '';
     }
@@ -1528,22 +1238,3 @@ if (typeof PaymentManager !== 'undefined') {
 if (typeof STATE !== 'undefined') {
     window.STATE = STATE;
 }
-
-window.StreamingAnalysisManager = StreamingAnalysisManager;
-
-// 提供默认的UI函数，如果不存在
-window.UI = window.UI || {
-    analyzeBtn: () => document.getElementById('analyze-btn'),
-    unlockBtn: () => document.getElementById('unlock-btn'),
-    downloadReportBtn: () => document.getElementById('download-report-btn'),
-    recalculateBtn: () => document.getElementById('recalculate-btn'),
-    paymentModal: () => document.getElementById('payment-modal'),
-    confirmPaymentBtn: () => document.getElementById('confirm-payment-btn'),
-    cancelPaymentBtn: () => document.getElementById('cancel-payment-btn'),
-    closePaymentBtn: () => document.getElementById('close-payment-btn'),
-    heroImage: () => document.querySelector('.hero-image img'),
-    detailImage: () => document.querySelector('.detail-image img'),
-    freeAnalysisText: () => document.getElementById('free-analysis-text'),
-    predictorInfoGrid: () => document.querySelector('.predictor-info-grid'),
-    baziGrid: () => document.querySelector('.bazi-grid')
-};
