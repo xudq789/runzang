@@ -290,7 +290,8 @@ export function displayBaziPan() {
     
     if (typeof window.displayBaziPan === 'function') {
         window.displayBaziPan();
-    } else {
+        return; // 添加 return 语句
+    }
     
     const baziGrid = UI.baziGrid();
     if (!baziGrid) return;
@@ -1220,4 +1221,5 @@ export {
     validateForm,
     collectUserData
 };
+
 
