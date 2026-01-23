@@ -1196,7 +1196,7 @@ export function collectUserData() {
     }
 }
 
-// ✅ 在这里添加统一的导出语句
+// ============ 【统一的导出语句 - 整个文件的唯一导出部分】 ============
 export {
     UI,
     initFormOptions,
@@ -1221,7 +1221,5 @@ export {
     validateForm,
     collectUserData
 };
-
-// ✅ 注意：不要在这里重复导出
 
 
