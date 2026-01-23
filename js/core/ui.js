@@ -1316,5 +1316,40 @@ export function collectUserData() {
     }
 }
 
+// 显示大运排盘 - 新增函数
+export function displayDayunPan() {
+    const dayunPanCard = document.querySelector('.dayun-pan-card');
+    if (!dayunPanCard) return;
+    
+    // 尝试从分析结果中提取大运信息
+    if (STATE.fullAnalysisResult && STATE.fullAnalysisResult.includes('【大运排盘】')) {
+        const startIndex = STATE.fullAnalysisResult.indexOf('【大运排盘】');
+        let endIndex = STATE.fullAnalysisResult.indexOf('【', startIndex + 1);
+        if (endIndex === -1) endIndex = STATE.fullAnalysisResult.length;
+        
+        const dayunContent = STATE.fullAnalysisResult.substring(startIndex, endIndex);
+        
+        // 解析大运内容
+        const lines = dayunContent.split('\n').filter(line => line.trim());
+        let htmlContent = '';
+        
+        lines.forEach(line => {
+            const trimmedLine = line.trim();
+            if (trimmedLine.includes('起运岁数：') || trimmedLine.includes('起运时间：')) {
+                htmlContent += `<div style="margin-bottom: 8px; color: #3a7bd5; font-weight: 600;">${trimmedLine}</div>`;
+            } else if (trimmedLine.includes('第') && trimmedLine.includes('步大运：')) {
+                htmlContent += `<div class="dayun-item">${trimmedLine}</div>`;
+            }
+        });
+        
+        if (htmlContent) {
+            dayunPanCard.style.display = 'block';
+            dayunPanCard.innerHTML = `
+                <h6>大运排盘</h6>
+                <div class="dayun-list">${htmlContent}</div>
+            `;
+        }
+    }
+}
 
 
