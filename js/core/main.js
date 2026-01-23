@@ -1,5 +1,5 @@
 // ============ 【支付宝支付回调处理模块】 ============
-export const AlipayCallbackHandler = {
+const AlipayCallbackHandler = {  // 移除 export
     // 检查URL中是否有后端返回的支付成功参数
     checkBackendCallback() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -54,7 +54,7 @@ export const AlipayCallbackHandler = {
 };
 
 // ============ 【支付状态管理器】 ============
-export const PaymentManager = {
+const PaymentManager = {  // 移除 export
     // 初始化支付检查
     initPaymentCheck: async function() {
         console.log('🔍 初始化支付状态检查...');
