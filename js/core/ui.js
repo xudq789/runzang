@@ -1195,15 +1195,29 @@ export function collectUserData() {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
+// ✅ 在这里添加统一的导出语句
+export {
+    UI,
+    initFormOptions,
+    setDefaultValues,
+    updateServiceDisplay,
+    updateUnlockInfo,
+    displayPredictorInfo,
+    displayBaziPan,
+    processAndDisplayAnalysis,
+    showPaymentModal,
+    closePaymentModal,
+    updateUnlockInterface,
+    showFullAnalysisContent,
+    lockDownloadButton,
+    unlockDownloadButton,
+    resetUnlockInterface,
+    animateButtonStretch,
+    showLoadingModal,
+    hideLoadingModal,
+    showAnalysisResult,
+    hideAnalysisResult,
+    validateForm,
+    collectUserData
+};
 
