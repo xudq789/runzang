@@ -1216,3 +1216,176 @@ input:focus, select:focus {
         transform: translateY(0);
     }
 }
+
+/* 优化八字排盘样式 */
+.bazi-pan-display {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.bazi-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    border: 1px solid var(--border-color);
+}
+
+.bazi-columns-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.bazi-column-item {
+    background: linear-gradient(135deg, #f9f5f0, #f0e6d6);
+    border: 2px solid var(--secondary-color);
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.bazi-column-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(212, 175, 55, 0.2);
+    border-color: var(--primary-color);
+}
+
+.bazi-column-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+}
+
+.bazi-label {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.bazi-value {
+    font-size: 22px;
+    font-weight: bold;
+    color: var(--dark-color);
+    margin-bottom: 5px;
+    font-family: 'SimSun', '宋体', serif;
+}
+
+.bazi-element {
+    font-size: 13px;
+    color: #7d6e63;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+.dayun-card {
+    background: linear-gradient(135deg, #f0f5ff, #e6ecff);
+    border: 2px solid #3a7bd5;
+    border-radius: 10px;
+    padding: 18px;
+    margin-top: 20px;
+    animation: fadeIn 0.6s ease-out;
+}
+
+.dayun-card h6 {
+    color: #3a7bd5;
+    margin-bottom: 12px;
+    font-size: 16px;
+    text-align: center;
+    border-bottom: 1px solid rgba(58, 123, 213, 0.3);
+    padding-bottom: 8px;
+}
+
+.dayun-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.dayun-list div {
+    background: white;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border-left: 4px solid #3a7bd5;
+    font-size: 13px;
+    color: var(--dark-color);
+    transition: all 0.3s ease;
+}
+
+.dayun-list div:hover {
+    transform: translateX(3px);
+    box-shadow: 0 4px 10px rgba(58, 123, 213, 0.2);
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .bazi-columns-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .bazi-value {
+        font-size: 18px;
+    }
+    
+    .dayun-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .bazi-columns-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .bazi-card {
+        padding: 15px;
+    }
+}
+
+/* 解决闪烁问题 */
+#bazi-grid {
+    min-height: 300px;
+    position: relative;
+}
+
+.loading-bazi {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    color: var(--primary-color);
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* 流式更新动画 */
+.streaming-update {
+    animation: highlight 0.8s ease-out;
+}
+
+@keyframes highlight {
+    0% { background-color: rgba(212, 175, 55, 0.1); }
+    100% { background-color: transparent; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
