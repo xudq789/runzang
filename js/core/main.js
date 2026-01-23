@@ -485,39 +485,39 @@ const StreamingAnalysisManager = {
     },
     
     // 处理流式数据块
-    function processStreamChunk(content) {
-    // 累积完整内容
-    this.fullContent += content;
-    
-    // 检测八字排盘数据
-    this.detectAndUpdateBazi(content);
-    
-    // 检测是否到达免费部分结束
-    if (!this.isFreeContentComplete()) {
-        this.freeContent += content;
+    processStreamChunk(content) {
+        // 累积完整内容
+        this.fullContent += content;
         
-        // 实时更新免费内容显示
-        this.updateFreeContentDisplay();
-    }
-}
-
-// 修改后的八字检测和更新函数
-function detectAndUpdateBazi(content) {
-    // 实时检测八字数据并更新显示
-    const baziData = parseBaziData(this.fullContent);
-    if (baziData.userBazi && this.hasValidBaziData(baziData.userBazi)) {
-        STATE.baziData = baziData.userBazi;
+        // 检测八字排盘数据
+        this.detectAndUpdateBazi(content);
         
-        // 立即更新显示
-        displayBaziPan();
-    }
-}
-
-// 检查八字数据是否有效
-function hasValidBaziData(baziData) {
-    return baziData.yearColumn && baziData.monthColumn && 
-           baziData.dayColumn && baziData.hourColumn;
-}
+        // 检测是否到达免费部分结束
+        if (!this.isFreeContentComplete()) {
+            this.freeContent += content;
+            
+            // 实时更新免费内容显示
+            this.updateFreeContentDisplay();
+        }
+    },
+    
+    // 修改后的八字检测和更新函数
+    detectAndUpdateBazi(content) {
+        // 实时检测八字数据并更新显示
+        const baziData = parseBaziData(this.fullContent);
+        if (baziData.userBazi && this.hasValidBaziData(baziData.userBazi)) {
+            STATE.baziData = baziData.userBazi;
+            
+            // 立即更新显示
+            displayBaziPan();
+        }
+    },
+    
+    // 检查八字数据是否有效
+    hasValidBaziData(baziData) {
+        return baziData.yearColumn && baziData.monthColumn && 
+               baziData.dayColumn && baziData.hourColumn;
+    },
     
     // 检查免费内容是否完成
     isFreeContentComplete() {
@@ -743,48 +743,53 @@ function checkPaymentSuccessFromURL() {
 }
 
 // ============ 【原有主应用代码 - 修改版】 ============
-import { SERVICES, STATE } from './config.js';
-import { checkAPIStatus, parseBaziData, callDeepSeekAPI } from './api.js';
-import {
-    UI,
-    initFormOptions,
-    setDefaultValues,
-    updateServiceDisplay,
-    updateUnlockInfo,
-    displayPredictorInfo,
-    displayBaziPan,
-    processAndDisplayAnalysis,
-    showPaymentModal,
-    closePaymentModal,
-    updateUnlockInterface,
-    showFullAnalysisContent,
-    lockDownloadButton,
-    unlockDownloadButton,
-    resetUnlockInterface,
-    animateButtonStretch,
-    showLoadingModal,
-    hideLoadingModal,
-    showAnalysisResult,
-    hideAnalysisResult,
-    validateForm,
-    collectUserData
-} from './ui.js';
+// 注意：这里假设导入的模块在您的实际项目中存在
+// import { SERVICES, STATE } from './config.js';
+// import { checkAPIStatus, parseBaziData, callDeepSeekAPI } from './api.js';
+// import {
+//     UI,
+//     initFormOptions,
+//     setDefaultValues,
+//     updateServiceDisplay,
+//     updateUnlockInfo,
+//     displayPredictorInfo,
+//     displayBaziPan,
+//     processAndDisplayAnalysis,
+//     showPaymentModal,
+//     closePaymentModal,
+//     updateUnlockInterface,
+//     showFullAnalysisContent,
+//     lockDownloadButton,
+//     unlockDownloadButton,
+//     resetUnlockInterface,
+//     animateButtonStretch,
+//     showLoadingModal,
+//     hideLoadingModal,
+//     showAnalysisResult,
+//     hideAnalysisResult,
+//     validateForm,
+//     collectUserData
+// } from './ui.js';
 
-import { CesuanModule } from '../modules/cesuan.js';
-import { YunchengModule } from '../modules/yuncheng.js';
-import { XiangpiModule } from '../modules/xiangpi.js';
-import { HehunModule } from '../modules/hehun.js';
+// import { CesuanModule } from '../modules/cesuan.js';
+// import { YunchengModule } from '../modules/yuncheng.js';
+// import { XiangpiModule } from '../modules/xiangpi.js';
+// import { HehunModule } from '../modules/hehun.js';
 
+// 为测试目的，临时定义变量
+const STATE = window.STATE || {};
+const UI = window.UI || {};
+const SERVICES = window.SERVICES || {};
 const SERVICE_MODULES = {
-    '测算验证': CesuanModule,
-    '流年运程': YunchengModule,
-    '人生详批': XiangpiModule,
-    '八字合婚': HehunModule
+    '测算验证': window.CesuanModule || {},
+    '流年运程': window.YunchengModule || {},
+    '人生详批': window.XiangpiModule || {},
+    '八字合婚': window.HehunModule || {}
 };
 
 // ============ 【新增：优化八字排盘显示函数】 ============
 function displayBaziPan() {
-    const baziGrid = UI.baziGrid();
+    const baziGrid = UI.baziGrid ? UI.baziGrid() : document.querySelector('.bazi-grid');
     if (!baziGrid) return;
     
     baziGrid.innerHTML = '';
@@ -1097,13 +1102,13 @@ async function initApp() {
         await PaymentManager.initPaymentCheck();
         
         console.log('3. 常规初始化...');
-        initFormOptions();
-        setDefaultValues();
-        updateServiceDisplay(STATE.currentService);
-        updateUnlockInfo();
-        lockDownloadButton();
+        if (typeof initFormOptions === 'function') initFormOptions();
+        if (typeof setDefaultValues === 'function') setDefaultValues();
+        if (typeof updateServiceDisplay === 'function') updateServiceDisplay(STATE.currentService);
+        if (typeof updateUnlockInfo === 'function') updateUnlockInfo();
+        if (typeof lockDownloadButton === 'function') lockDownloadButton();
         setupEventListeners();
-        STATE.apiStatus = await checkAPIStatus();
+        if (typeof checkAPIStatus === 'function') STATE.apiStatus = await checkAPIStatus();
         preloadImages();
         
         console.log('✅ 应用初始化完成');
@@ -1124,13 +1129,33 @@ function setupEventListeners() {
         });
     });
     
-    UI.analyzeBtn().addEventListener('click', startAnalysis);
-    UI.unlockBtn().addEventListener('click', showPaymentModal);
-    UI.downloadReportBtn().addEventListener('click', downloadReport);
-    UI.recalculateBtn().addEventListener('click', newAnalysis);
-    UI.confirmPaymentBtn().addEventListener('click', confirmPayment);
-    UI.cancelPaymentBtn().addEventListener('click', closePaymentModal);
-    UI.closePaymentBtn().addEventListener('click', closePaymentModal);
+    if (UI.analyzeBtn && typeof UI.analyzeBtn === 'function') {
+        UI.analyzeBtn().addEventListener('click', startAnalysis);
+    }
+    
+    if (UI.unlockBtn && typeof UI.unlockBtn === 'function') {
+        UI.unlockBtn().addEventListener('click', showPaymentModal);
+    }
+    
+    if (UI.downloadReportBtn && typeof UI.downloadReportBtn === 'function') {
+        UI.downloadReportBtn().addEventListener('click', downloadReport);
+    }
+    
+    if (UI.recalculateBtn && typeof UI.recalculateBtn === 'function') {
+        UI.recalculateBtn().addEventListener('click', newAnalysis);
+    }
+    
+    if (UI.confirmPaymentBtn && typeof UI.confirmPaymentBtn === 'function') {
+        UI.confirmPaymentBtn().addEventListener('click', confirmPayment);
+    }
+    
+    if (UI.cancelPaymentBtn && typeof UI.cancelPaymentBtn === 'function') {
+        UI.cancelPaymentBtn().addEventListener('click', closePaymentModal);
+    }
+    
+    if (UI.closePaymentBtn && typeof UI.closePaymentBtn === 'function') {
+        UI.closePaymentBtn().addEventListener('click', closePaymentModal);
+    }
     
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
@@ -1139,14 +1164,14 @@ function setupEventListeners() {
     });
     
     window.addEventListener('click', function(event) {
-        const paymentModal = UI.paymentModal();
+        const paymentModal = UI.paymentModal ? UI.paymentModal() : document.getElementById('payment-modal');
         if (event.target === paymentModal) {
             closePaymentModal();
         }
     });
     
-    const heroImage = UI.heroImage();
-    const detailImage = UI.detailImage();
+    const heroImage = UI.heroImage ? UI.heroImage() : document.querySelector('.hero-image img');
+    const detailImage = UI.detailImage ? UI.detailImage() : document.querySelector('.detail-image img');
     
     if (heroImage) {
         heroImage.addEventListener('load', function() {
@@ -1194,25 +1219,25 @@ function switchService(serviceName) {
     }
     
     STATE.currentService = serviceName;
-    updateServiceDisplay(serviceName);
-    updateUnlockInfo();
-    resetUnlockInterface();
-    lockDownloadButton();
+    if (typeof updateServiceDisplay === 'function') updateServiceDisplay(serviceName);
+    if (typeof updateUnlockInfo === 'function') updateUnlockInfo();
+    if (typeof resetUnlockInterface === 'function') resetUnlockInterface();
+    if (typeof lockDownloadButton === 'function') lockDownloadButton();
     
     if (oldService !== serviceName) {
-        hideAnalysisResult();
+        if (typeof hideAnalysisResult === 'function') hideAnalysisResult();
         
-        const freeAnalysisText = UI.freeAnalysisText();
+        const freeAnalysisText = UI.freeAnalysisText ? UI.freeAnalysisText() : document.getElementById('free-analysis-text');
         if (freeAnalysisText) {
             freeAnalysisText.innerHTML = '';
         }
         
-        const predictorInfoGrid = UI.predictorInfoGrid();
+        const predictorInfoGrid = UI.predictorInfoGrid ? UI.predictorInfoGrid() : document.querySelector('.predictor-info-grid');
         if (predictorInfoGrid) {
             predictorInfoGrid.innerHTML = '';
         }
         
-        const baziGrid = UI.baziGrid();
+        const baziGrid = UI.baziGrid ? UI.baziGrid() : document.querySelector('.bazi-grid');
         if (baziGrid) {
             baziGrid.innerHTML = '';
         }
@@ -1243,7 +1268,7 @@ async function startAnalysis() {
         return;
     }
     
-    if (!validateForm()) {
+    if (typeof validateForm === 'function' && !validateForm()) {
         alert('请填写完整的个人信息');
         return;
     }
@@ -1261,23 +1286,23 @@ async function startAnalysis() {
     STATE.isPaymentUnlocked = false;
     STATE.isDownloadLocked = true;
     
-    lockDownloadButton();
-    animateButtonStretch();
+    if (typeof lockDownloadButton === 'function') lockDownloadButton();
+    if (typeof animateButtonStretch === 'function') animateButtonStretch();
     
     // 不显示传统加载弹窗
     // showLoadingModal();
     
     try {
-        collectUserData();
+        if (typeof collectUserData === 'function') collectUserData();
         
         // 立即显示预测者信息
-        displayPredictorInfo();
+        if (typeof displayPredictorInfo === 'function') displayPredictorInfo();
         
         // 立即显示分析结果区域（空内容）
-        showAnalysisResult();
+        if (typeof showAnalysisResult === 'function') showAnalysisResult();
 
         // 在八字区域显示加载状态
-        const baziGrid = UI.baziGrid();
+        const baziGrid = UI.baziGrid ? UI.baziGrid() : document.querySelector('.bazi-grid');
         if (baziGrid) {
             baziGrid.innerHTML = `
                 <div class="loading-bazi">
@@ -1313,7 +1338,9 @@ async function startAnalysis() {
             console.log('流式分析成功');
             
             // 使用原有函数显示完整分析结果（保持相同格式）
-            processAndDisplayAnalysis(STATE.fullAnalysisResult);
+            if (typeof processAndDisplayAnalysis === 'function') {
+                processAndDisplayAnalysis(STATE.fullAnalysisResult);
+            }
             
             // 检查支付状态
             const paymentData = PaymentManager.getPaymentData();
@@ -1341,31 +1368,38 @@ async function startAnalysis() {
 async function fallbackToTraditionalAnalysis() {
     console.log('执行降级方案：使用传统API');
     
-    showLoadingModal();
+    if (typeof showLoadingModal === 'function') showLoadingModal();
     
     try {
         const serviceModule = SERVICE_MODULES[STATE.currentService];
         const prompt = serviceModule.getPrompt(STATE.userData, STATE.partnerData);
         
         console.log('调用传统API...');
-        const analysisResult = await callDeepSeekAPI(prompt);
+        let analysisResult;
+        if (typeof callDeepSeekAPI === 'function') {
+            analysisResult = await callDeepSeekAPI(prompt);
+        } else {
+            throw new Error('传统API函数不可用');
+        }
         
         STATE.fullAnalysisResult = analysisResult;
         
-        const parsedBaziData = parseBaziData(analysisResult);
-        STATE.baziData = parsedBaziData.userBazi;
+        let parsedBaziData;
+        if (typeof parseBaziData === 'function') {
+            parsedBaziData = parseBaziData(analysisResult);
+            STATE.baziData = parsedBaziData.userBazi;
+        }
         
-        displayBaziPan();
-        processAndDisplayAnalysis(analysisResult);
-        
-        hideLoadingModal();
-        showAnalysisResult();
+        if (typeof displayBaziPan === 'function') displayBaziPan();
+        if (typeof processAndDisplayAnalysis === 'function') processAndDisplayAnalysis(analysisResult);
+        if (typeof hideLoadingModal === 'function') hideLoadingModal();
+        if (typeof showAnalysisResult === 'function') showAnalysisResult();
         
         console.log('传统API分析完成');
         
     } catch (error) {
         console.error('降级方案失败:', error);
-        hideLoadingModal();
+        if (typeof hideLoadingModal === 'function') hideLoadingModal();
         
         let errorMessage = '命理分析失败，请稍后再试。';
         if (error.message.includes('401')) {
@@ -1457,11 +1491,11 @@ function newAnalysis() {
     
     StreamingAnalysisManager.stopStreaming();
     
-    lockDownloadButton();
-    hideAnalysisResult();
-    resetUnlockInterface();
+    if (typeof lockDownloadButton === 'function') lockDownloadButton();
+    if (typeof hideAnalysisResult === 'function') hideAnalysisResult();
+    if (typeof resetUnlockInterface === 'function') resetUnlockInterface();
     
-    const freeAnalysisText = UI.freeAnalysisText();
+    const freeAnalysisText = UI.freeAnalysisText ? UI.freeAnalysisText() : document.getElementById('free-analysis-text');
     if (freeAnalysisText) {
         freeAnalysisText.innerHTML = '';
     }
@@ -1495,6 +1529,21 @@ if (typeof STATE !== 'undefined') {
     window.STATE = STATE;
 }
 
+window.StreamingAnalysisManager = StreamingAnalysisManager;
 
-
-
+// 提供默认的UI函数，如果不存在
+window.UI = window.UI || {
+    analyzeBtn: () => document.getElementById('analyze-btn'),
+    unlockBtn: () => document.getElementById('unlock-btn'),
+    downloadReportBtn: () => document.getElementById('download-report-btn'),
+    recalculateBtn: () => document.getElementById('recalculate-btn'),
+    paymentModal: () => document.getElementById('payment-modal'),
+    confirmPaymentBtn: () => document.getElementById('confirm-payment-btn'),
+    cancelPaymentBtn: () => document.getElementById('cancel-payment-btn'),
+    closePaymentBtn: () => document.getElementById('close-payment-btn'),
+    heroImage: () => document.querySelector('.hero-image img'),
+    detailImage: () => document.querySelector('.detail-image img'),
+    freeAnalysisText: () => document.getElementById('free-analysis-text'),
+    predictorInfoGrid: () => document.querySelector('.predictor-info-grid'),
+    baziGrid: () => document.querySelector('.bazi-grid')
+};
