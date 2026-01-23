@@ -1270,18 +1270,25 @@ async function startAnalysis() {
     try {
         collectUserData();
         
-        // 清空显示区域
-        const freeAnalysisText = UI.freeAnalysisText();
-        if (freeAnalysisText) {
-            freeAnalysisText.innerHTML = '';
-        }
-        
         // 立即显示预测者信息
         displayPredictorInfo();
         
         // 立即显示分析结果区域（空内容）
         showAnalysisResult();
-        
+
+        // 在八字区域显示加载状态
+        const baziGrid = UI.baziGrid();
+        if (baziGrid) {
+            baziGrid.innerHTML = `
+                <div class="loading-bazi">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div class="spinner" style="width: 20px; height: 20px;"></div>
+                        <span>正在排盘，请稍候...</span>
+                    </div>
+                </div>
+            `;
+        }
+
         // 获取当前服务的模块和完整提示词
         const serviceModule = SERVICE_MODULES[STATE.currentService];
         if (!serviceModule) {
@@ -1487,6 +1494,7 @@ if (typeof PaymentManager !== 'undefined') {
 if (typeof STATE !== 'undefined') {
     window.STATE = STATE;
 }
+
 
 
 
