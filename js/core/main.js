@@ -485,21 +485,39 @@ const StreamingAnalysisManager = {
     },
     
     // 处理流式数据块
-    processStreamChunk(content) {
-        // 累积完整内容
-        this.fullContent += content;
+    function processStreamChunk(content) {
+    // 累积完整内容
+    this.fullContent += content;
+    
+    // 检测八字排盘数据
+    this.detectAndUpdateBazi(content);
+    
+    // 检测是否到达免费部分结束
+    if (!this.isFreeContentComplete()) {
+        this.freeContent += content;
         
-        // 检测是否到达免费部分结束（以第一个付费部分为界）
-        if (!this.isFreeContentComplete()) {
-            this.freeContent += content;
-            
-            // 实时更新免费内容显示
-            this.updateFreeContentDisplay();
-        }
+        // 实时更新免费内容显示
+        this.updateFreeContentDisplay();
+    }
+}
+
+// 修改后的八字检测和更新函数
+function detectAndUpdateBazi(content) {
+    // 实时检测八字数据并更新显示
+    const baziData = parseBaziData(this.fullContent);
+    if (baziData.userBazi && this.hasValidBaziData(baziData.userBazi)) {
+        STATE.baziData = baziData.userBazi;
         
-        // 检测八字排盘部分
-        this.detectAndDisplayBazi(content);
-    },
+        // 立即更新显示
+        displayBaziPan();
+    }
+}
+
+// 检查八字数据是否有效
+function hasValidBaziData(baziData) {
+    return baziData.yearColumn && baziData.monthColumn && 
+           baziData.dayColumn && baziData.hourColumn;
+}
     
     // 检查免费内容是否完成
     isFreeContentComplete() {
@@ -1469,5 +1487,6 @@ if (typeof PaymentManager !== 'undefined') {
 if (typeof STATE !== 'undefined') {
     window.STATE = STATE;
 }
+
 
 
