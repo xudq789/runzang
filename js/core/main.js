@@ -1,5 +1,5 @@
 // ============ 【支付宝支付回调处理模块】 ============
-const AlipayCallbackHandler = {
+export const AlipayCallbackHandler = {
     // 检查URL中是否有后端返回的支付成功参数
     checkBackendCallback() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -256,6 +256,10 @@ const PaymentManager = {
                 }
             }
             
+            // 需要从 api.js 导入 parseBaziData 函数
+            import { parseBaziData } from './api.js';
+
+            // ... 然后才能使用
             const parsedBaziData = parseBaziData(savedResult);
             STATE.baziData = parsedBaziData.userBazi;
             
@@ -742,11 +746,10 @@ function checkPaymentSuccessFromURL() {
     }
 }
 
-// ============ 【原有主应用代码 - 仅修复语法，不修改逻辑】 ============
-// 注意：这里使用原始导入语句，假设这些模块在您的项目中存在
+// 导入核心模块
 import { SERVICES, STATE } from './config.js';
 import { checkAPIStatus, parseBaziData, callDeepSeekAPI } from './api.js';
-import {
+import { 
     UI,
     initFormOptions,
     setDefaultValues,
@@ -1245,3 +1248,4 @@ window.StreamingAnalysisManager = StreamingAnalysisManager;
 
 // ✅ 也导出UI对象（如果需要在其他地方使用）
 window.UI = UI;
+
