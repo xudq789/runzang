@@ -1,5 +1,5 @@
 // ============ 【支付宝支付回调处理模块】 ============
-const AlipayCallbackHandler = {  // 移除 export
+const AlipayCallbackHandler = {
     // 检查URL中是否有后端返回的支付成功参数
     checkBackendCallback() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -54,7 +54,7 @@ const AlipayCallbackHandler = {  // 移除 export
 };
 
 // ============ 【支付状态管理器】 ============
-const PaymentManager = {  // 移除 export
+const PaymentManager = {
     // 初始化支付检查
     initPaymentCheck: async function() {
         console.log('🔍 初始化支付状态检查...');
@@ -365,6 +365,8 @@ const StreamingAnalysisManager = {
     fullContent: '',
     freeContent: '',
     streamController: null,
+    updateTimer: null,
+    baziUpdateTimer: null,
     
     // 开始流式分析
     async startStreamingAnalysis(prompt) {
@@ -486,44 +488,44 @@ const StreamingAnalysisManager = {
     },
     
     // 处理流式数据块
-processStreamChunk(content) {
-    // 累积完整内容
-    this.fullContent += content;
-    
-    // 检测八字排盘数据
-    this.detectAndUpdateBazi(content);
-    
-    // 检测是否到达免费部分结束
-    if (!this.isFreeContentComplete()) {
-        this.freeContent += content;
+    processStreamChunk(content) {
+        // 累积完整内容
+        this.fullContent += content;
         
-        // 使用防抖更新免费内容显示，减少闪烁
-        clearTimeout(this.updateTimer);
-        this.updateTimer = setTimeout(() => {
-            this.updateFreeContentDisplay();
-        }, 100); // 100ms防抖
-    }
-}
-
-// 修改后的八字检测和更新函数
-detectAndUpdateBazi(content) {
-    // 只在实际检测到八字数据时更新
-    if (content.includes('年柱：') || content.includes('月柱：') || content.includes('日柱：') || content.includes('时柱：')) {
-        // 使用防抖减少频繁更新
-        clearTimeout(this.baziUpdateTimer);
-        this.baziUpdateTimer = setTimeout(() => {
-            const baziData = parseBaziData(this.fullContent);
-            if (baziData.userBazi && this.hasValidBaziData(baziData.userBazi)) {
-                STATE.baziData = baziData.userBazi;
-                
-                // 使用requestAnimationFrame平滑更新
-                requestAnimationFrame(() => {
-                    displayBaziPan();
-                });
-            }
-        }, 300);
-    }
-}
+        // 检测八字排盘数据
+        this.detectAndUpdateBazi(content);
+        
+        // 检测是否到达免费部分结束
+        if (!this.isFreeContentComplete()) {
+            this.freeContent += content;
+            
+            // 使用防抖更新免费内容显示，减少闪烁
+            clearTimeout(this.updateTimer);
+            this.updateTimer = setTimeout(() => {
+                this.updateFreeContentDisplay();
+            }, 100); // 100ms防抖
+        }
+    },
+    
+    // 修改后的八字检测和更新函数
+    detectAndUpdateBazi(content) {
+        // 只在实际检测到八字数据时更新
+        if (content.includes('年柱：') || content.includes('月柱：') || content.includes('日柱：') || content.includes('时柱：')) {
+            // 使用防抖减少频繁更新
+            clearTimeout(this.baziUpdateTimer);
+            this.baziUpdateTimer = setTimeout(() => {
+                const baziData = parseBaziData(this.fullContent);
+                if (baziData.userBazi && this.hasValidBaziData(baziData.userBazi)) {
+                    STATE.baziData = baziData.userBazi;
+                    
+                    // 使用requestAnimationFrame平滑更新
+                    requestAnimationFrame(() => {
+                        displayBaziPan();
+                    });
+                }
+            }, 300);
+        }
+    },
     
     // 检查八字数据是否有效
     hasValidBaziData(baziData) {
@@ -612,21 +614,6 @@ detectAndUpdateBazi(content) {
         }
         
         return formattedContent;
-    },
-    
-    // 检测并显示八字排盘
-    detectAndDisplayBazi(content) {
-        // 检测八字排盘部分
-        if (content.includes('年柱：') || content.includes('月柱：') || content.includes('日柱：') || content.includes('时柱：')) {
-            // 延迟一点确保有完整数据
-            setTimeout(() => {
-                const baziData = parseBaziData(this.fullContent);
-                if (baziData.userBazi && Object.values(baziData.userBazi).some(v => v)) {
-                    STATE.baziData = baziData.userBazi;
-                    displayBaziPan();
-                }
-            }, 500);
-        }
     },
     
     // 显示流式分析状态
@@ -779,7 +766,8 @@ import {
     showAnalysisResult,
     hideAnalysisResult,
     validateForm,
-    collectUserData
+    collectUserData,
+    displayDayunPan
 } from './ui.js';
 
 import { CesuanModule } from '../modules/cesuan.js';
@@ -1019,9 +1007,6 @@ async function startAnalysis() {
     lockDownloadButton();
     animateButtonStretch();
     
-    // 不显示传统加载弹窗
-    // showLoadingModal();
-    
     try {
         collectUserData();
         
@@ -1256,4 +1241,3 @@ window.StreamingAnalysisManager = StreamingAnalysisManager;
 
 // ✅ 也导出UI对象（如果需要在其他地方使用）
 window.UI = UI;
-
