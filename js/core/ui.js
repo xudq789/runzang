@@ -642,11 +642,10 @@ function calculatePartnerBaziData() {
     return calculateBazi(partnerDataForCalc);
 }
 
-// 处理并显示分析结果
+// 处理并显示分析结果 - 优化版
 export function processAndDisplayAnalysis(result) {
     console.log('处理分析结果...');
     
-    // 免费部分：八字排盘、大运排盘、八字喜用分析、性格特点、适宜行业职业推荐
     const freeSections = [
         '【八字排盘】',
         '【大运排盘】',
@@ -661,18 +660,12 @@ export function processAndDisplayAnalysis(result) {
     // 按【分割内容
     const sections = result.split('【');
     
-    // 重新组装，保留【标记
     for (let i = 1; i < sections.length; i++) {
         const section = '【' + sections[i];
         const sectionTitle = section.split('】')[0] + '】';
         
-        // 八字排盘已经单独显示，不在这里显示
-        if (sectionTitle === '【八字排盘】') {
-            continue;
-        }
-        
-        // 大运排盘也不显示
-        if (sectionTitle === '【大运排盘】') {
+        // 八字排盘已经单独显示，跳过
+        if (sectionTitle === '【八字排盘】' || sectionTitle === '【大运排盘】') {
             continue;
         }
         
@@ -686,11 +679,9 @@ export function processAndDisplayAnalysis(result) {
     // 如果分割不理想，使用简单的方法
     if (freeContent.length < 100) {
         freeContent = '';
-        // 尝试找到免费部分
         for (const freeSection of freeSections) {
             const startIndex = result.indexOf(freeSection);
             if (startIndex !== -1) {
-                // 找到下一个【或结束
                 let endIndex = result.indexOf('【', startIndex + 1);
                 if (endIndex === -1) {
                     endIndex = result.length;
@@ -699,72 +690,168 @@ export function processAndDisplayAnalysis(result) {
             }
         }
         
-        // 剩余部分作为锁定内容
         if (freeContent) {
             lockedContent = result.replace(freeContent, '');
         }
     }
     
-    // 显示免费内容
+    // 格式化并显示免费内容
     const freeAnalysisText = UI.freeAnalysisText();
     if (freeAnalysisText) {
-        // 将免费内容格式化为HTML
-        let formattedContent = '';
-        const freeSectionsArray = freeContent.split('\n\n');
-        
-        freeSectionsArray.forEach(section => {
-            if (section.trim()) {
-                // 提取标题
-                const titleMatch = section.match(/【([^】]+)】/);
-                if (titleMatch) {
-                    const title = titleMatch[1];
-                    const content = section.replace(titleMatch[0], '').trim();
-                    
-                    formattedContent += `
-                    <div class="analysis-section">
-                        <h5>${title}</h5>
-                        <div class="analysis-content">${content.replace(/\n/g, '<br>')}</div>
-                    </div>`;
-                } else {
-                    formattedContent += `<div class="analysis-content">${section.replace(/\n/g, '<br>')}</div>`;
-                }
-            }
-        });
-        
+        const formattedContent = formatAnalysisContent(freeContent, 'free');
         freeAnalysisText.innerHTML = formattedContent;
     }
     
     // 存储锁定内容
     const lockedAnalysisText = UI.lockedAnalysisText();
     if (lockedAnalysisText) {
-        // 将锁定内容格式化为HTML
-        let formattedLockedContent = '';
-        const lockedSectionsArray = lockedContent.split('\n\n');
-        
-        lockedSectionsArray.forEach(section => {
-            if (section.trim()) {
-                // 提取标题
-                const titleMatch = section.match(/【([^】]+)】/);
-                if (titleMatch) {
-                    const title = titleMatch[1];
-                    const content = section.replace(titleMatch[0], '').trim();
-                    
-                    formattedLockedContent += `
-                    <div class="analysis-section">
-                        <h5>${title}</h5>
-                        <div class="analysis-content">${content.replace(/\n/g, '<br>')}</div>
-                    </div>`;
-                } else {
-                    formattedLockedContent += `<div class="analysis-content">${section.replace(/\n/g, '<br>')}</div>`;
-                }
-            }
-        });
-        
+        const formattedLockedContent = formatAnalysisContent(lockedContent, 'locked');
         lockedAnalysisText.innerHTML = formattedLockedContent;
     }
     
     // 显示大运排盘
     displayDayunPan();
+}
+
+// 格式化分析内容 - 新增函数
+function formatAnalysisContent(content, type = 'free') {
+    if (!content.trim()) return '';
+    
+    let formattedContent = '';
+    const sections = content.split('\n\n').filter(s => s.trim());
+    
+    sections.forEach(section => {
+        if (section.trim()) {
+            // 提取标题
+            const titleMatch = section.match(/【([^】]+)】/);
+            if (titleMatch) {
+                const title = titleMatch[1];
+                const contentText = section.replace(titleMatch[0], '').trim();
+                
+                // 格式化内容文本
+                const formattedText = formatTextContent(contentText);
+                
+                formattedContent += `
+                <div class="analysis-section ${type}-section">
+                    <h5>${title}</h5>
+                    <div class="analysis-content">
+                        ${formattedText}
+                    </div>
+                </div>`;
+            } else {
+                // 没有标题的内容
+                const formattedText = formatTextContent(section);
+                formattedContent += `<div class="analysis-content">${formattedText}</div>`;
+            }
+        }
+    });
+    
+    return formattedContent;
+}
+
+// 格式化文本内容 - 新增函数
+function formatTextContent(text) {
+    if (!text) return '';
+    
+    // 按段落分割
+    const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim());
+    
+    let formatted = '';
+    
+    paragraphs.forEach(paragraph => {
+        const lines = paragraph.split('\n').filter(line => line.trim());
+        
+        if (lines.length === 1) {
+            // 单行：可能是标题或短段落
+            const trimmed = lines[0].trim();
+            if (trimmed.endsWith('：') || trimmed.length < 50) {
+                formatted += `<h6>${trimmed}</h6>`;
+            } else {
+                formatted += `<p>${trimmed}</p>`;
+            }
+        } else {
+            // 多行：可能是列表或段落组
+            let isList = lines.every(line => 
+                line.trim().match(/^[•·●◦○▪▫►◄►◄▶◀※§¶]/) || 
+                line.trim().match(/^\d+[\.、]/) ||
+                line.trim().match(/^[一二三四五六七八九十]+[、.]/)
+            );
+            
+            if (isList) {
+                formatted += '<ul>';
+                lines.forEach(line => {
+                    const cleanLine = line.trim().replace(/^[•·●◦○▪▫►◄►◄▶◀※§¶\d+[\.、一二三四五六七八九十]+[、.]]\s*/, '');
+                    formatted += `<li>${cleanLine}</li>`;
+                });
+                formatted += '</ul>';
+            } else {
+                lines.forEach(line => {
+                    const trimmed = line.trim();
+                    if (trimmed) {
+                        // 检测关键词并加粗
+                        const highlighted = highlightKeywords(trimmed);
+                        formatted += `<p>${highlighted}</p>`;
+                    }
+                });
+            }
+        }
+    });
+    
+    return formatted;
+}
+
+// 高亮关键词 - 新增函数
+function highlightKeywords(text) {
+    const keywords = [
+        '富贵', '财运', '事业', '婚姻', '感情', '健康', 
+        '贵人', '机遇', '挑战', '注意', '建议', '重要',
+        '关键', '转折点', '优势', '劣势', '适合', '不宜'
+    ];
+    
+    let highlightedText = text;
+    
+    keywords.forEach(keyword => {
+        const regex = new RegExp(keyword, 'g');
+        highlightedText = highlightedText.replace(regex, `<strong>${keyword}</strong>`);
+    });
+    
+    // 高亮年份
+    highlightedText = highlightedText.replace(/(\d{4})年/g, '<em>$1年</em>');
+    
+    // 高亮年龄
+    highlightedText = highlightedText.replace(/(\d{1,2})岁/g, '<em>$1岁</em>');
+    
+    return highlightedText;
+}
+
+// 显示完整分析内容 - 优化版
+export function showFullAnalysisContent() {
+    const lockedAnalysisText = UI.lockedAnalysisText();
+    const freeAnalysisText = UI.freeAnalysisText();
+    
+    if (lockedAnalysisText && lockedAnalysisText.innerHTML.trim() && freeAnalysisText) {
+        // 获取锁定内容并格式化
+        const lockedContent = lockedAnalysisText.innerHTML;
+        
+        // 使用平滑过渡
+        freeAnalysisText.style.opacity = '0.8';
+        freeAnalysisText.style.transition = 'opacity 0.5s ease';
+        
+        // 添加锁定内容
+        setTimeout(() => {
+            freeAnalysisText.innerHTML += lockedContent;
+            freeAnalysisText.style.opacity = '1';
+            
+            // 触发动画
+            setTimeout(() => {
+                const newSections = freeAnalysisText.querySelectorAll('.locked-section');
+                newSections.forEach((section, index) => {
+                    section.style.animationDelay = `${index * 0.1}s`;
+                    section.classList.add('animated');
+                });
+            }, 100);
+        }, 300);
+    }
 }
 
 // ============ 【完整版】支付弹窗 - 支持支付宝和微信支付 ============
@@ -1449,3 +1536,4 @@ export function displayDayunPan() {
         console.log('分析结果中没有找到大运排盘信息');
     }
 }
+
