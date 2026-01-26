@@ -1,3 +1,5 @@
+[file name]: ui.js
+[file content begin]
 // UI控制模块
 import { DOM, formatDate, hideElement, showElement, generateOrderId, calculateBazi } from './utils.js';
 import { SERVICES, STATE, PAYMENT_CONFIG } from './config.js';
@@ -331,9 +333,16 @@ function updateBaziDisplay() {
     }
 }
 
-// 创建合婚八字显示
+// 创建合婚八字显示 - ✅ 修复：处理伴侣八字数据
 function createHehunBaziDisplay() {
     const baziGrid = UI.baziGrid();
+    
+    // 确保伴侣八字数据存在
+    let partnerBaziData = STATE.partnerBaziData;
+    if (!partnerBaziData && STATE.partnerData) {
+        // 从分析结果中提取伴侣八字，如果没有则使用备用计算
+        partnerBaziData = extractPartnerBaziFromResult() || calculatePartnerBaziData();
+    }
     
     // 创建用户八字区域
     const userSection = createBaziCard(
@@ -343,7 +352,6 @@ function createHehunBaziDisplay() {
     );
     
     // 创建伴侣八字区域
-    const partnerBaziData = STATE.partnerBaziData || calculatePartnerBaziData();
     const partnerSection = createBaziCard(
         `${STATE.partnerData.partnerName} 的八字排盘`,
         partnerBaziData,
@@ -378,6 +386,65 @@ function createHehunBaziDisplay() {
         baziGrid.style.transition = 'opacity 0.5s ease';
         baziGrid.style.opacity = '1';
     }, 50);
+}
+
+// 从分析结果中提取伴侣八字数据 - ✅ 新增函数
+function extractPartnerBaziFromResult() {
+    if (!STATE.fullAnalysisResult) return null;
+    
+    const result = {
+        yearColumn: '',
+        yearElement: '',
+        monthColumn: '',
+        monthElement: '',
+        dayColumn: '',
+        dayElement: '',
+        hourColumn: '',
+        hourElement: ''
+    };
+    
+    // 查找伴侣八字排盘部分
+    const partnerBaziMatch = STATE.fullAnalysisResult.match(/【伴侣八字排盘】([\s\S]*?)(?=【|$)/);
+    if (!partnerBaziMatch) return null;
+    
+    const baziText = partnerBaziMatch[1];
+    const lines = baziText.split('\n');
+    
+    lines.forEach(line => {
+        const trimmedLine = line.trim();
+        if (trimmedLine.includes('年柱')) {
+            const match = trimmedLine.match(/年柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
+            if (match) {
+                result.yearColumn = match[1] || '';
+                result.yearElement = match[2] || '';
+            }
+        } else if (trimmedLine.includes('月柱')) {
+            const match = trimmedLine.match(/月柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
+            if (match) {
+                result.monthColumn = match[1] || '';
+                result.monthElement = match[2] || '';
+            }
+        } else if (trimmedLine.includes('日柱')) {
+            const match = trimmedLine.match(/日柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
+            if (match) {
+                result.dayColumn = match[1] || '';
+                result.dayElement = match[2] || '';
+            }
+        } else if (trimmedLine.includes('时柱')) {
+            const match = trimmedLine.match(/时柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
+            if (match) {
+                result.hourColumn = match[1] || '';
+                result.hourElement = match[2] || '';
+            }
+        }
+    });
+    
+    // 检查是否所有字段都有值
+    if (result.yearColumn && result.monthColumn && result.dayColumn && result.hourColumn) {
+        return result;
+    }
+    
+    return null;
 }
 
 // 创建单个八字显示
@@ -656,10 +723,10 @@ export function processAndDisplayAnalysis(result) {
                     formattedContent += `
                     <div class="analysis-section">
                         <h5>${title}</h5>
-                        <div class="analysis-content">${content.replace(/\n/g, '<br>')}</div>
+                        <div class="analysis-content" style="font-size: 16px; line-height: 1.8;">${content.replace(/\n/g, '<br>')}</div>
                     </div>`;
                 } else {
-                    formattedContent += `<div class="analysis-content">${section.replace(/\n/g, '<br>')}</div>`;
+                    formattedContent += `<div class="analysis-content" style="font-size: 16px; line-height: 1.8;">${section.replace(/\n/g, '<br>')}</div>`;
                 }
             }
         });
@@ -685,10 +752,10 @@ export function processAndDisplayAnalysis(result) {
                     formattedLockedContent += `
                     <div class="analysis-section">
                         <h5>${title}</h5>
-                        <div class="analysis-content">${content.replace(/\n/g, '<br>')}</div>
+                        <div class="analysis-content" style="font-size: 16px; line-height: 1.8;">${content.replace(/\n/g, '<br>')}</div>
                     </div>`;
                 } else {
-                    formattedLockedContent += `<div class="analysis-content">${section.replace(/\n/g, '<br>')}</div>`;
+                    formattedLockedContent += `<div class="analysis-content" style="font-size: 16px; line-height: 1.8;">${section.replace(/\n/g, '<br>')}</div>`;
                 }
             }
         });
@@ -1305,13 +1372,37 @@ export function collectUserData() {
     }
 }
 
-// 显示大运排盘 - 新增函数
+// 显示大运排盘 - ✅ 修复：正确提取和显示大运信息
 export function displayDayunPan() {
-    const dayunPanCard = document.querySelector('.dayun-pan-card');
-    if (!dayunPanCard) return;
+    console.log('显示大运排盘...');
+    
+    // 创建或获取大运排盘卡片
+    let dayunPanCard = document.querySelector('.dayun-pan-card');
+    if (!dayunPanCard) {
+        // 创建大运排盘卡片
+        dayunPanCard = document.createElement('div');
+        dayunPanCard.className = 'dayun-pan-card';
+        dayunPanCard.style.cssText = `
+            display: none;
+            background: linear-gradient(135deg, #f0f5ff, #e6ecff);
+            border: 2px solid #3a7bd5;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            animation: fadeInUp 0.8s ease-out;
+        `;
+        
+        // 找到八字排盘卡片之后插入大运排盘
+        const baziPanCard = document.querySelector('.bazi-pan-card');
+        if (baziPanCard && baziPanCard.parentNode) {
+            baziPanCard.parentNode.insertBefore(dayunPanCard, baziPanCard.nextSibling);
+        }
+    }
     
     // 尝试从分析结果中提取大运信息
     if (STATE.fullAnalysisResult && STATE.fullAnalysisResult.includes('【大运排盘】')) {
+        console.log('找到大运排盘信息');
+        
         const startIndex = STATE.fullAnalysisResult.indexOf('【大运排盘】');
         let endIndex = STATE.fullAnalysisResult.indexOf('【', startIndex + 1);
         if (endIndex === -1) endIndex = STATE.fullAnalysisResult.length;
@@ -1321,22 +1412,41 @@ export function displayDayunPan() {
         // 解析大运内容
         const lines = dayunContent.split('\n').filter(line => line.trim());
         let htmlContent = '';
+        let hasDayunData = false;
         
         lines.forEach(line => {
             const trimmedLine = line.trim();
             if (trimmedLine.includes('起运岁数：') || trimmedLine.includes('起运时间：')) {
-                htmlContent += `<div style="margin-bottom: 8px; color: #3a7bd5; font-weight: 600;">${trimmedLine}</div>`;
+                htmlContent += `<div style="margin-bottom: 12px; color: #3a7bd5; font-weight: 600; font-size: 15px;">${trimmedLine}</div>`;
+                hasDayunData = true;
             } else if (trimmedLine.includes('第') && trimmedLine.includes('步大运：')) {
-                htmlContent += `<div class="dayun-item">${trimmedLine}</div>`;
+                htmlContent += `<div style="background: white; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #3a7bd5; font-size: 14px; color: var(--dark-color); margin-bottom: 10px; box-shadow: 0 3px 8px rgba(58, 123, 213, 0.1);">${trimmedLine}</div>`;
+                hasDayunData = true;
+            } else if (trimmedLine.includes('大运详细：')) {
+                // 跳过标题行
+            } else if (trimmedLine.startsWith('第') && trimmedLine.includes('步大运')) {
+                htmlContent += `<div style="background: white; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #3a7bd5; font-size: 14px; color: var(--dark-color); margin-bottom: 10px; box-shadow: 0 3px 8px rgba(58, 123, 213, 0.1);">${trimmedLine}</div>`;
+                hasDayunData = true;
             }
         });
         
-        if (htmlContent) {
+        if (hasDayunData) {
             dayunPanCard.style.display = 'block';
             dayunPanCard.innerHTML = `
-                <h6>大运排盘</h6>
-                <div class="dayun-list">${htmlContent}</div>
+                <h6 style="color: #3a7bd5; margin-bottom: 15px; font-size: 18px; text-align: center; position: relative; padding-bottom: 12px; font-weight: 700;">
+                    大运排盘
+                    <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 3px; background: linear-gradient(to right, #3a7bd5, #5a8de8); border-radius: 2px;"></div>
+                </h6>
+                <div style="margin-top: 15px;">${htmlContent}</div>
             `;
+            console.log('大运排盘显示成功');
+        } else {
+            dayunPanCard.style.display = 'none';
+            console.log('没有找到有效的大运数据');
         }
+    } else {
+        dayunPanCard.style.display = 'none';
+        console.log('分析结果中没有找到大运排盘信息');
     }
 }
+[file content end]
