@@ -287,487 +287,421 @@ export function displayPredictorInfo() {
     });
 }
 
-// ============ 【优化版八字排盘显示函数】 ============
+// ============ 【优化版八字和大运排盘显示函数】 ============
 
-// 显示八字排盘结果 - 优化版（解决闪烁问题）
+// 显示八字和大运排盘结果 - 优化版（合并显示）
 export function displayBaziPan() {
-    const baziGrid = UI.baziGrid();
-    if (!baziGrid) return;
-    
-    // 防止闪烁：先清空并显示加载状态
-    baziGrid.innerHTML = `
-        <div class="loading-bazi" style="
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 200px; 
-            color: var(--primary-color); 
-            font-size: 16px; 
-            font-weight: 500;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div class="spinner" style="width: 20px; height: 20px; border: 3px solid rgba(212, 175, 55, 0.2); border-top-color: var(--secondary-color); border-radius: 50%; animation: spin 1s ease-in-out infinite;"></div>
-                <span>正在排盘...</span>
-            </div>
-        </div>
-    `;
-    
-    // 延迟一点确保数据完整，然后更新显示
-    setTimeout(() => {
-        updateBaziDisplay();
-    }, 300);
-}
-
-// 更新八字显示函数
-function updateBaziDisplay() {
     const baziGrid = UI.baziGrid();
     if (!baziGrid) return;
     
     // 清空内容
     baziGrid.innerHTML = '';
     
-    // 如果是八字合婚服务
-    if (STATE.currentService === '八字合婚' && STATE.partnerData) {
-        createHehunBaziDisplay();
-    } else {
-        createSingleBaziDisplay();
-    }
+    // 创建八字排盘卡片（包含大运）
+    const panCard = createBaziAndDayunCard();
+    baziGrid.appendChild(panCard);
 }
 
-// 创建合婚八字显示 - ✅ 修复：处理伴侣八字数据
-function createHehunBaziDisplay() {
-    const baziGrid = UI.baziGrid();
-    
-    // 确保伴侣八字数据存在
-    let partnerBaziData = STATE.partnerBaziData;
-    if (!partnerBaziData && STATE.partnerData) {
-        // 从分析结果中提取伴侣八字，如果没有则使用备用计算
-        partnerBaziData = extractPartnerBaziFromResult() || calculatePartnerBaziData();
-    }
-    
-    // 创建用户八字区域
-    const userSection = createBaziCard(
-        `${STATE.userData.name} 的八字排盘`,
-        STATE.baziData,
-        true
-    );
-    
-    // 创建伴侣八字区域
-    const partnerSection = createBaziCard(
-        `${STATE.partnerData.partnerName} 的八字排盘`,
-        partnerBaziData,
-        true
-    );
-    
-    // 保存伴侣八字数据
-    if (partnerBaziData) {
-        STATE.partnerBaziData = partnerBaziData;
-    }
-    
-    // 使用平滑过渡
-    baziGrid.style.opacity = '0';
-    baziGrid.innerHTML = '';
-    baziGrid.appendChild(userSection);
-    
-    // 添加分隔线
-    const separator = document.createElement('div');
-    separator.className = 'bazi-separator';
-    separator.style.cssText = `
-        height: 2px;
-        background: linear-gradient(to right, transparent, var(--secondary-color), transparent);
-        margin: 25px 10px;
-        border-radius: 1px;
-    `;
-    baziGrid.appendChild(separator);
-    
-    baziGrid.appendChild(partnerSection);
-    
-    // 淡入效果
-    setTimeout(() => {
-        baziGrid.style.transition = 'opacity 0.5s ease';
-        baziGrid.style.opacity = '1';
-    }, 50);
-}
-
-// 从分析结果中提取伴侣八字数据 - ✅ 新增函数
-function extractPartnerBaziFromResult() {
-    if (!STATE.fullAnalysisResult) return null;
-    
-    const result = {
-        yearColumn: '',
-        yearElement: '',
-        monthColumn: '',
-        monthElement: '',
-        dayColumn: '',
-        dayElement: '',
-        hourColumn: '',
-        hourElement: ''
-    };
-    
-    // 查找伴侣八字排盘部分
-    const partnerBaziMatch = STATE.fullAnalysisResult.match(/【伴侣八字排盘】([\s\S]*?)(?=【|$)/);
-    if (!partnerBaziMatch) return null;
-    
-    const baziText = partnerBaziMatch[1];
-    const lines = baziText.split('\n');
-    
-    lines.forEach(line => {
-        const trimmedLine = line.trim();
-        if (trimmedLine.includes('年柱')) {
-            const match = trimmedLine.match(/年柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
-            if (match) {
-                result.yearColumn = match[1] || '';
-                result.yearElement = match[2] || '';
-            }
-        } else if (trimmedLine.includes('月柱')) {
-            const match = trimmedLine.match(/月柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
-            if (match) {
-                result.monthColumn = match[1] || '';
-                result.monthElement = match[2] || '';
-            }
-        } else if (trimmedLine.includes('日柱')) {
-            const match = trimmedLine.match(/日柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
-            if (match) {
-                result.dayColumn = match[1] || '';
-                result.dayElement = match[2] || '';
-            }
-        } else if (trimmedLine.includes('时柱')) {
-            const match = trimmedLine.match(/时柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
-            if (match) {
-                result.hourColumn = match[1] || '';
-                result.hourElement = match[2] || '';
-            }
-        }
-    });
-    
-    // 检查是否所有字段都有值
-    if (result.yearColumn && result.monthColumn && result.dayColumn && result.hourColumn) {
-        return result;
-    }
-    
-    return null;
-}
-
-// 创建单个八字显示
-function createSingleBaziDisplay() {
-    const baziGrid = UI.baziGrid();
-    const baziDataToDisplay = STATE.baziData;
-    
-    if (!baziDataToDisplay) {
-        baziGrid.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">八字数据未找到</div>';
-        return;
-    }
-    
-    const baziCard = createBaziCard('八字排盘', baziDataToDisplay, false);
-    
-    // 使用平滑过渡
-    baziGrid.style.opacity = '0';
-    baziGrid.innerHTML = '';
-    baziGrid.appendChild(baziCard);
-    
-    // 淡入效果
-    setTimeout(() => {
-        baziGrid.style.transition = 'opacity 0.5s ease';
-        baziGrid.style.opacity = '1';
-    }, 50);
-}
-
-// 创建八字卡片（统一格式）
-function createBaziCard(title, baziData, showTitle = true) {
+// 创建八字和大运排盘卡片
+function createBaziAndDayunCard() {
     const card = document.createElement('div');
-    card.className = 'bazi-card';
+    card.className = 'bazi-dayun-card';
     card.style.cssText = `
         background: white;
         border-radius: 15px;
         padding: 25px;
         margin-bottom: 20px;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-        border: 1px solid var(--border-color);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        border: 2px solid var(--primary-color);
         transition: all 0.3s ease;
         overflow: hidden;
     `;
     
-    card.addEventListener('mouseenter', () => {
-        card.style.transform = 'translateY(-5px)';
-        card.style.boxShadow = '0 15px 35px rgba(0,0,0,0.1)';
-    });
-    
-    card.addEventListener('mouseleave', () => {
-        card.style.transform = 'translateY(0)';
-        card.style.boxShadow = '0 8px 25px rgba(0,0,0,0.08)';
-    });
-    
     // 添加标题
-    if (showTitle) {
-        const titleElement = document.createElement('div');
-        titleElement.className = 'bazi-title';
-        titleElement.style.cssText = `
-            color: var(--primary-color);
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            text-align: center;
-            position: relative;
-            padding-bottom: 12px;
-        `;
-        
-        titleElement.innerHTML = `
-            ${title}
-            <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); 
-                width: 80px; height: 3px; background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); 
-                border-radius: 2px;"></div>
-        `;
-        card.appendChild(titleElement);
-    }
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'pan-title';
+    titleDiv.style.cssText = `
+        color: var(--primary-color);
+        font-size: 22px;
+        font-weight: bold;
+        margin-bottom: 25px;
+        text-align: center;
+        position: relative;
+        padding-bottom: 12px;
+    `;
+    
+    titleDiv.innerHTML = `
+        八字排盘 & 大运排盘
+        <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); 
+            width: 100px; height: 4px; background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); 
+            border-radius: 2px;"></div>
+    `;
+    card.appendChild(titleDiv);
+    
+    // 创建八字排盘部分
+    const baziSection = createBaziSection();
+    card.appendChild(baziSection);
+    
+    // 创建大运排盘部分
+    const dayunSection = createDayunSection();
+    card.appendChild(dayunSection);
+    
+    return card;
+}
+
+// 创建八字排盘部分
+function createBaziSection() {
+    const section = document.createElement('div');
+    section.className = 'bazi-section';
+    section.style.cssText = `
+        margin-bottom: 30px;
+        padding: 20px;
+        background: linear-gradient(135deg, #f9f5f0, #f0e6d6);
+        border-radius: 12px;
+        border: 2px solid var(--secondary-color);
+    `;
+    
+    // 八字排盘子标题
+    const subtitle = document.createElement('div');
+    subtitle.style.cssText = `
+        color: var(--primary-color);
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 20px;
+        padding-left: 10px;
+        border-left: 4px solid var(--secondary-color);
+    `;
+    subtitle.textContent = '八字排盘';
+    section.appendChild(subtitle);
     
     // 创建八字网格
-    const baziGridContainer = document.createElement('div');
-    baziGridContainer.className = 'bazi-grid-container';
-    baziGridContainer.style.cssText = `
+    const baziGrid = document.createElement('div');
+    baziGrid.style.cssText = `
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 15px;
-        margin-bottom: 15px;
     `;
+    
+    // 获取八字数据
+    const baziData = STATE.baziData;
+    if (!baziData) {
+        baziGrid.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">八字数据加载中...</div>';
+        section.appendChild(baziGrid);
+        return section;
+    }
     
     // 四柱数据
     const columns = [
-        { label: '年柱', value: baziData.yearColumn, element: baziData.yearElement, color: '#8b4513' },
-        { label: '月柱', value: baziData.monthColumn, element: baziData.monthElement, color: '#d4af37' },
-        { label: '日柱', value: baziData.dayColumn, element: baziData.dayElement, color: '#5c3d2e' },
-        { label: '时柱', value: baziData.hourColumn, element: baziData.hourElement, color: '#3a2c1e' }
+        { 
+            label: '年柱', 
+            value: baziData.yearColumn, 
+            element: baziData.yearElement, 
+            color: '#8b4513',
+            size: '42px'
+        },
+        { 
+            label: '月柱', 
+            value: baziData.monthColumn, 
+            element: baziData.monthElement, 
+            color: '#d4af37',
+            size: '42px'
+        },
+        { 
+            label: '日柱', 
+            value: baziData.dayColumn, 
+            element: baziData.dayElement, 
+            color: '#5c3d2e',
+            size: '42px'
+        },
+        { 
+            label: '时柱', 
+            value: baziData.hourColumn, 
+            element: baziData.hourElement, 
+            color: '#3a2c1e',
+            size: '42px'
+        }
     ];
     
     columns.forEach(col => {
         const columnDiv = document.createElement('div');
-        columnDiv.className = 'bazi-column-item';
         columnDiv.style.cssText = `
-            background: linear-gradient(135deg, #f9f5f0, #f0e6d6);
-            border: 2px solid ${col.color};
-            border-radius: 12px;
+            background: white;
+            border: 3px solid ${col.color};
+            border-radius: 10px;
             padding: 20px 15px;
             text-align: center;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         `;
         
         columnDiv.addEventListener('mouseenter', () => {
-            columnDiv.style.transform = 'translateY(-3px)';
-            columnDiv.style.boxShadow = '0 8px 20px rgba(0,0,0,0.15)';
+            columnDiv.style.transform = 'translateY(-5px)';
+            columnDiv.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
         });
         
         columnDiv.addEventListener('mouseleave', () => {
             columnDiv.style.transform = 'translateY(0)';
-            columnDiv.style.boxShadow = 'none';
+            columnDiv.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
         });
-        
-        // 添加装饰线
-        const topLine = document.createElement('div');
-        topLine.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(to right, ${col.color}, var(--secondary-color));
-            border-radius: 2px;
-        `;
-        columnDiv.appendChild(topLine);
         
         // 标签
         const labelDiv = document.createElement('div');
-        labelDiv.className = 'bazi-label';
         labelDiv.style.cssText = `
             color: ${col.color};
-            font-weight: 700;
-            margin-bottom: 12px;
+            font-weight: bold;
+            margin-bottom: 15px;
             font-size: 16px;
             text-transform: uppercase;
             letter-spacing: 1px;
         `;
         labelDiv.textContent = col.label;
         
-        // 值
+        // 值 - 使用更大字体
         const valueDiv = document.createElement('div');
-        valueDiv.className = 'bazi-value';
         valueDiv.style.cssText = `
-            font-size: 28px;
+            font-size: ${col.size};
             font-weight: bold;
-            color: var(--dark-color);
-            margin-bottom: 8px;
-            font-family: 'SimSun', '宋体', serif;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            color: ${col.color};
+            margin-bottom: 10px;
+            font-family: 'SimSun', '宋体', 'STSong', serif;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+            line-height: 1.2;
         `;
         valueDiv.textContent = col.value;
         
         // 五行
         const elementDiv = document.createElement('div');
-        elementDiv.className = 'bazi-element';
         elementDiv.style.cssText = `
-            font-size: 14px;
+            font-size: 16px;
             color: #7d6e63;
-            font-style: italic;
-            opacity: 0.9;
-            padding: 4px 10px;
-            background: rgba(255,255,255,0.7);
-            border-radius: 20px;
+            font-weight: 600;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(249,249,249,0.8));
+            border-radius: 25px;
             display: inline-block;
+            border: 1px solid rgba(0,0,0,0.1);
         `;
-        elementDiv.textContent = col.element || '';
+        elementDiv.textContent = col.element || '五行';
         
         columnDiv.appendChild(labelDiv);
         columnDiv.appendChild(valueDiv);
         columnDiv.appendChild(elementDiv);
-        baziGridContainer.appendChild(columnDiv);
+        baziGrid.appendChild(columnDiv);
     });
     
-    card.appendChild(baziGridContainer);
-    
-    return card;
+    section.appendChild(baziGrid);
+    return section;
 }
 
-// 计算伴侣八字数据
-function calculatePartnerBaziData() {
-    if (!STATE.partnerData) return null;
+// 创建大运排盘部分
+function createDayunSection() {
+    const section = document.createElement('div');
+    section.className = 'dayun-section';
+    section.style.cssText = `
+        padding: 20px;
+        background: linear-gradient(135deg, #f0f5ff, #e6ecff);
+        border-radius: 12px;
+        border: 2px solid #3a7bd5;
+    `;
     
-    // 使用相同的计算函数
-    const partnerDataForCalc = {
-        birthYear: STATE.partnerData.partnerBirthYear,
-        birthMonth: STATE.partnerData.partnerBirthMonth,
-        birthDay: STATE.partnerData.partnerBirthDay,
-        birthHour: STATE.partnerData.partnerBirthHour,
-        birthMinute: STATE.partnerData.partnerBirthMinute
-    };
+    // 大运排盘子标题
+    const subtitle = document.createElement('div');
+    subtitle.style.cssText = `
+        color: #3a7bd5;
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 20px;
+        padding-left: 10px;
+        border-left: 4px solid #3a7bd5;
+    `;
+    subtitle.textContent = '大运排盘';
+    section.appendChild(subtitle);
     
-    return calculateBazi(partnerDataForCalc);
+    // 从分析结果中提取大运信息
+    let dayunContent = '';
+    if (STATE.fullAnalysisResult && STATE.fullAnalysisResult.includes('【大运排盘】')) {
+        const startIndex = STATE.fullAnalysisResult.indexOf('【大运排盘】');
+        let endIndex = STATE.fullAnalysisResult.indexOf('【', startIndex + 1);
+        if (endIndex === -1) endIndex = STATE.fullAnalysisResult.length;
+        
+        dayunContent = STATE.fullAnalysisResult.substring(startIndex, endIndex);
+    }
+    
+    // 显示大运内容
+    if (dayunContent) {
+        const contentDiv = document.createElement('div');
+        contentDiv.style.cssText = `
+            font-size: 16px;
+            line-height: 1.8;
+            color: #333;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #3a7bd5;
+        `;
+        
+        // 格式化大运内容
+        const lines = dayunContent.split('\n');
+        lines.forEach(line => {
+            if (line.trim()) {
+                const lineDiv = document.createElement('div');
+                lineDiv.style.marginBottom = '10px';
+                
+                if (line.includes('起运岁数') || line.includes('起运时间')) {
+                    lineDiv.style.color = '#3a7bd5';
+                    lineDiv.style.fontWeight = 'bold';
+                    lineDiv.style.fontSize = '16px';
+                } else if (line.includes('第') && line.includes('步大运')) {
+                    lineDiv.style.color = '#333';
+                    lineDiv.style.fontWeight = '600';
+                    lineDiv.style.fontSize = '15px';
+                    lineDiv.style.padding = '8px 12px';
+                    lineDiv.style.background = 'rgba(58, 123, 213, 0.1)';
+                    lineDiv.style.borderRadius = '6px';
+                    lineDiv.style.borderLeft = '3px solid #3a7bd5';
+                }
+                
+                lineDiv.textContent = line.trim();
+                contentDiv.appendChild(lineDiv);
+            }
+        });
+        
+        section.appendChild(contentDiv);
+    } else {
+        const loadingDiv = document.createElement('div');
+        loadingDiv.style.cssText = `
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            font-size: 16px;
+        `;
+        loadingDiv.textContent = '大运数据加载中...';
+        section.appendChild(loadingDiv);
+    }
+    
+    return section;
 }
 
-// 处理并显示分析结果
+// ============ 【优化报告内容字体和付费解锁逻辑】 ============
+
+// 处理并显示分析结果 - 优化字体和布局（支持免费/付费分割）
 export function processAndDisplayAnalysis(result) {
     console.log('处理分析结果...');
     
-    // 免费部分：八字排盘、大运排盘、八字喜用分析、性格特点、适宜行业职业推荐
+    const freeAnalysisText = UI.freeAnalysisText();
+    const lockedAnalysisText = UI.lockedAnalysisText();
+    
+    if (!freeAnalysisText || !lockedAnalysisText) return;
+    
+    // 清空内容
+    freeAnalysisText.innerHTML = '';
+    lockedAnalysisText.innerHTML = '';
+    
+    // 定义免费部分（根据你的服务配置）
     const freeSections = [
-        '【八字排盘】',
-        '【大运排盘】',
         '【八字喜用分析】',
         '【性格特点】',
         '【适宜行业职业推荐】'
     ];
     
-    let freeContent = '';
-    let lockedContent = '';
+    // 根据当前服务动态调整免费内容
+    const serviceConfig = SERVICES[STATE.currentService];
+    if (serviceConfig) {
+        // 对于八字合婚服务，调整免费内容
+        if (STATE.currentService === '八字合婚') {
+            // 八字合婚的免费内容可能不同
+            // 可以根据需要调整
+        }
+    }
     
     // 按【分割内容
     const sections = result.split('【');
     
-    // 重新组装，保留【标记
+    let freeContent = '';
+    let lockedContent = '';
+    
     for (let i = 1; i < sections.length; i++) {
         const section = '【' + sections[i];
         const sectionTitle = section.split('】')[0] + '】';
+        const sectionContent = section.replace(sectionTitle, '').trim();
         
-        // 八字排盘已经单独显示，不在这里显示
-        if (sectionTitle === '【八字排盘】') {
+        // 跳过八字排盘和大运排盘（已单独显示）
+        if (sectionTitle === '【八字排盘】' || sectionTitle === '【大运排盘】') {
             continue;
         }
         
-        // 大运排盘也不显示
-        if (sectionTitle === '【大运排盘】') {
-            continue;
-        }
-        
+        // 判断是免费还是付费内容
         if (freeSections.includes(sectionTitle)) {
-            freeContent += section + '\n\n';
+            freeContent += createAnalysisSection(sectionTitle, sectionContent);
         } else {
-            lockedContent += section + '\n\n';
-        }
-    }
-    
-    // 如果分割不理想，使用简单的方法
-    if (freeContent.length < 100) {
-        freeContent = '';
-        // 尝试找到免费部分
-        for (const freeSection of freeSections) {
-            const startIndex = result.indexOf(freeSection);
-            if (startIndex !== -1) {
-                // 找到下一个【或结束
-                let endIndex = result.indexOf('【', startIndex + 1);
-                if (endIndex === -1) {
-                    endIndex = result.length;
-                }
-                freeContent += result.substring(startIndex, endIndex) + '\n\n';
-            }
-        }
-        
-        // 剩余部分作为锁定内容
-        if (freeContent) {
-            lockedContent = result.replace(freeContent, '');
+            lockedContent += createAnalysisSection(sectionTitle, sectionContent);
         }
     }
     
     // 显示免费内容
-    const freeAnalysisText = UI.freeAnalysisText();
-    if (freeAnalysisText) {
-        // 将免费内容格式化为HTML
-        let formattedContent = '';
-        const freeSectionsArray = freeContent.split('\n\n');
-        
-        freeSectionsArray.forEach(section => {
-            if (section.trim()) {
-                // 提取标题
-                const titleMatch = section.match(/【([^】]+)】/);
-                if (titleMatch) {
-                    const title = titleMatch[1];
-                    const content = section.replace(titleMatch[0], '').trim();
-                    
-                    formattedContent += `
-                    <div class="analysis-section">
-                        <h5>${title}</h5>
-                        <div class="analysis-content">${content.replace(/\n/g, '<br>')}</div>
-                    </div>`;
-                } else {
-                    formattedContent += `<div class="analysis-content">${section.replace(/\n/g, '<br>')}</div>`;
-                }
-            }
-        });
-        
-        freeAnalysisText.innerHTML = formattedContent;
+    if (freeContent.trim()) {
+        freeAnalysisText.innerHTML = freeContent;
+    } else {
+        freeAnalysisText.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #666; font-size: 16px;">
+                免费分析内容加载中...
+            </div>
+        `;
     }
     
-    // 存储锁定内容
-    const lockedAnalysisText = UI.lockedAnalysisText();
-    if (lockedAnalysisText) {
-        // 将锁定内容格式化为HTML
-        let formattedLockedContent = '';
-        const lockedSectionsArray = lockedContent.split('\n\n');
-        
-        lockedSectionsArray.forEach(section => {
-            if (section.trim()) {
-                // 提取标题
-                const titleMatch = section.match(/【([^】]+)】/);
-                if (titleMatch) {
-                    const title = titleMatch[1];
-                    const content = section.replace(titleMatch[0], '').trim();
-                    
-                    formattedLockedContent += `
-                    <div class="analysis-section">
-                        <h5>${title}</h5>
-                        <div class="analysis-content">${content.replace(/\n/g, '<br>')}</div>
-                    </div>`;
-                } else {
-                    formattedLockedContent += `<div class="analysis-content">${section.replace(/\n/g, '<br>')}</div>`;
-                }
-            }
-        });
-        
-        lockedAnalysisText.innerHTML = formattedLockedContent;
+    // 存储付费内容
+    if (lockedContent.trim()) {
+        lockedAnalysisText.innerHTML = lockedContent;
     }
     
-    // 显示大运排盘
-    displayDayunPan();
+    console.log('分析结果处理完成，免费部分:', freeContent.length, '字符，付费部分:', lockedContent.length, '字符');
 }
 
-// ============ 【完整版】支付弹窗 - 支持支付宝和微信支付 ============
+// 创建分析段落（通用函数）
+function createAnalysisSection(title, content) {
+    const sectionTitle = title.replace(/【|】/g, '');
+    
+    return `
+        <div class="analysis-paragraph">
+            <div class="analysis-title">${sectionTitle}</div>
+            <div class="analysis-content">${formatContent(content)}</div>
+        </div>
+    `;
+}
+
+// 格式化内容
+function formatContent(text) {
+    const paragraphs = text.split('\n').filter(p => p.trim());
+    return paragraphs.map(para => `
+        <p>${para.trim()}</p>
+    `).join('');
+}
+
+// 显示完整分析内容（支付后调用）
+export function showFullAnalysisContent() {
+    const lockedAnalysisText = UI.lockedAnalysisText();
+    const freeAnalysisText = UI.freeAnalysisText();
+    
+    if (lockedAnalysisText && lockedAnalysisText.innerHTML.trim() && freeAnalysisText) {
+        // 将锁定内容添加到免费内容中
+        const currentContent = freeAnalysisText.innerHTML;
+        freeAnalysisText.innerHTML = currentContent + lockedAnalysisText.innerHTML;
+        
+        // 隐藏锁定覆盖层
+        const lockedOverlay = document.getElementById('locked-overlay');
+        if (lockedOverlay) {
+            lockedOverlay.style.display = 'none';
+        }
+        
+        console.log('✅ 完整内容已显示');
+    }
+}
+
+// ============ 【支付弹窗相关函数】 ============
+
+// 显示支付弹窗 - 支持支付宝和微信支付
 export async function showPaymentModal() {
     console.log('调用支付接口...');
 
@@ -856,7 +790,7 @@ export async function showPaymentModal() {
     }
 }
 
-// ============ 【修改后】支付方式选择弹窗 - 移除手动选择 ============
+// 支付方式选择弹窗
 function showPaymentMethodSelection() {
     return new Promise((resolve) => {
         // 直接根据设备类型决定支付方式
@@ -937,7 +871,7 @@ function showPaymentMethodSelection() {
     });
 }
 
-// ============ 【修改后】显示支付界面 ============
+// 显示支付界面
 function displayPaymentInterface(paymentData, method) {
     const paymentMethods = document.querySelector('.payment-methods');
     if (!paymentMethods) return;
@@ -1065,7 +999,7 @@ function displayPaymentInterface(paymentData, method) {
     }
 }
 
-// ============ 保存分析数据 ============
+// 保存分析数据
 function saveAnalysisData() {
     if (STATE.fullAnalysisResult) {
         localStorage.setItem('last_analysis_result', STATE.fullAnalysisResult);
@@ -1084,6 +1018,8 @@ export function closePaymentModal() {
         document.body.style.overflow = 'auto';
     }
 }
+
+// ============ 【解锁界面相关函数】 ============
 
 // 更新解锁界面状态
 export function updateUnlockInterface() {
@@ -1129,18 +1065,6 @@ export function updateUnlockInterface() {
     }
 }
 
-// 显示完整分析内容
-export function showFullAnalysisContent() {
-    const lockedAnalysisText = UI.lockedAnalysisText();
-    const freeAnalysisText = UI.freeAnalysisText();
-    
-    if (lockedAnalysisText && lockedAnalysisText.textContent.trim() && freeAnalysisText) {
-        // 将锁定内容添加到免费内容中
-        const currentContent = freeAnalysisText.innerHTML;
-        freeAnalysisText.innerHTML = currentContent + lockedAnalysisText.innerHTML;
-    }
-}
-
 // 锁定下载按钮
 export function lockDownloadButton() {
     const downloadBtn = UI.downloadReportBtn();
@@ -1155,7 +1079,7 @@ export function lockDownloadButton() {
     }
 }
 
-// 解锁下载按钮 - ✅ 修复1：确保能正确解锁
+// 解锁下载按钮
 export function unlockDownloadButton() {
     const downloadBtn = UI.downloadReportBtn();
     const downloadBtnText = DOM.id('download-btn-text');
@@ -1177,7 +1101,7 @@ export function unlockDownloadButton() {
     }
 }
 
-// 重置解锁界面 - ✅ 修复2：确保切换服务时正确重置
+// 重置解锁界面
 export function resetUnlockInterface() {
     console.log('resetUnlockInterface: 重置解锁界面');
     
@@ -1228,6 +1152,8 @@ export function resetUnlockInterface() {
         }
     }
 }
+
+// ============ 【其他UI函数】 ============
 
 // 按钮拉伸动画
 export function animateButtonStretch() {
@@ -1369,83 +1295,5 @@ export function collectUserData() {
             partnerBirthMinute: UI.partnerBirthMinute().value,
             partnerBirthCity: UI.partnerBirthCity().value
         };
-    }
-}
-
-// 显示大运排盘 - ✅ 修复：正确提取和显示大运信息
-export function displayDayunPan() {
-    console.log('显示大运排盘...');
-    
-    // 创建或获取大运排盘卡片
-    let dayunPanCard = document.querySelector('.dayun-pan-card');
-    if (!dayunPanCard) {
-        // 创建大运排盘卡片
-        dayunPanCard = document.createElement('div');
-        dayunPanCard.className = 'dayun-pan-card';
-        dayunPanCard.style.cssText = `
-            display: none;
-            background: linear-gradient(135deg, #f0f5ff, #e6ecff);
-            border: 2px solid #3a7bd5;
-            border-radius: 12px;
-            padding: 25px;
-            margin: 25px 0;
-            animation: fadeInUp 0.8s ease-out;
-        `;
-        
-        // 找到八字排盘卡片之后插入大运排盘
-        const baziPanCard = document.querySelector('.bazi-pan-card');
-        if (baziPanCard && baziPanCard.parentNode) {
-            baziPanCard.parentNode.insertBefore(dayunPanCard, baziPanCard.nextSibling);
-        }
-    }
-    
-    // 尝试从分析结果中提取大运信息
-    if (STATE.fullAnalysisResult && STATE.fullAnalysisResult.includes('【大运排盘】')) {
-        console.log('找到大运排盘信息');
-        
-        const startIndex = STATE.fullAnalysisResult.indexOf('【大运排盘】');
-        let endIndex = STATE.fullAnalysisResult.indexOf('【', startIndex + 1);
-        if (endIndex === -1) endIndex = STATE.fullAnalysisResult.length;
-        
-        const dayunContent = STATE.fullAnalysisResult.substring(startIndex, endIndex);
-        
-        // 解析大运内容
-        const lines = dayunContent.split('\n').filter(line => line.trim());
-        let htmlContent = '';
-        let hasDayunData = false;
-        
-        lines.forEach(line => {
-            const trimmedLine = line.trim();
-            if (trimmedLine.includes('起运岁数：') || trimmedLine.includes('起运时间：')) {
-                htmlContent += `<div style="margin-bottom: 12px; color: #3a7bd5; font-weight: 600; font-size: 15px;">${trimmedLine}</div>`;
-                hasDayunData = true;
-            } else if (trimmedLine.includes('第') && trimmedLine.includes('步大运：')) {
-                htmlContent += `<div style="background: white; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #3a7bd5; font-size: 14px; color: var(--dark-color); margin-bottom: 10px; box-shadow: 0 3px 8px rgba(58, 123, 213, 0.1);">${trimmedLine}</div>`;
-                hasDayunData = true;
-            } else if (trimmedLine.includes('大运详细：')) {
-                // 跳过标题行
-            } else if (trimmedLine.startsWith('第') && trimmedLine.includes('步大运')) {
-                htmlContent += `<div style="background: white; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #3a7bd5; font-size: 14px; color: var(--dark-color); margin-bottom: 10px; box-shadow: 0 3px 8px rgba(58, 123, 213, 0.1);">${trimmedLine}</div>`;
-                hasDayunData = true;
-            }
-        });
-        
-        if (hasDayunData) {
-            dayunPanCard.style.display = 'block';
-            dayunPanCard.innerHTML = `
-                <h6 style="color: #3a7bd5; margin-bottom: 15px; font-size: 18px; text-align: center; position: relative; padding-bottom: 12px; font-weight: 700;">
-                    大运排盘
-                    <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 3px; background: linear-gradient(to right, #3a7bd5, #5a8de8); border-radius: 2px;"></div>
-                </h6>
-                <div style="margin-top: 15px;">${htmlContent}</div>
-            `;
-            console.log('大运排盘显示成功');
-        } else {
-            dayunPanCard.style.display = 'none';
-            console.log('没有找到有效的大运数据');
-        }
-    } else {
-        dayunPanCard.style.display = 'none';
-        console.log('分析结果中没有找到大运排盘信息');
     }
 }
