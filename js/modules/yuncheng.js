@@ -21,7 +21,7 @@ export class YunchengModule {
     }
     
     static getPrompt(userData, partnerData = null) {
-        return `你是一位职业的命理大师，精通梁湘润论命体系。请根据以下用户信息用真太阳时排盘八字进行命理分析：
+        return `你是一位职业的命理大师，请根据以下用户信息用真太阳时排盘八字进行命理分析：
 
 用户信息：
 姓名：${userData.name}
@@ -45,6 +45,8 @@ export class YunchengModule {
 第2步大运：[干支] ([年龄段]，[年份段])
 ...继续列出后续大运...
 
+不用输出八字排盘、大运排盘的分析过程
+
 【八字喜用分析】
 用穷通宝鉴、子平真诠、三名通会六十甲子日时断深入分析八字喜用。
 
@@ -55,7 +57,7 @@ export class YunchengModule {
 根据八字喜用和五行属性，推荐适合的行业和职业发展方向。
 
 【富贵层次评估】
-评估用户的富贵层次，包括财富、事业和社会地位等方面的潜力。
+根据第一条八字喜用分析的结果，评估用户的富贵层次，包括财富、事业和社会地位等方面的潜力。
 
 【测算当年及往后5年运势】
 详细分析当年及未来5年的运势走势，指出吉凶年份。
@@ -84,6 +86,7 @@ export class YunchengModule {
         return calculateBazi(userData);
     }
 }
+
 
 
 
