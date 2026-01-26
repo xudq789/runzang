@@ -359,346 +359,6 @@ const PaymentManager = {
     }
 };
 
-// ============ 【流式分析管理器】 ============
-const StreamingAnalysisManager = {
-    isStreaming: false,
-    fullContent: '',
-    freeContent: '',
-    streamController: null,
-    updateTimer: null,
-    baziUpdateTimer: null,
-    
-    // 开始流式分析
-    async startStreamingAnalysis(prompt) {
-        console.log('🎯 开始流式分析...');
-        
-        this.isStreaming = true;
-        this.fullContent = '';
-        this.freeContent = '';
-        
-        // 显示流式分析状态
-        this.showStreamingStatus();
-        
-        try {
-            // 使用流式API
-            await this.callDeepSeekStreamingAPI(prompt);
-            
-            // 流式分析完成
-            this.isStreaming = false;
-            this.hideStreamingStatus();
-            
-            // 保存完整结果
-            STATE.fullAnalysisResult = this.fullContent;
-            
-            // 提取八字数据
-            const parsedBaziData = parseBaziData(this.fullContent);
-            STATE.baziData = parsedBaziData.userBazi;
-            
-            // 保存到本地存储
-            localStorage.setItem('last_analysis_result', this.fullContent);
-            localStorage.setItem('last_analysis_service', STATE.currentService);
-            
-            console.log('✅ 流式分析完成，总字数:', this.fullContent.length);
-            
-            return true;
-            
-        } catch (error) {
-            console.error('流式分析失败:', error);
-            this.isStreaming = false;
-            this.hideStreamingStatus();
-            throw error;
-        }
-    },
-    
-    // 调用流式API
-    async callDeepSeekStreamingAPI(prompt) {
-        console.log('调用DeepSeek流式API...');
-        
-        const controller = new AbortController();
-        this.streamController = controller;
-        
-        try {
-            const response = await fetch(window.APP_CONFIG.DEEPSEEK_API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${window.APP_CONFIG.DEEPSEEK_API_KEY}`
-                },
-                body: JSON.stringify({
-                    model: 'deepseek-chat',
-                    messages: [
-                        {
-                            role: 'system',
-                            content: '你是一位职业的命理大师，精通梁湘润论命体系。请严格按照要求的格式输出完整报告。'
-                        },
-                        {
-                            role: 'user',
-                            content: prompt
-                        }
-                    ],
-                    max_tokens: 4000,
-                    temperature: 0.7,
-                    stream: true  // 关键：启用流式输出
-                }),
-                signal: controller.signal
-            });
-            
-            if (!response.ok) {
-                throw new Error(`API请求失败: ${response.status}`);
-            }
-            
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder('utf-8');
-            let buffer = '';
-            
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                
-                buffer += decoder.decode(value, { stream: true });
-                
-                // 处理流式数据
-                const lines = buffer.split('\n');
-                buffer = lines.pop(); // 保留未完成的行
-                
-                for (const line of lines) {
-                    if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-                        try {
-                            const data = JSON.parse(line.slice(6));
-                            if (data.choices[0].delta.content) {
-                                const content = data.choices[0].delta.content;
-                                this.processStreamChunk(content);
-                            }
-                        } catch (e) {
-                            // 忽略解析错误
-                        }
-                    }
-                }
-            }
-            
-            console.log('流式接收完成');
-            
-        } catch (error) {
-            if (error.name === 'AbortError') {
-                console.log('流式请求被中止');
-            } else {
-                throw error;
-            }
-        }
-    },
-    
-    // 处理流式数据块
-    processStreamChunk(content) {
-        // 累积完整内容
-        this.fullContent += content;
-        
-        // 检测八字排盘数据
-        this.detectAndUpdateBazi(content);
-        
-        // 检测是否到达免费部分结束
-        if (!this.isFreeContentComplete()) {
-            this.freeContent += content;
-            
-            // 使用防抖更新免费内容显示，减少闪烁
-            clearTimeout(this.updateTimer);
-            this.updateTimer = setTimeout(() => {
-                this.updateFreeContentDisplay();
-            }, 100); // 100ms防抖
-        }
-    },
-    
-    // 修改后的八字检测和更新函数
-    detectAndUpdateBazi(content) {
-        // 只在实际检测到八字数据时更新
-        if (content.includes('年柱：') || content.includes('月柱：') || content.includes('日柱：') || content.includes('时柱：')) {
-            // 使用防抖减少频繁更新
-            clearTimeout(this.baziUpdateTimer);
-            this.baziUpdateTimer = setTimeout(() => {
-                const baziData = parseBaziData(this.fullContent);
-                if (baziData.userBazi && this.hasValidBaziData(baziData.userBazi)) {
-                    STATE.baziData = baziData.userBazi;
-                    
-                    // 使用requestAnimationFrame平滑更新
-                    requestAnimationFrame(() => {
-                        displayBaziPan();
-                    });
-                }
-            }, 300);
-        }
-    },
-    
-    // 检查八字数据是否有效
-    hasValidBaziData(baziData) {
-        return baziData.yearColumn && baziData.monthColumn && 
-               baziData.dayColumn && baziData.hourColumn;
-    },
-    
-    // 检查免费内容是否完成
-    isFreeContentComplete() {
-        const freeSections = [
-            '【八字排盘】',
-            '【大运排盘】',
-            '【八字喜用分析】',
-            '【性格特点】',
-            '【适宜行业职业推荐】'
-        ];
-        
-        // 检查是否出现了第一个付费部分
-        const paidSections = [
-            '【富贵层次评估】',
-            '【过往大运吉凶分析】',
-            '【过往关键流年验证】',
-            '【专业建议与指导】',
-            '【测算当年及往后5年运势】',
-            '【事业财运走向】',
-            '【婚姻感情趋势】',
-            '【人生每步大运吉凶分析】',
-            '【双方八字契合度分析】'
-        ];
-        
-        for (const section of paidSections) {
-            if (this.fullContent.includes(section)) {
-                return true;
-            }
-        }
-        
-        return false;
-    },
-    
-    // 实时更新免费内容显示
-    updateFreeContentDisplay() {
-        const freeAnalysisText = UI.freeAnalysisText();
-        if (!freeAnalysisText) return;
-        
-        // 提取并格式化免费内容
-        const formattedContent = this.formatFreeContent(this.freeContent);
-        freeAnalysisText.innerHTML = formattedContent;
-    },
-    
-    // 格式化免费内容
-    formatFreeContent(content) {
-        const freeSections = [
-            '【八字排盘】',
-            '【大运排盘】',
-            '【八字喜用分析】',
-            '【性格特点】',
-            '【适宜行业职业推荐】'
-        ];
-        
-        let formattedContent = '';
-        
-        for (const section of freeSections) {
-            const startIndex = content.indexOf(section);
-            if (startIndex !== -1) {
-                // 找到下一个【或结束
-                let endIndex = content.indexOf('【', startIndex + 1);
-                if (endIndex === -1) endIndex = content.length;
-                
-                const sectionContent = content.substring(startIndex, endIndex);
-                const titleMatch = sectionContent.match(/【([^】]+)】/);
-                
-                if (titleMatch) {
-                    const title = titleMatch[1];
-                    const contentText = sectionContent.replace(titleMatch[0], '').trim();
-                    
-                    // 八字排盘已单独显示，跳过
-                    if (title.includes('八字排盘')) continue;
-                    
-                    formattedContent += `
-                    <div class="analysis-section">
-                        <h5>${title}</h5>
-                        <div class="analysis-content">${contentText.replace(/\n/g, '<br>')}</div>
-                    </div>`;
-                }
-            }
-        }
-        
-        return formattedContent;
-    },
-    
-    // 显示流式分析状态
-    showStreamingStatus() {
-        const freeAnalysisText = UI.freeAnalysisText();
-        if (!freeAnalysisText) return;
-        
-        freeAnalysisText.innerHTML = `
-            <div class="streaming-status">
-                <div class="streaming-spinner"></div>
-                <div class="streaming-text">正在为您生成深度命理分析...</div>
-                <div class="streaming-progress">分析内容正在实时生成中，请稍候</div>
-            </div>
-        `;
-        
-        // 添加CSS样式
-        if (!document.getElementById('streaming-styles')) {
-            const style = document.createElement('style');
-            style.id = 'streaming-styles';
-            style.textContent = `
-                .streaming-status {
-                    text-align: center;
-                    padding: 30px;
-                    background: linear-gradient(135deg, #f9f5f0, #f0e6d6);
-                    border-radius: 10px;
-                    border: 2px solid var(--secondary-color);
-                }
-                .streaming-spinner {
-                    width: 40px;
-                    height: 40px;
-                    border: 3px solid rgba(212, 175, 55, 0.2);
-                    border-top-color: var(--secondary-color);
-                    border-radius: 50%;
-                    animation: spin 1s linear infinite;
-                    margin: 0 auto 15px;
-                }
-                .streaming-text {
-                    font-size: 16px;
-                    font-weight: 600;
-                    color: var(--primary-color);
-                    margin-bottom: 8px;
-                }
-                .streaming-progress {
-                    font-size: 14px;
-                    color: #666;
-                }
-                @keyframes spin {
-                    to { transform: rotate(360deg); }
-                }
-                .streaming-analysis-section {
-                    animation: fadeIn 0.5s ease-out;
-                }
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-    },
-    
-    // 隐藏流式分析状态
-    hideStreamingStatus() {
-        const streamingStatus = document.querySelector('.streaming-status');
-        if (streamingStatus && streamingStatus.parentNode) {
-            streamingStatus.style.opacity = '0';
-            streamingStatus.style.transform = 'translateY(-10px)';
-            setTimeout(() => {
-                if (streamingStatus.parentNode) {
-                    streamingStatus.parentNode.removeChild(streamingStatus);
-                }
-            }, 300);
-        }
-    },
-    
-    // 停止流式分析
-    stopStreaming() {
-        if (this.streamController) {
-            this.streamController.abort();
-            this.isStreaming = false;
-            console.log('流式分析已停止');
-        }
-    }
-};
-
 // ============ 【新增：简化版URL支付回调检测函数】 ============
 function checkPaymentSuccessFromURL() {
     try {
@@ -930,9 +590,6 @@ function switchService(serviceName) {
         STATE.userData = null;
         STATE.partnerData = null;
         
-        // 停止流式分析
-        StreamingAnalysisManager.stopStreaming();
-        
         console.log('✅ 所有状态已重置');
     }
     
@@ -977,7 +634,7 @@ function preloadImages() {
     });
 }
 
-// ============ 【核心修改：流式分析函数】 ============
+// ============ 【核心修改：传统分析函数（删除流式输出）】 ============
 async function startAnalysis() {
     console.log('开始命理分析...');
     
@@ -1029,6 +686,9 @@ async function startAnalysis() {
             `;
         }
 
+        // 显示加载弹窗
+        showLoadingModal();
+        
         // 获取当前服务的模块和完整提示词
         const serviceModule = SERVICE_MODULES[STATE.currentService];
         if (!serviceModule) {
@@ -1040,71 +700,46 @@ async function startAnalysis() {
             prompt = serviceModule.getPrompt(STATE.userData, STATE.partnerData);
         } catch (error) {
             console.error('生成提示词失败:', error);
+            hideLoadingModal();
             alert(error.message);
             return;
         }
         
-        console.log('开始流式分析，提示词长度:', prompt.length);
+        console.log('开始分析，提示词长度:', prompt.length);
         
-        // 开始流式分析
-        const streamingSuccess = await StreamingAnalysisManager.startStreamingAnalysis(prompt);
+        // 调用传统API（一次性获取完整结果）
+        const analysisResult = await callDeepSeekAPI(prompt);
         
-        if (streamingSuccess) {
-            console.log('流式分析成功');
-            
-            // 使用原有函数显示完整分析结果（保持相同格式）
-            processAndDisplayAnalysis(STATE.fullAnalysisResult);
-            
-            // 检查支付状态
-            const paymentData = PaymentManager.getPaymentData();
-            if (paymentData && paymentData.verified) {
-                const savedService = localStorage.getItem('last_analysis_service');
-                if (savedService === STATE.currentService && !STATE.isPaymentUnlocked) {
-                    console.log('当前服务已支付，自动解锁');
-                    setTimeout(() => {
-                        PaymentManager.updateUIAfterPayment();
-                    }, 500);
-                }
+        // 保存完整结果
+        STATE.fullAnalysisResult = analysisResult;
+        
+        // 提取八字数据
+        const parsedBaziData = parseBaziData(analysisResult);
+        STATE.baziData = parsedBaziData.userBazi;
+        
+        // 显示结果
+        displayBaziPan();
+        processAndDisplayAnalysis(analysisResult);
+        
+        // 隐藏加载弹窗
+        hideLoadingModal();
+        
+        console.log('传统API分析完成，总字数:', analysisResult.length);
+        
+        // 检查支付状态
+        const paymentData = PaymentManager.getPaymentData();
+        if (paymentData && paymentData.verified) {
+            const savedService = localStorage.getItem('last_analysis_service');
+            if (savedService === STATE.currentService && !STATE.isPaymentUnlocked) {
+                console.log('当前服务已支付，自动解锁');
+                setTimeout(() => {
+                    PaymentManager.updateUIAfterPayment();
+                }, 500);
             }
         }
         
     } catch (error) {
         console.error('分析失败:', error);
-        
-        // 降级方案：使用传统API
-        console.log('流式分析失败，降级到传统API');
-        await fallbackToTraditionalAnalysis();
-    }
-}
-
-// ============ 【降级方案：传统API】 ============
-async function fallbackToTraditionalAnalysis() {
-    console.log('执行降级方案：使用传统API');
-    
-    showLoadingModal();
-    
-    try {
-        const serviceModule = SERVICE_MODULES[STATE.currentService];
-        const prompt = serviceModule.getPrompt(STATE.userData, STATE.partnerData);
-        
-        console.log('调用传统API...');
-        const analysisResult = await callDeepSeekAPI(prompt);
-        
-        STATE.fullAnalysisResult = analysisResult;
-        
-        const parsedBaziData = parseBaziData(analysisResult);
-        STATE.baziData = parsedBaziData.userBazi;
-        
-        displayBaziPan();
-        processAndDisplayAnalysis(analysisResult);
-        
-        hideLoadingModal();
-        showAnalysisResult();
-        
-        console.log('传统API分析完成');
-        
-    } catch (error) {
-        console.error('降级方案失败:', error);
         hideLoadingModal();
         
         let errorMessage = '命理分析失败，请稍后再试。';
@@ -1195,8 +830,6 @@ function newAnalysis() {
     STATE.isPaymentUnlocked = false;
     STATE.isDownloadLocked = true;
     
-    StreamingAnalysisManager.stopStreaming();
-    
     lockDownloadButton();
     hideAnalysisResult();
     resetUnlockInterface();
@@ -1237,7 +870,8 @@ if (typeof STATE !== 'undefined') {
     window.STATE = STATE;
 }
 
-window.StreamingAnalysisManager = StreamingAnalysisManager;
+// 移除流式输出相关导出
+// window.StreamingAnalysisManager = StreamingAnalysisManager;
 
 // ✅ 也导出UI对象（如果需要在其他地方使用）
 window.UI = UI;
