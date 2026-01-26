@@ -804,64 +804,22 @@ updateContentIncrementally(formattedContent) {
         return formattedContent;
     },
     
-    // 显示流式分析状态
-    showStreamingStatus() {
-        const freeAnalysisText = UI.freeAnalysisText();
-        if (!freeAnalysisText) return;
-        
-        freeAnalysisText.innerHTML = `
-            <div class="streaming-status">
-                <div class="streaming-spinner"></div>
-                <div class="streaming-text">正在为您生成深度命理分析...</div>
-                <div class="streaming-progress">分析内容正在实时生成中，请稍候</div>
+    // 在 StreamingAnalysisManager 中优化显示提示
+showStreamingStatus() {
+    const freeAnalysisText = UI.freeAnalysisText();
+    if (!freeAnalysisText) return;
+    
+    freeAnalysisText.innerHTML = `
+        <div class="streaming-status">
+            <div class="streaming-spinner"></div>
+            <div class="streaming-text">正在为您进行专业命理分析</div>
+            <div class="streaming-progress">
+                <div>📊 分析流程：八字排盘 → 大运推算 → 格局分析 → 用神选取 → 运势判断</div>
+                <small>请耐心等待，专业分析需要时间，保证报告质量</small>
             </div>
-        `;
-        
-        // 添加CSS样式
-        if (!document.getElementById('streaming-styles')) {
-            const style = document.createElement('style');
-            style.id = 'streaming-styles';
-            style.textContent = `
-                .streaming-status {
-                    text-align: center;
-                    padding: 30px;
-                    background: linear-gradient(135deg, #f9f5f0, #f0e6d6);
-                    border-radius: 10px;
-                    border: 2px solid var(--secondary-color);
-                }
-                .streaming-spinner {
-                    width: 40px;
-                    height: 40px;
-                    border: 3px solid rgba(212, 175, 55, 0.2);
-                    border-top-color: var(--secondary-color);
-                    border-radius: 50%;
-                    animation: spin 1s linear infinite;
-                    margin: 0 auto 15px;
-                }
-                .streaming-text {
-                    font-size: 16px;
-                    font-weight: 600;
-                    color: var(--primary-color);
-                    margin-bottom: 8px;
-                }
-                .streaming-progress {
-                    font-size: 14px;
-                    color: #666;
-                }
-                @keyframes spin {
-                    to { transform: rotate(360deg); }
-                }
-                .streaming-analysis-section {
-                    animation: fadeIn 0.5s ease-out;
-                }
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-    },
+        </div>
+    `;
+},
     
     // 隐藏流式分析状态
     hideStreamingStatus() {
@@ -1429,4 +1387,5 @@ window.StreamingAnalysisManager = StreamingAnalysisManager;
 
 // ✅ 也导出UI对象（如果需要在其他地方使用）
 window.UI = UI;
+
 
