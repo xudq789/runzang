@@ -723,10 +723,10 @@ export function processAndDisplayAnalysis(result) {
                     formattedContent += `
                     <div class="analysis-section">
                         <h5>${title}</h5>
-                        <div class="analysis-content" style="font-size: 16px; line-height: 1.8;">${content.replace(/\n/g, '<br>')}</div>
+                        <div class="analysis-content">${content.replace(/\n/g, '<br>')}</div>
                     </div>`;
                 } else {
-                    formattedContent += `<div class="analysis-content" style="font-size: 16px; line-height: 1.8;">${section.replace(/\n/g, '<br>')}</div>`;
+                    formattedContent += `<div class="analysis-content">${section.replace(/\n/g, '<br>')}</div>`;
                 }
             }
         });
@@ -752,10 +752,10 @@ export function processAndDisplayAnalysis(result) {
                     formattedLockedContent += `
                     <div class="analysis-section">
                         <h5>${title}</h5>
-                        <div class="analysis-content" style="font-size: 16px; line-height: 1.8;">${content.replace(/\n/g, '<br>')}</div>
+                        <div class="analysis-content">${content.replace(/\n/g, '<br>')}</div>
                     </div>`;
                 } else {
-                    formattedLockedContent += `<div class="analysis-content" style="font-size: 16px; line-height: 1.8;">${section.replace(/\n/g, '<br>')}</div>`;
+                    formattedLockedContent += `<div class="analysis-content">${section.replace(/\n/g, '<br>')}</div>`;
                 }
             }
         });
@@ -1450,3 +1450,4 @@ export function displayDayunPan() {
     }
 }
 [file content end]
+
