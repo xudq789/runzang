@@ -802,24 +802,88 @@ function formatTextContent(text) {
 
 // 高亮关键词 - 新增函数
 function highlightKeywords(text) {
-    const keywords = [
-        '富贵', '财运', '事业', '婚姻', '感情', '健康', 
-        '贵人', '机遇', '挑战', '注意', '建议', '重要',
-        '关键', '转折点', '优势', '劣势', '适合', '不宜'
-    ];
+    if (!text) return text;
+    
+    // 1. 高亮专业术语
+    const terms = {
+        // 格局
+        '偏印格': '<span class="keyword-highlight">偏印格</span>',
+        '正官格': '<span class="keyword-highlight">正官格</span>',
+        '七杀格': '<span class="keyword-highlight">七杀格</span>',
+        '正财格': '<span class="keyword-highlight">正财格</span>',
+        '偏财格': '<span class="keyword-highlight">偏财格</span>',
+        '食神格': '<span class="keyword-highlight">食神格</span>',
+        '伤官格': '<span class="keyword-highlight">伤官格</span>',
+        
+        // 十神
+        '比肩': '<span class="keyword-highlight">比肩</span>',
+        '劫财': '<span class="keyword-highlight">劫财</span>',
+        '食神': '<span class="keyword-highlight">食神</span>',
+        '伤官': '<span class="keyword-highlight">伤官</span>',
+        '正财': '<span class="keyword-highlight">正财</span>',
+        '偏财': '<span class="keyword-highlight">偏财</span>',
+        '正官': '<span class="keyword-highlight">正官</span>',
+        '七杀': '<span class="keyword-highlight">七杀</span>',
+        '正印': '<span class="keyword-highlight">正印</span>',
+        '偏印': '<span class="keyword-highlight">偏印</span>',
+        
+        // 五行
+        '金': '<span class="keyword-highlight">金</span>',
+        '木': '<span class="keyword-highlight">木</span>',
+        '水': '<span class="keyword-highlight">水</span>',
+        '火': '<span class="keyword-highlight">火</span>',
+        '土': '<span class="keyword-highlight">土</span>',
+        
+        // 重要概念
+        '用神': '<span class="keyword-highlight">用神</span>',
+        '喜神': '<span class="keyword-highlight">喜神</span>',
+        '忌神': '<span class="keyword-highlight">忌神</span>',
+        '闲神': '<span class="keyword-highlight">闲神</span>',
+        '身强': '<span class="keyword-highlight">身强</span>',
+        '身弱': '<span class="keyword-highlight">身弱</span>',
+        '中和': '<span class="keyword-highlight">中和</span>',
+        '调候': '<span class="keyword-highlight">调候</span>',
+        '通关': '<span class="keyword-highlight">通关</span>',
+        '扶抑': '<span class="keyword-highlight">扶抑</span>',
+        
+        // 重要结论词汇
+        '富贵': '<span class="keyword-highlight" style="color:#d90000;">富贵</span>',
+        '财运': '<span class="keyword-highlight" style="color:#d90000;">财运</span>',
+        '事业': '<span class="keyword-highlight" style="color:#d90000;">事业</span>',
+        '婚姻': '<span class="keyword-highlight" style="color:#d90000;">婚姻</span>',
+        '感情': '<span class="keyword-highlight" style="color:#d90000;">感情</span>',
+        '健康': '<span class="keyword-highlight" style="color:#d90000;">健康</span>',
+        '贵人': '<span class="keyword-highlight" style="color:#d90000;">贵人</span>',
+        '机遇': '<span class="keyword-highlight" style="color:#d90000;">机遇</span>',
+        '挑战': '<span class="keyword-highlight" style="color:#d90000;">挑战</span>',
+        '注意': '<span class="keyword-highlight" style="color:#ff6600;">注意</span>',
+        '建议': '<span class="keyword-highlight" style="color:#ff6600;">建议</span>',
+        '重要': '<span class="keyword-highlight" style="color:#ff6600;">重要</span>',
+        '关键': '<span class="keyword-highlight" style="color:#ff6600;">关键</span>',
+        '转折点': '<span class="keyword-highlight" style="color:#ff6600;">转折点</span>',
+        '优势': '<span class="keyword-highlight" style="color:#009900;">优势</span>',
+        '劣势': '<span class="keyword-highlight" style="color:#cc0000;">劣势</span>',
+        '适合': '<span class="keyword-highlight" style="color:#009900;">适合</span>',
+        '不宜': '<span class="keyword-highlight" style="color:#cc0000;">不宜</span>'
+    };
     
     let highlightedText = text;
     
-    keywords.forEach(keyword => {
-        const regex = new RegExp(keyword, 'g');
-        highlightedText = highlightedText.replace(regex, `<strong>${keyword}</strong>`);
+    // 替换专业术语
+    Object.keys(terms).forEach(term => {
+        const regex = new RegExp(term, 'g');
+        highlightedText = highlightedText.replace(regex, terms[term]);
     });
     
-    // 高亮年份
-    highlightedText = highlightedText.replace(/(\d{4})年/g, '<em>$1年</em>');
+    // 高亮年份（四位数年份）
+    highlightedText = highlightedText.replace(/(\d{4})年/g, '<span class="year-highlight">$1年</span>');
     
-    // 高亮年龄
-    highlightedText = highlightedText.replace(/(\d{1,2})岁/g, '<em>$1岁</em>');
+    // 高亮年龄（数字+岁）
+    highlightedText = highlightedText.replace(/(\d{1,2})岁/g, '<span class="age-highlight">$1岁</span>');
+    
+    // 高亮大运（如：7-16岁、壬子运）
+    highlightedText = highlightedText.replace(/(\d{1,2})-(\d{1,2})岁/g, '<span class="keyword-highlight">$1-$2岁</span>');
+    highlightedText = highlightedText.replace(/([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥])运/g, '<span class="keyword-highlight">$1运</span>');
     
     return highlightedText;
 }
@@ -1595,6 +1659,7 @@ export function displayDayunPan() {
         console.log('分析结果中没有找到大运排盘信息');
     }
 }
+
 
 
 
