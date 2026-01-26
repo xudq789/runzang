@@ -1,3 +1,5 @@
+[file name]: styles.css
+[file content begin]
 /* 基础样式 */
 * {
     margin: 0;
@@ -480,13 +482,13 @@ input:focus, select:focus {
 .predictor-info-label {
     color: #666;
     font-weight: 500;
-    font-size: 14px;
+    font-size: 15px;
 }
 
 .predictor-info-value {
     color: var(--dark-color);
     font-weight: 600;
-    font-size: 14px;
+    font-size: 15px;
     text-align: right;
 }
 
@@ -509,19 +511,20 @@ input:focus, select:focus {
     color: var(--primary-color);
     font-weight: 600;
     margin-bottom: 8px;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .bazi-value {
-    font-size: 20px;
+    font-size: 28px;
     font-weight: bold;
     color: var(--dark-color);
     margin-bottom: 5px;
+    font-family: 'SimSun', '宋体', serif;
 }
 
 .bazi-element {
     color: #7d6e63;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 /* 大运排盘 - 优化为行排列 */
@@ -529,24 +532,42 @@ input:focus, select:focus {
     display: none;
 }
 
-/* 免费内容区域 */
-.analysis-section {
-    margin-bottom: 20px;
-}
-
+/* ============ 新增：分析内容字体优化 ============ */
 .analysis-section h5 {
     color: var(--primary-color);
-    font-size: 16px;
-    margin-bottom: 8px;
-    padding-left: 12px;
+    font-size: 20px;
+    margin-bottom: 15px;
+    padding-left: 15px;
     border-left: 4px solid var(--secondary-color);
+    position: relative;
+    font-weight: 700;
 }
 
 .analysis-content {
     line-height: 1.8;
     color: var(--text-color);
-    padding: 8px 0;
-    font-size: 14px;
+    padding: 12px 0;
+    font-size: 17px;
+    text-align: justify;
+    letter-spacing: 0.3px;
+}
+
+/* 免费内容区域优化 */
+.free-content .analysis-content {
+    font-size: 17px;
+    line-height: 1.8;
+    color: var(--dark-color);
+}
+
+/* 已解锁内容优化 */
+#free-content .analysis-content {
+    font-size: 17px;
+    line-height: 1.8;
+}
+
+/* 分析内容区域 */
+.analysis-section {
+    margin-bottom: 20px;
 }
 
 /* 锁定内容区域 - 优化布局 */
@@ -1049,6 +1070,53 @@ input:focus, select:focus {
         padding: 12px 20px;
         font-size: 14px;
     }
+    
+    /* 移动端字体优化 */
+    .analysis-section h5 {
+        font-size: 18px;
+        margin-bottom: 12px;
+        padding-left: 12px;
+    }
+    
+    .analysis-content {
+        font-size: 16px;
+        line-height: 1.7;
+        padding: 10px 0;
+    }
+    
+    .free-content .analysis-content {
+        font-size: 16px;
+        line-height: 1.7;
+    }
+    
+    #free-content .analysis-content {
+        font-size: 16px;
+        line-height: 1.7;
+    }
+    
+    .predictor-info-label {
+        font-size: 14px;
+    }
+    
+    .predictor-info-value {
+        font-size: 14px;
+    }
+    
+    .bazi-label {
+        font-size: 14px;
+    }
+    
+    .bazi-value {
+        font-size: 22px;
+    }
+    
+    .bazi-element {
+        font-size: 12px;
+    }
+    
+    .dayun-pan-card h6 {
+        font-size: 18px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1092,6 +1160,49 @@ input:focus, select:focus {
     
     .qr-code img {
         max-width: 130px;
+    }
+    
+    /* 小屏幕手机字体优化 */
+    .analysis-section h5 {
+        font-size: 16px;
+        margin-bottom: 10px;
+        padding-left: 10px;
+    }
+    
+    .analysis-content {
+        font-size: 15px;
+        line-height: 1.6;
+        padding: 8px 0;
+    }
+    
+    .free-content .analysis-content {
+        font-size: 15px;
+        line-height: 1.6;
+    }
+    
+    #free-content .analysis-content {
+        font-size: 15px;
+        line-height: 1.6;
+    }
+    
+    .predictor-info-label {
+        font-size: 13px;
+    }
+    
+    .predictor-info-value {
+        font-size: 13px;
+    }
+    
+    .bazi-label {
+        font-size: 13px;
+    }
+    
+    .bazi-value {
+        font-size: 20px;
+    }
+    
+    .dayun-pan-card h6 {
+        font-size: 16px;
     }
 }
 
@@ -1507,7 +1618,7 @@ input:focus, select:focus {
 .dayun-pan-card h6 {
     color: #3a7bd5;
     margin-bottom: 15px;
-    font-size: 18px;
+    font-size: 20px;
     text-align: center;
     position: relative;
     padding-bottom: 12px;
@@ -1565,7 +1676,7 @@ input:focus, select:focus {
 
 .analysis-section h5 {
     color: var(--primary-color);
-    font-size: 18px;
+    font-size: 20px;
     margin-bottom: 12px;
     padding-left: 12px;
     border-left: 4px solid var(--secondary-color);
@@ -1584,7 +1695,7 @@ input:focus, select:focus {
     line-height: 1.8;
     color: var(--text-color);
     padding: 10px 0;
-    font-size: 15px;
+    font-size: 17px;
     text-align: justify;
 }
 
@@ -1602,11 +1713,11 @@ input:focus, select:focus {
     }
     
     .analysis-section h5 {
-        font-size: 16px;
+        font-size: 18px;
     }
     
     .analysis-content {
-        font-size: 14px;
+        font-size: 16px;
         line-height: 1.7;
     }
     
@@ -1621,7 +1732,8 @@ input:focus, select:focus {
     }
     
     .analysis-content {
-        font-size: 14px;
+        font-size: 15px;
         line-height: 1.6;
     }
 }
+[file content end]
