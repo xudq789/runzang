@@ -427,7 +427,7 @@ import {
     hideAnalysisResult,
     validateForm,
     collectUserData,
-    displayDayunPan
+    //displayDayunPan
 } from './ui.js';
 
 import { CesuanModule } from '../modules/cesuan.js';
@@ -875,3 +875,4 @@ if (typeof STATE !== 'undefined') {
 
 // ✅ 也导出UI对象（如果需要在其他地方使用）
 window.UI = UI;
+
