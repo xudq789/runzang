@@ -1504,15 +1504,59 @@ export function displayDayunPan() {
         lines.forEach(line => {
             const trimmedLine = line.trim();
             if (trimmedLine.includes('起运岁数：') || trimmedLine.includes('起运时间：')) {
-                htmlContent += `<div style="margin-bottom: 12px; color: #3a7bd5; font-weight: 600; font-size: 15px;">${trimmedLine}</div>`;
+                // 修改这里：添加更好的样式和悬停效果
+                htmlContent += `<div class="dayun-info-item" style="
+                    margin-bottom: 12px; 
+                    color: #3a7bd5; 
+                    font-weight: 600; 
+                    font-size: 15px;
+                    padding: 10px 15px;
+                    background: rgba(255, 255, 255, 0.9);
+                    border-radius: 8px;
+                    border-left: 3px solid #3a7bd5;
+                    transition: all 0.3s ease;
+                " onmouseover="this.style.transform='translateX(5px)'; this.style.boxShadow='0 4px 12px rgba(58, 123, 213, 0.2)'" 
+                 onmouseout="this.style.transform='translateX(0)'; this.style.boxShadow='none'">
+                    ${trimmedLine}
+                </div>`;
                 hasDayunData = true;
             } else if (trimmedLine.includes('第') && trimmedLine.includes('步大运：')) {
-                htmlContent += `<div style="background: white; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #3a7bd5; font-size: 14px; color: var(--dark-color); margin-bottom: 10px; box-shadow: 0 3px 8px rgba(58, 123, 213, 0.1);">${trimmedLine}</div>`;
+                // 修改这里：优化大运行显示，添加悬停效果
+                htmlContent += `<div class="dayun-item" style="
+                    background: white; 
+                    padding: 12px 15px; 
+                    border-radius: 8px; 
+                    border-left: 4px solid #3a7bd5; 
+                    font-size: 14px; 
+                    color: var(--dark-color); 
+                    margin-bottom: 10px; 
+                    box-shadow: 0 3px 8px rgba(58, 123, 213, 0.1);
+                    transition: all 0.3s ease;
+                    cursor: pointer;
+                " onmouseover="this.style.transform='translateX(5px)'; this.style.boxShadow='0 5px 15px rgba(58, 123, 213, 0.2)'; this.style.borderLeftColor='#5a8de8'" 
+                 onmouseout="this.style.transform='translateX(0)'; this.style.boxShadow='0 3px 8px rgba(58, 123, 213, 0.1)'; this.style.borderLeftColor='#3a7bd5'">
+                    ${trimmedLine}
+                </div>`;
                 hasDayunData = true;
             } else if (trimmedLine.includes('大运详细：')) {
                 // 跳过标题行
             } else if (trimmedLine.startsWith('第') && trimmedLine.includes('步大运')) {
-                htmlContent += `<div style="background: white; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #3a7bd5; font-size: 14px; color: var(--dark-color); margin-bottom: 10px; box-shadow: 0 3px 8px rgba(58, 123, 213, 0.1);">${trimmedLine}</div>`;
+                // 修改这里：处理另一种格式的大运行
+                htmlContent += `<div class="dayun-item" style="
+                    background: white; 
+                    padding: 12px 15px; 
+                    border-radius: 8px; 
+                    border-left: 4px solid #3a7bd5; 
+                    font-size: 14px; 
+                    color: var(--dark-color); 
+                    margin-bottom: 10px; 
+                    box-shadow: 0 3px 8px rgba(58, 123, 213, 0.1);
+                    transition: all 0.3s ease;
+                    cursor: pointer;
+                " onmouseover="this.style.transform='translateX(5px)'; this.style.boxShadow='0 5px 15px rgba(58, 123, 213, 0.2)'; this.style.borderLeftColor='#5a8de8'" 
+                 onmouseout="this.style.transform='translateX(0)'; this.style.boxShadow='0 3px 8px rgba(58, 123, 213, 0.1)'; this.style.borderLeftColor='#3a7bd5'">
+                    ${trimmedLine}
+                </div>`;
                 hasDayunData = true;
             }
         });
@@ -1520,9 +1564,26 @@ export function displayDayunPan() {
         if (hasDayunData) {
             dayunPanCard.style.display = 'block';
             dayunPanCard.innerHTML = `
-                <h6 style="color: #3a7bd5; margin-bottom: 15px; font-size: 18px; text-align: center; position: relative; padding-bottom: 12px; font-weight: 700;">
+                <h6 style="
+                    color: #3a7bd5; 
+                    margin-bottom: 20px; 
+                    font-size: 20px; 
+                    text-align: center; 
+                    position: relative; 
+                    padding-bottom: 12px; 
+                    font-weight: 700;
+                ">
                     大运排盘
-                    <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 100px; height: 3px; background: linear-gradient(to right, #3a7bd5, #5a8de8); border-radius: 2px;"></div>
+                    <div style="
+                        position: absolute; 
+                        bottom: 0; 
+                        left: 50%; 
+                        transform: translateX(-50%); 
+                        width: 100px; 
+                        height: 3px; 
+                        background: linear-gradient(to right, #3a7bd5, #5a8de8); 
+                        border-radius: 2px;
+                    "></div>
                 </h6>
                 <div style="margin-top: 15px;">${htmlContent}</div>
             `;
@@ -1536,4 +1597,5 @@ export function displayDayunPan() {
         console.log('分析结果中没有找到大运排盘信息');
     }
 }
+
 
