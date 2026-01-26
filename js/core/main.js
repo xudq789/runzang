@@ -263,7 +263,7 @@ const PaymentManager = {
             updateServiceDisplay(savedService);
             displayPredictorInfo();
             displayBaziPan();
-            processAndDisplayAnalysis(savedResult);
+            await processAndDisplayAnalysis(savedResult);
             showAnalysisResult();
             
             console.log('✅ 分析结果恢复成功');
@@ -695,47 +695,164 @@ async function startAnalysis() {
             throw new Error(`未找到服务模块: ${STATE.currentService}`);
         }
         
-        let prompt;
-        try {
-            prompt = serviceModule.getPrompt(STATE.userData, STATE.partnerData);
-        } catch (error) {
-            console.error('生成提示词失败:', error);
-            hideLoadingModal();
-            alert(error.message);
-            return;
+        console.log('开始分析，准备调用服务器接口...');
+        
+        // 服务类型到API端点的映射
+        const SERVICE_API_MAP = {
+            '人生详批': '/api/ai/query-rsxp',
+            '测算验证': '/api/ai/query-csyz',
+            '流年运程': '/api/ai/query-lnyc',
+            '八字合婚': '/api/ai/query-bzhh'
+        };
+        
+        const apiEndpoint = SERVICE_API_MAP[STATE.currentService];
+        if (!apiEndpoint) {
+            throw new Error(`未找到服务 ${STATE.currentService} 对应的API接口`);
         }
         
-        console.log('开始分析，提示词长度:', prompt.length);
+        // 转换性别格式的辅助函数
+        const formatGender = (gender) => {
+            if (gender === '男' || gender === '女') return gender;
+            return gender === 'male' ? '男' : '女';
+        };
         
-        // 调用传统API（一次性获取完整结果）
-        const analysisResult = await callDeepSeekAPI(prompt);
+        // 格式化出生时间 YYYY-MM-DD HH:mm:ss
+        // 如果 hour 或 minute 为空，使用默认值 12:00
+        const formatBirthTime = (year, month, day, hour, minute) => {
+            const h = (hour === '' || hour === null || hour === undefined) ? 12 : hour;
+            const m = (minute === '' || minute === null || minute === undefined) ? 0 : minute;
+            return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`;
+        };
         
-        // 保存完整结果
-        STATE.fullAnalysisResult = analysisResult;
+        // 构建请求参数
+        let requestBody;
+        
+        if (STATE.currentService === '八字合婚') {
+            // 八字合婚需要特殊参数格式
+            if (!STATE.partnerData) {
+                throw new Error('八字合婚需要提供伴侣信息');
+            }
+            
+            requestBody = {
+                selfName: STATE.userData.name,
+                selfGender: formatGender(STATE.userData.gender),
+                selfBirthTime: formatBirthTime(
+                    STATE.userData.birthYear,
+                    STATE.userData.birthMonth,
+                    STATE.userData.birthDay,
+                    STATE.userData.birthHour,
+                    STATE.userData.birthMinute
+                ),
+                selfBirthRegion: STATE.userData.birthCity || '',
+                spouseName: STATE.partnerData.partnerName,
+                spouseGender: formatGender(STATE.partnerData.partnerGender),
+                spouseBirthTime: formatBirthTime(
+                    STATE.partnerData.partnerBirthYear,
+                    STATE.partnerData.partnerBirthMonth,
+                    STATE.partnerData.partnerBirthDay,
+                    STATE.partnerData.partnerBirthHour,
+                    STATE.partnerData.partnerBirthMinute
+                ),
+                spouseBirthRegion: STATE.partnerData.partnerBirthCity || '',
+                description: STATE.currentService || ''
+            };
+        } else {
+            // 其他三个服务的参数格式相同
+            requestBody = {
+                name: STATE.userData.name,
+                gender: formatGender(STATE.userData.gender),
+                birthTime: formatBirthTime(
+                    STATE.userData.birthYear,
+                    STATE.userData.birthMonth,
+                    STATE.userData.birthDay,
+                    STATE.userData.birthHour,
+                    STATE.userData.birthMinute
+                ),
+                birthRegion: STATE.userData.birthCity || '',
+                description: STATE.currentService || ''
+            };
+        }
+        
+        // 调用对应的服务器接口
+        const apiUrl = `https://runzang.top${apiEndpoint}`;
+        console.log(`🔗 调用AI查询接口: ${apiUrl}`);
+        console.log('请求参数:', requestBody);
+        
+        const queryResponse = await fetch(apiUrl, {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': 'runzang-payment-security-key-2025-1234567890'
+            },
+            body: JSON.stringify(requestBody)
+        });
+        
+        if (!queryResponse.ok) {
+            throw new Error(`服务器接口调用失败: ${queryResponse.status}`);
+        }
+        
+        const queryResult = await queryResponse.json();
+        
+        if (!queryResult.success) {
+            throw new Error(queryResult.message || '查询失败');
+        }
+        
+        // 保存订单ID
+        STATE.currentOrderId = queryResult.data.orderId;
+        console.log('✅ 订单ID已保存:', STATE.currentOrderId);
+        
+        // 保存部分内容（未支付前显示的内容）
+        let contentToDisplay = queryResult.data.content || '';
+        STATE.fullAnalysisResult = contentToDisplay;
+        
+        // 检查是否已支付，如果已支付则获取完整内容
+        const paymentData = PaymentManager.getPaymentData();
+        if (paymentData && paymentData.verified && paymentData.orderId === STATE.currentOrderId) {
+            console.log('🔗 检测到已支付，获取完整内容...');
+            try {
+                const resultResponse = await fetch(`https://runzang.top/api/ai/result/${STATE.currentOrderId}`, {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'X-API-Key': 'runzang-payment-security-key-2025-1234567890'
+                    }
+                });
+                
+                if (resultResponse.ok) {
+                    const resultData = await resultResponse.json();
+                    if (resultData.success && resultData.data && resultData.data.content) {
+                        contentToDisplay = resultData.data.content;
+                        STATE.fullAnalysisResult = contentToDisplay;
+                        STATE.isPaymentUnlocked = true;
+                        console.log('✅ 已获取完整内容');
+                    }
+                }
+            } catch (error) {
+                console.error('获取完整内容失败:', error);
+                // 继续使用部分内容
+            }
+        }
         
         // 提取八字数据
-        const parsedBaziData = parseBaziData(analysisResult);
+        const parsedBaziData = parseBaziData(contentToDisplay);
         STATE.baziData = parsedBaziData.userBazi;
         
         // 显示结果
         displayBaziPan();
-        processAndDisplayAnalysis(analysisResult);
+        await processAndDisplayAnalysis(contentToDisplay);
         
         // 隐藏加载弹窗
         hideLoadingModal();
         
-        console.log('传统API分析完成，总字数:', analysisResult.length);
+        console.log('服务器接口分析完成，总字数:', contentToDisplay.length);
         
-        // 检查支付状态
-        const paymentData = PaymentManager.getPaymentData();
-        if (paymentData && paymentData.verified) {
-            const savedService = localStorage.getItem('last_analysis_service');
-            if (savedService === STATE.currentService && !STATE.isPaymentUnlocked) {
-                console.log('当前服务已支付，自动解锁');
-                setTimeout(() => {
-                    PaymentManager.updateUIAfterPayment();
-                }, 500);
-            }
+        // 如果已支付，更新UI
+        if (STATE.isPaymentUnlocked) {
+            console.log('当前服务已支付，自动解锁');
+            setTimeout(() => {
+                PaymentManager.updateUIAfterPayment();
+            }, 500);
         }
         
     } catch (error) {

@@ -112,12 +112,12 @@ export function setDefaultValues() {
     // 用户默认值
     UI.name().value = '张三';
     UI.gender().value = 'male';
-    UI.birthCity().value = '北京';
+    UI.birthCity().value = '';
     UI.birthYear().value = 1990;
     UI.birthMonth().value = 1;
     UI.birthDay().value = 1;
-    UI.birthHour().value = 12;
-    UI.birthMinute().value = 0;
+    UI.birthHour().value = '';
+    UI.birthMinute().value = '';
     
     // 伴侣默认值
     UI.partnerName().value = '李四';
@@ -587,7 +587,7 @@ function createDayunSection() {
 // ============ 【优化报告内容字体和付费解锁逻辑】 ============
 
 // 处理并显示分析结果 - 优化字体和布局（支持免费/付费分割）
-export function processAndDisplayAnalysis(result) {
+export async function processAndDisplayAnalysis(result) {
     console.log('处理分析结果...');
     
     const freeAnalysisText = UI.freeAnalysisText();
@@ -598,6 +598,33 @@ export function processAndDisplayAnalysis(result) {
     // 清空内容
     freeAnalysisText.innerHTML = '';
     lockedAnalysisText.innerHTML = '';
+    
+    // 如果已支付且有订单ID，从结果API获取完整内容
+    let contentToDisplay = result;
+    if (STATE.isPaymentUnlocked && STATE.currentOrderId) {
+        try {
+            console.log('🔗 已支付，获取完整内容，订单ID:', STATE.currentOrderId);
+            const resultResponse = await fetch(`https://runzang.top/api/ai/result/${STATE.currentOrderId}`, {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'X-API-Key': 'runzang-payment-security-key-2025-1234567890'
+                }
+            });
+            
+            if (resultResponse.ok) {
+                const resultData = await resultResponse.json();
+                if (resultData.success && resultData.data && resultData.data.content) {
+                    contentToDisplay = resultData.data.content;
+                    STATE.fullAnalysisResult = contentToDisplay;
+                    console.log('✅ 已获取完整内容');
+                }
+            }
+        } catch (error) {
+            console.error('获取完整内容失败:', error);
+            // 继续使用部分内容
+        }
+    }
     
     // 定义免费部分（根据你的服务配置）
     const freeSections = [
@@ -617,7 +644,7 @@ export function processAndDisplayAnalysis(result) {
     }
     
     // 按【分割内容
-    const sections = result.split('【');
+    const sections = contentToDisplay.split('【');
     
     let freeContent = '';
     let lockedContent = '';
@@ -738,13 +765,18 @@ export async function showPaymentModal() {
         }
         
         // 3. 调用后端支付接口
-        const frontendOrderId = 'RUNZ-FRONT-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
+        // 使用从AI查询接口返回的订单ID
+        if (!STATE.currentOrderId) {
+            alert('请先进行命理分析，获取订单号后再支付');
+            closePaymentModal();
+            return;
+        }
 
-        console.log('🔗 调用支付API: http://runzang.top/api/payment/create');
+        console.log('🔗 调用支付API: https://runzang.top/api/payment/create');
         console.log('请求数据:', {
             serviceType: STATE.currentService,
             amount: parseFloat(serviceConfig.price).toFixed(2),
-            frontendOrderId: frontendOrderId,
+            frontendOrderId: STATE.currentOrderId,
             paymentMethod: selectedMethod
         });
 
@@ -758,7 +790,7 @@ export async function showPaymentModal() {
             body: JSON.stringify({
                 serviceType: STATE.currentService,
                 amount: parseFloat(serviceConfig.price).toFixed(2),
-                frontendOrderId: frontendOrderId,
+                frontendOrderId: STATE.currentOrderId,
                 paymentMethod: selectedMethod
             })
         });
@@ -1251,9 +1283,8 @@ export function validateForm() {
     if (!validateField('birth-year', 'birth-year-error')) isValid = false;
     if (!validateField('birth-month', 'birth-month-error')) isValid = false;
     if (!validateField('birth-day', 'birth-day-error')) isValid = false;
-    if (!validateField('birth-hour', 'birth-hour-error')) isValid = false;
-    if (!validateField('birth-minute', 'birth-minute-error')) isValid = false;
-    if (!validateField('birth-city', 'birth-city-error')) isValid = false;
+    // 出生时辰和出生分钟改为非必填字段，不再验证
+    // 出生城市改为非必填字段，不再验证
     
     // 如果是八字合婚，验证伴侣信息
     if (STATE.currentService === '八字合婚') {
