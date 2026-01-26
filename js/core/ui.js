@@ -1226,18 +1226,6 @@ export function updateUnlockInterface() {
     }
 }
 
-// 显示完整分析内容
-export function showFullAnalysisContent() {
-    const lockedAnalysisText = UI.lockedAnalysisText();
-    const freeAnalysisText = UI.freeAnalysisText();
-    
-    if (lockedAnalysisText && lockedAnalysisText.textContent.trim() && freeAnalysisText) {
-        // 将锁定内容添加到免费内容中
-        const currentContent = freeAnalysisText.innerHTML;
-        freeAnalysisText.innerHTML = currentContent + lockedAnalysisText.innerHTML;
-    }
-}
-
 // 锁定下载按钮
 export function lockDownloadButton() {
     const downloadBtn = UI.downloadReportBtn();
@@ -1607,6 +1595,7 @@ export function displayDayunPan() {
         console.log('分析结果中没有找到大运排盘信息');
     }
 }
+
 
 
 
