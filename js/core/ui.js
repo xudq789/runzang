@@ -824,7 +824,7 @@ function highlightKeywords(text) {
     return highlightedText;
 }
 
-// 显示完整分析内容 - 优化版
+// 显示完整分析内容 - ✅ 优化版
 export function showFullAnalysisContent() {
     const lockedAnalysisText = UI.lockedAnalysisText();
     const freeAnalysisText = UI.freeAnalysisText();
@@ -844,10 +844,20 @@ export function showFullAnalysisContent() {
             
             // 触发动画
             setTimeout(() => {
-                const newSections = freeAnalysisText.querySelectorAll('.locked-section');
+                const newSections = freeAnalysisText.querySelectorAll('.locked-section, .analysis-section:not(.free-section)');
                 newSections.forEach((section, index) => {
                     section.style.animationDelay = `${index * 0.1}s`;
                     section.classList.add('animated');
+                    // 添加悬停效果
+                    section.style.cursor = 'pointer';
+                    section.onmouseover = function() {
+                        this.style.transform = 'translateY(-3px)';
+                        this.style.boxShadow = '0 8px 20px rgba(0,0,0,0.08)';
+                    };
+                    section.onmouseout = function() {
+                        this.style.transform = 'translateY(0)';
+                        this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
+                    };
                 });
             }, 100);
         }, 300);
@@ -1597,5 +1607,6 @@ export function displayDayunPan() {
         console.log('分析结果中没有找到大运排盘信息');
     }
 }
+
 
 
