@@ -487,25 +487,213 @@ const StreamingAnalysisManager = {
         }
     },
     
-    // 处理流式数据块
-    processStreamChunk(content) {
-        // 累积完整内容
-        this.fullContent += content;
+    // 找到processStreamChunk方法，修改为：
+processStreamChunk(content) {
+    // 累积完整内容
+    this.fullContent += content;
+    
+    // 检测八字排盘数据
+    this.detectAndUpdateBazi(content);
+    
+    // 检测是否到达免费部分结束
+    if (!this.isFreeContentComplete()) {
+        this.freeContent += content;
         
-        // 检测八字排盘数据
-        this.detectAndUpdateBazi(content);
+        // 使用防抖更新免费内容显示
+        clearTimeout(this.updateTimer);
+        this.updateTimer = setTimeout(() => {
+            // 使用优化的格式化函数
+            this.updateFreeContentDisplayOptimized();
+        }, 150); // 稍微增加防抖时间，减少闪烁
+    }
+},
+
+// 新增优化版免费内容显示函数
+updateFreeContentDisplayOptimized() {
+    const freeAnalysisText = UI.freeAnalysisText();
+    if (!freeAnalysisText) return;
+    
+    try {
+        // 格式化免费内容
+        const formattedContent = this.formatFreeContentOptimized(this.freeContent);
         
-        // 检测是否到达免费部分结束
-        if (!this.isFreeContentComplete()) {
-            this.freeContent += content;
+        // 使用requestAnimationFrame确保平滑更新
+        requestAnimationFrame(() => {
+            // 检查是否需要渐变更新
+            if (freeAnalysisText.children.length > 0) {
+                // 逐步更新，避免全部重绘
+                this.updateContentIncrementally(formattedContent);
+            } else {
+                // 第一次显示，直接设置
+                freeAnalysisText.innerHTML = formattedContent;
+            }
+        });
+        
+    } catch (error) {
+        console.error('更新免费内容显示失败:', error);
+    }
+},
+
+// 新增：优化版免费内容格式化
+formatFreeContentOptimized(content) {
+    const freeSections = [
+        '【八字排盘】',
+        '【大运排盘】',
+        '【八字喜用分析】',
+        '【性格特点】',
+        '【适宜行业职业推荐】'
+    ];
+    
+    let formattedContent = '';
+    
+    for (const section of freeSections) {
+        const startIndex = content.indexOf(section);
+        if (startIndex !== -1) {
+            // 找到下一个【或结束
+            let endIndex = content.indexOf('【', startIndex + 1);
+            if (endIndex === -1) endIndex = content.length;
             
-            // 使用防抖更新免费内容显示，减少闪烁
-            clearTimeout(this.updateTimer);
-            this.updateTimer = setTimeout(() => {
-                this.updateFreeContentDisplay();
-            }, 100); // 100ms防抖
+            const sectionContent = content.substring(startIndex, endIndex);
+            const titleMatch = sectionContent.match(/【([^】]+)】/);
+            
+            if (titleMatch) {
+                const title = titleMatch[1];
+                const contentText = sectionContent.replace(titleMatch[0], '').trim();
+                
+                // 八字排盘和大运排盘已单独显示，跳过
+                if (title.includes('八字排盘') || title.includes('大运排盘')) continue;
+                
+                // 使用新的格式化函数
+                const formattedText = this.formatSectionText(contentText);
+                
+                formattedContent += `
+                <div class="analysis-section free-section">
+                    <h5>${title}</h5>
+                    <div class="analysis-content">
+                        ${formattedText}
+                    </div>
+                </div>`;
+            }
         }
-    },
+    }
+    
+    return formattedContent;
+},
+
+// 新增：格式化段落文本
+formatSectionText(text) {
+    if (!text) return '';
+    
+    // 分割成段落
+    const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim());
+    let formatted = '';
+    
+    paragraphs.forEach((paragraph, index) => {
+        const lines = paragraph.split('\n').filter(line => line.trim());
+        
+        if (lines.length === 1) {
+            formatted += `<p>${lines[0]}</p>`;
+        } else if (this.isListParagraph(lines)) {
+            formatted += '<ul>';
+            lines.forEach(line => {
+                const cleanLine = this.cleanListLine(line);
+                formatted += `<li>${cleanLine}</li>`;
+            });
+            formatted += '</ul>';
+        } else {
+            lines.forEach(line => {
+                if (line.trim()) {
+                    formatted += `<p>${line}</p>`;
+                }
+            });
+        }
+        
+        // 在段落之间添加间隔（除了最后一个）
+        if (index < paragraphs.length - 1) {
+            formatted += '<div style="height: 15px;"></div>';
+        }
+    });
+    
+    return formatted;
+},
+
+// 新增：检查是否是列表段落
+isListParagraph(lines) {
+    if (lines.length < 2) return false;
+    
+    // 检查是否有列表特征
+    const listIndicators = [
+        /^[•·●◦○▪▫►◄►◄▶◀※§¶]/,
+        /^\d+[\.、]/,
+        /^[一二三四五六七八九十]+[、.]/,
+        /^[①②③④⑤⑥⑦⑧⑨⑩]/,
+        /^[⑴⑵⑶⑷⑸⑹⑺⑻⑼⑽]/
+    ];
+    
+    return lines.every(line => 
+        listIndicators.some(indicator => indicator.test(line.trim()))
+    );
+},
+
+// 新增：清理列表行
+cleanListLine(line) {
+    let cleanLine = line.trim();
+    
+    // 移除列表标记
+    const listMarkers = [
+        /^[•·●◦○▪▫►◄►◄▶◀※§¶]\s*/,
+        /^\d+[\.、]\s*/,
+        /^[一二三四五六七八九十]+[、.]\s*/,
+        /^[①②③④⑤⑥⑦⑧⑨⑩]\s*/,
+        /^[⑴⑵⑶⑷⑸⑹⑺⑻⑼⑽]\s*/
+    ];
+    
+    listMarkers.forEach(marker => {
+        cleanLine = cleanLine.replace(marker, '');
+    });
+    
+    return cleanLine;
+},
+
+// 新增：增量更新内容
+updateContentIncrementally(formattedContent) {
+    const freeAnalysisText = UI.freeAnalysisText();
+    if (!freeAnalysisText) return;
+    
+    // 创建临时容器来比较内容
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = formattedContent;
+    
+    const newSections = Array.from(tempDiv.children);
+    const existingSections = Array.from(freeAnalysisText.children);
+    
+    // 比较并更新
+    newSections.forEach((newSection, index) => {
+        if (index < existingSections.length) {
+            // 更新现有部分
+            if (existingSections[index].innerHTML !== newSection.innerHTML) {
+                existingSections[index].style.opacity = '0.8';
+                setTimeout(() => {
+                    existingSections[index].innerHTML = newSection.innerHTML;
+                    existingSections[index].style.opacity = '1';
+                }, 50);
+            }
+        } else {
+            // 添加新部分
+            const clonedSection = newSection.cloneNode(true);
+            clonedSection.style.opacity = '0';
+            clonedSection.style.transform = 'translateY(10px)';
+            freeAnalysisText.appendChild(clonedSection);
+            
+            // 淡入动画
+            setTimeout(() => {
+                clonedSection.style.transition = 'all 0.3s ease';
+                clonedSection.style.opacity = '1';
+                clonedSection.style.transform = 'translateY(0)';
+            }, 50);
+        }
+    });
+},
     
     // 修改后的八字检测和更新函数
     detectAndUpdateBazi(content) {
@@ -1241,3 +1429,4 @@ window.StreamingAnalysisManager = StreamingAnalysisManager;
 
 // ✅ 也导出UI对象（如果需要在其他地方使用）
 window.UI = UI;
+
