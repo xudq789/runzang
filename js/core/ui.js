@@ -1,6 +1,6 @@
-[file name]: ui.js
-[file content begin]
 // UI控制模块
+'use strict';
+
 import { DOM, formatDate, hideElement, showElement, generateOrderId, calculateBazi } from './utils.js';
 import { SERVICES, STATE, PAYMENT_CONFIG } from './config.js';
 
@@ -1450,4 +1450,5 @@ export function displayDayunPan() {
     }
 }
 [file content end]
+
 
