@@ -532,18 +532,6 @@ function formatTitle(title) {
     }
 }
 
-// ============ 【创建分析段落（宋体格式）】 ============
-function createAnalysisSection(title, content) {
-    const sectionTitle = title.replace(/【|】/g, '');
-    
-    return `
-        <div class="report-section">
-            <div class="report-title">${formatTitle(sectionTitle)}</div>
-            <div class="report-content">${formatReportContent(content)}</div>
-        </div>
-    `;
-}
-
 // 导出所有必要的函数
 export {
     UI,
@@ -1267,6 +1255,7 @@ export function displayDayunPan() {
     // 不执行任何操作，因为大运已经在八字排盘中显示
     return;
 }
+
 
 
 
