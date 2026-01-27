@@ -289,18 +289,6 @@ export function displayPredictorInfo() {
 
 // ============ 【辅助函数：五行和十神颜色处理】 ============
 
-// 获取五行颜色
-function getElementColor(element) {
-    const colors = {
-        '金': '<span style="color: #FFD700;">金</span>',
-        '木': '<span style="color: #32CD32;">木</span>',
-        '水': '<span style="color: #1E90FF;">水</span>',
-        '火': '<span style="color: #FF4500;">火</span>',
-        '土': '<span style="color: #8B4513;">土</span>'
-    };
-    return colors[element] || element;
-}
-
 // 获取十神颜色
 function getShishenColor(shishen) {
     const colors = {
@@ -426,7 +414,7 @@ function createDayunCalendar() {
     `;
 }
 
-// ============ 【格式化报告内容】 ============
+// ============ 【格式化报告内容 - 唯一版本】 ============
 function formatReportContent(text) {
     // 只保留十神颜色处理，删除五行颜色处理
     text = text.replace(/喜神/g, '<span class="xiji-element xiji-xi">喜神</span>')
@@ -520,7 +508,7 @@ export function displayBaziPan() {
 
 // ============ 【分析报告格式化函数】 ============
 
-// 格式化标题
+// ============ 【格式化标题】 ============
 function formatTitle(title) {
     // 为不同类型的标题添加不同颜色
     if (title.includes('喜用') || title.includes('喜神') || title.includes('用神')) {
@@ -573,7 +561,7 @@ function formatReportContent(text) {
     `).join('');
 }
 
-// 创建分析段落（宋体格式）
+// ============ 【创建分析段落（宋体格式）】 ============
 function createAnalysisSection(title, content) {
     const sectionTitle = title.replace(/【|】/g, '');
     
@@ -584,6 +572,32 @@ function createAnalysisSection(title, content) {
         </div>
     `;
 }
+
+// 导出所有必要的函数
+export {
+    UI,
+    initFormOptions,
+    setDefaultValues,
+    updateServiceDisplay,
+    updateUnlockInfo,
+    displayPredictorInfo,
+    displayBaziPan,
+    processAndDisplayAnalysis,
+    showPaymentModal,
+    closePaymentModal,
+    updateUnlockInterface,
+    showFullAnalysisContent,
+    lockDownloadButton,
+    unlockDownloadButton,
+    resetUnlockInterface,
+    animateButtonStretch,
+    showLoadingModal,
+    hideLoadingModal,
+    showAnalysisResult,
+    hideAnalysisResult,
+    validateForm,
+    collectUserData
+};
 
 // ============ 【处理并显示分析结果】 ============
 
@@ -1282,5 +1296,6 @@ export function displayDayunPan() {
     // 不执行任何操作，因为大运已经在八字排盘中显示
     return;
 }
+
 
 
