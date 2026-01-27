@@ -1870,3 +1870,342 @@ input:focus, select:focus {
         border: 1px solid #ddd;
     }
 }
+
+/* 报告容器 */
+#free-content, #locked-content {
+    max-width: 800px;  /* 比网页宽度窄 */
+    margin: 0 auto;
+    font-family: 'SimSun', '宋体', 'STSong', serif;
+}
+
+/* 报告区域 */
+.analysis-result-section {
+    font-family: 'SimSun', '宋体', 'STSong', serif;
+}
+
+.result-container {
+    max-width: 850px;  /* 控制报告整体宽度 */
+    margin: 0 auto;
+    background: #fffef7;  /* 浅黄色背景，类似纸张 */
+    border: 1px solid #e8e8e8;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+}
+
+/* 八字大运排盘容器 */
+.bazi-dayun-container {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #d9d9d9;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* 日历格式排盘 */
+.bazi-calendar, .dayun-calendar {
+    margin-bottom: 20px;
+}
+
+.calendar-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.calendar-title {
+    font-size: 20px;  /* 相当于二号字 */
+    color: #8b4513;
+    font-weight: bold;
+    font-family: 'SimSun', '宋体', serif;
+    margin-bottom: 5px;
+}
+
+.calendar-subtitle {
+    font-size: 14px;
+    color: #666;
+    font-family: 'SimSun', '宋体', serif;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.calendar-item {
+    background: #f9f9f9;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    padding: 15px;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.calendar-item:hover {
+    background: #f5f5f5;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.calendar-label {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.calendar-value {
+    font-size: 24px;  /* 大字体显示干支 */
+    font-weight: bold;
+    font-family: 'SimSun', '宋体', serif;
+    margin-bottom: 5px;
+    height: 32px;
+    line-height: 32px;
+}
+
+.calendar-element {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.calendar-footer {
+    text-align: center;
+    padding-top: 15px;
+    border-top: 1px dashed #e8e8e8;
+}
+
+.calendar-note {
+    font-size: 12px;
+    color: #999;
+    font-style: italic;
+}
+
+/* 大运排盘样式 */
+.qiyun-info {
+    background: #f0f8ff;
+    border: 1px solid #d1e9ff;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.qiyun-item {
+    font-size: 15px;
+    color: #333;
+    margin-bottom: 8px;
+    font-family: 'SimSun', '宋体', serif;
+}
+
+.dayun-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 12px;
+}
+
+.dayun-item {
+    background: white;
+    border: 1px solid #e8e8e8;
+    border-radius: 6px;
+    padding: 12px 15px;
+    font-size: 14px;
+    color: #333;
+    font-family: 'SimSun', '宋体', serif;
+    transition: all 0.2s;
+}
+
+.dayun-item:hover {
+    background: #f9f9f9;
+    border-color: #d4af37;
+}
+
+/* 报告段落样式 */
+.report-section {
+    margin-bottom: 30px;
+    padding: 25px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e8e8e8;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    page-break-inside: avoid;  /* 打印时避免分页 */
+}
+
+.report-title {
+    font-size: 20px;  /* 二号字 */
+    font-weight: bold;
+    color: #8b4513;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f0e6d6;
+    font-family: 'SimSun', '宋体', serif;
+    line-height: 1.4;
+}
+
+.report-content {
+    font-size: 16px;  /* 小三号字 */
+    color: #333;  /* 黑色 */
+    line-height: 1.8;
+    text-align: justify;
+    font-family: 'SimSun', '宋体', serif;
+}
+
+.report-paragraph {
+    margin-bottom: 15px;
+    text-indent: 2em;  /* 首行缩进 */
+}
+
+/* 五行颜色样式 */
+.wuxing-element {
+    font-weight: bold;
+    padding: 1px 3px;
+    border-radius: 3px;
+    margin: 0 2px;
+}
+
+.wuxing-jin { color: #FFD700; background-color: rgba(255, 215, 0, 0.1); }  /* 金色 */
+.wuxing-mu { color: #32CD32; background-color: rgba(50, 205, 50, 0.1); }  /* 绿色 */
+.wuxing-shui { color: #1E90FF; background-color: rgba(30, 144, 255, 0.1); }  /* 蓝色 */
+.wuxing-huo { color: #FF4500; background-color: rgba(255, 69, 0, 0.1); }  /* 红色 */
+.wuxing-tu { color: #8B4513; background-color: rgba(139, 69, 19, 0.1); }  /* 棕色 */
+
+/* 喜忌颜色样式 */
+.xiji-element {
+    font-weight: bold;
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin: 0 2px;
+}
+
+.xiji-xi { color: #32CD32; background-color: rgba(50, 205, 50, 0.1); }  /* 喜神绿色 */
+.xiji-yong { color: #1E90FF; background-color: rgba(30, 144, 255, 0.1); }  /* 用神蓝色 */
+.xiji-ji { color: #FF4500; background-color: rgba(255, 69, 0, 0.1); }  /* 忌神红色 */
+.xiji-xiyong { color: #20B2AA; background-color: rgba(32, 178, 170, 0.1); }  /* 喜用青色 */
+
+/* 预测者信息优化 */
+.predictor-info-card {
+    max-width: 800px;
+    margin: 0 auto 25px;
+    background: white;
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+
+.predictor-info-card h4 {
+    font-size: 20px;  /* 二号字 */
+    color: #8b4513;
+    font-family: 'SimSun', '宋体', serif;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f0e6d6;
+}
+
+.predictor-info-grid {
+    font-family: 'SimSun', '宋体', serif;
+}
+
+.predictor-info-item {
+    font-size: 16px;  /* 小三号字 */
+    color: #333;
+    padding: 10px 0;
+    border-bottom: 1px dashed #e8e8e8;
+}
+
+.predictor-info-label {
+    color: #666;
+    font-weight: 500;
+}
+
+.predictor-info-value {
+    color: #333;
+    font-weight: 500;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .result-container {
+        padding: 15px;
+    }
+    
+    .report-section {
+        padding: 20px 15px;
+    }
+    
+    .report-title {
+        font-size: 18px;
+    }
+    
+    .report-content {
+        font-size: 15px;
+        line-height: 1.7;
+    }
+    
+    .calendar-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .dayun-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .bazi-dayun-container {
+        padding: 20px 15px;
+    }
+    
+    .calendar-value {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .report-section {
+        padding: 15px 12px;
+    }
+    
+    .report-title {
+        font-size: 16px;
+    }
+    
+    .report-content {
+        font-size: 14px;
+        line-height: 1.6;
+    }
+    
+    .predictor-info-card {
+        padding: 20px 15px;
+    }
+}
+
+/* 打印样式 */
+@media print {
+    .result-container {
+        box-shadow: none;
+        border: 1px solid #000;
+        max-width: 100%;
+    }
+    
+    .report-section {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        page-break-inside: avoid;
+    }
+    
+    .bazi-dayun-container {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    .report-title {
+        color: #000 !important;
+    }
+    
+    .wuxing-element, .xiji-element {
+        background-color: transparent !important;
+    }
+}
