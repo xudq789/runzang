@@ -586,7 +586,165 @@ function createDayunSection() {
 
 // ============ 【优化报告内容字体和付费解锁逻辑】 ============
 
-// 处理并显示分析结果 - 优化字体和布局（支持免费/付费分割）
+// 创建八字排盘日历格式
+function createBaziCalendar(baziData) {
+    if (!baziData) return '<div style="text-align:center;padding:20px;color:#666;">八字数据加载中...</div>';
+    
+    return `
+        <div class="bazi-calendar">
+            <div class="calendar-header">
+                <div class="calendar-title">📅 八字排盘</div>
+                <div class="calendar-subtitle">生辰八字 • 命理基础</div>
+            </div>
+            <div class="calendar-grid">
+                <div class="calendar-item year-item">
+                    <div class="calendar-label">年柱</div>
+                    <div class="calendar-value" style="color: #8b4513;">${baziData.yearColumn}</div>
+                    <div class="calendar-element" style="color: #8b4513;">${getElementColor(baziData.yearElement)}</div>
+                </div>
+                <div class="calendar-item month-item">
+                    <div class="calendar-label">月柱</div>
+                    <div class="calendar-value" style="color: #d2691e;">${baziData.monthColumn}</div>
+                    <div class="calendar-element" style="color: #d2691e;">${getElementColor(baziData.monthElement)}</div>
+                </div>
+                <div class="calendar-item day-item">
+                    <div class="calendar-label">日柱</div>
+                    <div class="calendar-value" style="color: #a0522d;">${baziData.dayColumn}</div>
+                    <div class="calendar-element" style="color: #a0522d;">${getElementColor(baziData.dayElement)}</div>
+                </div>
+                <div class="calendar-item hour-item">
+                    <div class="calendar-label">时柱</div>
+                    <div class="calendar-value" style="color: #8b4513;">${baziData.hourColumn}</div>
+                    <div class="calendar-element" style="color: #8b4513;">${getElementColor(baziData.hourElement)}</div>
+                </div>
+            </div>
+            <div class="calendar-footer">
+                <div class="calendar-note">※ 排盘基于真太阳时计算</div>
+            </div>
+        </div>
+    `;
+}
+
+// 获取五行颜色
+function getElementColor(element) {
+    const colors = {
+        '金': '<span style="color: #FFD700;">金</span>',
+        '木': '<span style="color: #32CD32;">木</span>',
+        '水': '<span style="color: #1E90FF;">水</span>',
+        '火': '<span style="color: #FF4500;">火</span>',
+        '土': '<span style="color: #8B4513;">土</span>'
+    };
+    return colors[element] || element;
+}
+
+// 创建大运排盘日历格式
+function createDayunCalendar() {
+    let dayunContent = '';
+    if (STATE.fullAnalysisResult && STATE.fullAnalysisResult.includes('【大运排盘】')) {
+        const startIndex = STATE.fullAnalysisResult.indexOf('【大运排盘】');
+        let endIndex = STATE.fullAnalysisResult.indexOf('【', startIndex + 1);
+        if (endIndex === -1) endIndex = STATE.fullAnalysisResult.length;
+        
+        dayunContent = STATE.fullAnalysisResult.substring(startIndex, endIndex);
+    }
+    
+    if (!dayunContent) {
+        return '<div style="text-align:center;padding:20px;color:#666;">大运数据加载中...</div>';
+    }
+    
+    // 解析大运内容
+    const lines = dayunContent.split('\n').filter(line => line.trim());
+    let qiyunInfo = '';
+    let dayunList = '';
+    
+    lines.forEach(line => {
+        const trimmedLine = line.trim();
+        if (trimmedLine.includes('起运岁数') || trimmedLine.includes('起运时间')) {
+            qiyunInfo += `<div class="qiyun-item">${trimmedLine}</div>`;
+        } else if (trimmedLine.includes('第') && trimmedLine.includes('步大运')) {
+            dayunList += `<div class="dayun-item">${trimmedLine}</div>`;
+        }
+    });
+    
+    return `
+        <div class="dayun-calendar">
+            <div class="calendar-header">
+                <div class="calendar-title">📈 大运排盘</div>
+                <div class="calendar-subtitle">命运流转 • 十年一运</div>
+            </div>
+            <div class="qiyun-info">
+                ${qiyunInfo}
+            </div>
+            <div class="dayun-list">
+                ${dayunList}
+            </div>
+            <div class="calendar-footer">
+                <div class="calendar-note">※ 大运推算遵循"男命阳顺阴逆，女命阳逆阴顺"原则</div>
+            </div>
+        </div>
+    `;
+}
+
+// 显示八字排盘结果 - 日历格式
+export function displayBaziPan() {
+    const baziGrid = UI.baziGrid();
+    if (!baziGrid) return;
+    
+    baziGrid.innerHTML = '';
+    
+    // 创建排盘容器
+    const container = document.createElement('div');
+    container.className = 'bazi-dayun-container';
+    container.style.cssText = `
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        padding: 20px;
+        margin-bottom: 25px;
+        border: 1px solid #e8e8e8;
+    `;
+    
+    // 添加标题
+    const titleDiv = document.createElement('div');
+    titleDiv.style.cssText = `
+        text-align: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e8e8e8;
+    `;
+    titleDiv.innerHTML = `
+        <div style="font-size: 24px; color: #8b4513; font-weight: bold; font-family: 'SimSun', '宋体', serif; margin-bottom: 5px;">
+            八字大运排盘
+        </div>
+        <div style="font-size: 14px; color: #666; font-family: 'SimSun', '宋体', serif;">
+            命理根基 • 运势轨迹
+        </div>
+    `;
+    container.appendChild(titleDiv);
+    
+    // 添加八字排盘
+    const baziSection = document.createElement('div');
+    baziSection.innerHTML = createBaziCalendar(STATE.baziData);
+    container.appendChild(baziSection);
+    
+    // 添加分隔线
+    const separator = document.createElement('div');
+    separator.style.cssText = `
+        height: 1px;
+        background: linear-gradient(to right, transparent, #d4af37, transparent);
+        margin: 25px 0;
+    `;
+    container.appendChild(separator);
+    
+    // 添加大运排盘
+    const dayunSection = document.createElement('div');
+    dayunSection.innerHTML = createDayunCalendar();
+    container.appendChild(dayunSection);
+    
+    baziGrid.appendChild(container);
+}
+
+// 处理并显示分析结果 - 宋体格式
 export function processAndDisplayAnalysis(result) {
     console.log('处理分析结果...');
     
@@ -608,13 +766,6 @@ export function processAndDisplayAnalysis(result) {
     
     // 根据当前服务动态调整免费内容
     const serviceConfig = SERVICES[STATE.currentService];
-    if (serviceConfig) {
-        // 对于八字合婚服务，调整免费内容
-        if (STATE.currentService === '八字合婚') {
-            // 八字合婚的免费内容可能不同
-            // 可以根据需要调整
-        }
-    }
     
     // 按【分割内容
     const sections = result.split('【');
@@ -645,7 +796,7 @@ export function processAndDisplayAnalysis(result) {
         freeAnalysisText.innerHTML = freeContent;
     } else {
         freeAnalysisText.innerHTML = `
-            <div style="text-align: center; padding: 40px; color: #666; font-size: 16px;">
+            <div style="text-align: center; padding: 40px; color: #666; font-family: 'SimSun', '宋体', serif; font-size: 16px;">
                 免费分析内容加载中...
             </div>
         `;
@@ -656,27 +807,85 @@ export function processAndDisplayAnalysis(result) {
         lockedAnalysisText.innerHTML = lockedContent;
     }
     
-    console.log('分析结果处理完成，免费部分:', freeContent.length, '字符，付费部分:', lockedContent.length, '字符');
+    console.log('分析结果处理完成');
 }
 
-// 创建分析段落（通用函数）
+// 创建分析段落（宋体格式）
 function createAnalysisSection(title, content) {
     const sectionTitle = title.replace(/【|】/g, '');
     
     return `
-        <div class="analysis-paragraph">
-            <div class="analysis-title">${sectionTitle}</div>
-            <div class="analysis-content">${formatContent(content)}</div>
+        <div class="report-section">
+            <div class="report-title">${formatTitle(sectionTitle)}</div>
+            <div class="report-content">${formatReportContent(content)}</div>
         </div>
     `;
 }
 
-// 格式化内容
-function formatContent(text) {
+// 格式化标题
+function formatTitle(title) {
+    // 为不同类型的标题添加不同颜色
+    if (title.includes('喜用') || title.includes('喜神') || title.includes('用神')) {
+        return `<span style="color: #32CD32;">${title}</span>`;
+    } else if (title.includes('忌神') || title.includes('忌')) {
+        return `<span style="color: #FF4500;">${title}</span>`;
+    } else if (title.includes('性格')) {
+        return `<span style="color: #1E90FF;">${title}</span>`;
+    } else if (title.includes('职业') || title.includes('行业')) {
+        return `<span style="color: #8b4513;">${title}</span>`;
+    } else if (title.includes('富贵') || title.includes('财富')) {
+        return `<span style="color: #FFD700;">${title}</span>`;
+    } else if (title.includes('婚姻') || title.includes('感情')) {
+        return `<span style="color: #FF69B4;">${title}</span>`;
+    } else {
+        return `<span style="color: #8b4513;">${title}</span>`;
+    }
+}
+
+// 格式化报告内容
+function formatReportContent(text) {
+    // 处理五行颜色
+    text = text.replace(/金/g, '<span class="wuxing-element wuxing-jin">金</span>')
+               .replace(/木/g, '<span class="wuxing-element wuxing-mu">木</span>')
+               .replace(/水/g, '<span class="wuxing-element wuxing-shui">水</span>')
+               .replace(/火/g, '<span class="wuxing-element wuxing-huo">火</span>')
+               .replace(/土/g, '<span class="wuxing-element wuxing-tu">土</span>');
+    
+    // 处理喜用神颜色
+    text = text.replace(/喜神/g, '<span class="xiji-element xiji-xi">喜神</span>')
+               .replace(/用神/g, '<span class="xiji-element xiji-yong">用神</span>')
+               .replace(/忌神/g, '<span class="xiji-element xiji-ji">忌神</span>')
+               .replace(/喜用/g, '<span class="xiji-element xiji-xiyong">喜用</span>');
+    
+    // 处理十神颜色
+    const shishenKeywords = ['正官', '七杀', '正印', '偏印', '正财', '偏财', '食神', '伤官', '比肩', '劫财'];
+    shishenKeywords.forEach(keyword => {
+        const color = getShishenColor(keyword);
+        text = text.replace(new RegExp(keyword, 'g'), `<span style="color: ${color};">${keyword}</span>`);
+    });
+    
+    // 处理段落
     const paragraphs = text.split('\n').filter(p => p.trim());
     return paragraphs.map(para => `
-        <p>${para.trim()}</p>
+        <div class="report-paragraph">${para}</div>
     `).join('');
+}
+
+// 获取十神颜色
+function getShishenColor(shishen) {
+    const colors = {
+        '正官': '#4169E1',    // 蓝色
+        '七杀': '#DC143C',    // 深红色
+        '正印': '#32CD32',    // 绿色
+        '偏印': '#20B2AA',    // 浅绿色
+        '正财': '#FFD700',    // 金色
+        '偏财': '#FFA500',    // 橙色
+        '食神': '#9370DB',    // 紫色
+        '伤官': '#FF69B4',    // 粉色
+        '比肩': '#808080',    // 灰色
+        '劫财': '#A9A9A9'     // 深灰色
+    };
+    return colors[shishen] || '#333';
 }
 
 // 显示完整分析内容（支付后调用）
@@ -1297,3 +1506,4 @@ export function collectUserData() {
         };
     }
 }
+
