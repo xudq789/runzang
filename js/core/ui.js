@@ -508,7 +508,7 @@ export function displayBaziPan() {
     baziGrid.appendChild(container);
 }
 
-// ============ 【格式化标题 - 添加底纹颜色】 ============
+// ============ 【分析报告格式化函数】 ============
 
 // 格式化标题（添加底纹颜色）
 function formatTitle(title) {
@@ -567,61 +567,6 @@ function formatReportContent(text) {
     text = text.replace(/喜神/g, '<span class="xiji-element xiji-xi">喜神</span>')
                .replace(/用神/g, '<span class="xiji-element xiji-yong">用神</span>')
                .replace(/忌神/g, '<span class="xiji-element xiji-ji">忌神</span>');
-    
-    // 处理段落
-    const paragraphs = text.split('\n').filter(p => p.trim());
-    return paragraphs.map(para => `
-        <div class="report-paragraph">${para}</div>
-    `).join('');
-}
-
-// ============ 【分析报告格式化函数】 ============
-
-// 格式化标题
-function formatTitle(title) {
-    // 为不同类型的标题添加不同颜色
-    if (title.includes('喜用') || title.includes('喜神') || title.includes('用神')) {
-        return `<span style="color: #32CD32;">${title}</span>`;
-    } else if (title.includes('忌神') || title.includes('忌')) {
-        return `<span style="color: #FF4500;">${title}</span>`;
-    } else if (title.includes('性格')) {
-        return `<span style="color: #1E90FF;">${title}</span>`;
-    } else if (title.includes('职业') || title.includes('行业')) {
-        return `<span style="color: #8b4513;">${title}</span>`;
-    } else if (title.includes('富贵') || title.includes('财富')) {
-        return `<span style="color: #FFD700;">${title}</span>`;
-    } else if (title.includes('婚姻') || title.includes('感情')) {
-        return `<span style="color: #FF69B4;">${title}</span>`;
-    } else if (title.includes('事业') || title.includes('财运')) {
-        return `<span style="color: #FFA500;">${title}</span>`;
-    } else if (title.includes('健康')) {
-        return `<span style="color: #32CD32;">${title}</span>`;
-    } else {
-        return `<span style="color: #8b4513;">${title}</span>`;
-    }
-}
-
-// 格式化报告内容
-function formatReportContent(text) {
-    // 处理五行颜色
-    text = text.replace(/金/g, '<span class="wuxing-element wuxing-jin">金</span>')
-               .replace(/木/g, '<span class="wuxing-element wuxing-mu">木</span>')
-               .replace(/水/g, '<span class="wuxing-element wuxing-shui">水</span>')
-               .replace(/火/g, '<span class="wuxing-element wuxing-huo">火</span>')
-               .replace(/土/g, '<span class="wuxing-element wuxing-tu">土</span>');
-    
-    // 处理喜用神颜色
-    text = text.replace(/喜神/g, '<span class="xiji-element xiji-xi">喜神</span>')
-               .replace(/用神/g, '<span class="xiji-element xiji-yong">用神</span>')
-               .replace(/忌神/g, '<span class="xiji-element xiji-ji">忌神</span>')
-               .replace(/喜用/g, '<span class="xiji-element xiji-xiyong">喜用</span>');
-    
-    // 处理十神颜色
-    const shishenKeywords = ['正官', '七杀', '正印', '偏印', '正财', '偏财', '食神', '伤官', '比肩', '劫财'];
-    shishenKeywords.forEach(keyword => {
-        const color = getShishenColor(keyword);
-        text = text.replace(new RegExp(keyword, 'g'), `<span style="color: ${color};">${keyword}</span>`);
-    });
     
     // 处理段落
     const paragraphs = text.split('\n').filter(p => p.trim());
@@ -1339,4 +1284,5 @@ export function displayDayunPan() {
     // 不执行任何操作，因为大运已经在八字排盘中显示
     return;
 }
+
 
