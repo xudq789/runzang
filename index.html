@@ -11,10 +11,6 @@
 <body>
     <!-- 新增 H1 标题（隐藏显示，仅用于SEO） -->
     <h1 style="display: none;">润藏八字命理分析平台</h1>
-    
-    <!-- API状态指示器 -->
-    <div id="api-status" class="api-status">API状态</div>
-    
     <!-- 免责声明滚动条 -->
     <div class="disclaimer-bar">
         <div class="disclaimer-wrapper">
@@ -326,7 +322,7 @@
         <div style="margin-top: 20px; padding: 10px; background-color: #fff8e1; border-radius: 6px; font-size: 12px; color: #7d6e63; text-align: left;">
             <p style="margin: 5px 0;"><strong>安全提示：</strong></p>
             <ul style="margin: 5px 0; padding-left: 20px;">
-                <li>支付过程由支付宝官方安全系统保障</li>
+                <li>支付过程由官方安全系统保障</li>
                 <li>本平台不存储您的支付密码等敏感信息</li>
                 <li>支付成功后请及时下载报告，关闭页面后无法找回</li>
                 <li>如有问题，请联系客服微信：runzang888</li>
@@ -340,18 +336,9 @@
         <div class="modal-content" style="text-align: center; padding: 40px 25px;">
             <div class="spinner"></div>
             <div class="loading-text">润藏八字正在为您进行深度命理分析，请稍候...</div>
-            <p style="color: #7d6e63; margin-top: 15px; font-size: 14px;">大约需要3分钟，不要关闭</p>
+            <p style="color: #7d6e63; margin-top: 15px; font-size: 14px;">大约需要1-2分钟，不要关闭</p>
         </div>
     </div>
-
-    <!-- 全局配置（敏感信息） -->
-    <script>
-        // 全局配置 - 真实API密钥
-        window.APP_CONFIG = {
-            DEEPSEEK_API_KEY: 'sk-0c763bf4e169413dbd57a45e8ca73a6a',
-            DEEPSEEK_API_URL: 'https://api.deepseek.com/v1/chat/completions'
-        };
-    </script>
 
     <script>
 // 应急解锁按钮
@@ -457,4 +444,5 @@ window.addEventListener('load', checkEmergency);
     <script src="js/core/main.js" type="module"></script>
 </body>
 </html>
+
 

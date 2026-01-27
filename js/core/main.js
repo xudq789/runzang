@@ -403,7 +403,7 @@ function checkPaymentSuccessFromURL() {
 
 // ============ 【导入核心模块】 ============
 import { SERVICES, STATE } from './config.js';
-import { checkAPIStatus, parseBaziData, callDeepSeekAPI } from './api.js';
+import { parseBaziData } from './api.js';
 import {
     UI,
     initFormOptions,
@@ -506,14 +506,55 @@ async function initApp() {
         updateUnlockInfo();
         lockDownloadButton();
         setupEventListeners();
-        STATE.apiStatus = await checkAPIStatus();
         preloadImages();
+        
+        // 初始化字体优化
+        initFontOptimization();
         
         console.log('✅ 应用初始化完成');
         
     } catch (error) {
         console.error('❌ 应用初始化失败:', error);
     }
+}
+
+// ============ 【字体优化初始化】 ============
+function initFontOptimization() {
+    // 检测设备类型并应用优化
+    const isMobile = /mobile|iphone|android/i.test(navigator.userAgent.toLowerCase());
+    
+    if (isMobile) {
+        // 移动端：动态调整字体大小
+        adjustMobileFontSizes();
+        
+        // 监听窗口大小变化
+        window.addEventListener('resize', adjustMobileFontSizes);
+        
+        console.log('📱 移动端字体优化已启用');
+    } else {
+        console.log('💻 电脑端保持原字体大小');
+    }
+}
+
+function adjustMobileFontSizes() {
+    const viewportWidth = window.innerWidth;
+    
+    // 根据屏幕宽度动态调整字体
+    if (viewportWidth <= 480) {
+        // 小屏幕手机
+        applyFontScale(0.95);
+    } else if (viewportWidth <= 768) {
+        // 平板或大屏手机
+        applyFontScale(1.0);
+    } else {
+        // 电脑端
+        applyFontScale(1.0);
+    }
+}
+
+function applyFontScale(scale) {
+    // 这里可以添加动态字体调整逻辑
+    // 目前已经在CSS中做了响应式处理
 }
 
 function setupEventListeners() {
@@ -634,14 +675,9 @@ function preloadImages() {
     });
 }
 
-// ============ 【核心修改：传统分析函数（删除流式输出）】 ============
+// ============ 【核心修改：传统分析函数】 ============
 async function startAnalysis() {
     console.log('开始命理分析...');
-    
-    if (STATE.apiStatus !== 'online') {
-        alert('⚠️ API连接异常，请稍后再试或检查网络连接。');
-        return;
-    }
     
     if (!validateForm()) {
         alert('请填写完整的个人信息');
@@ -838,8 +874,10 @@ async function startAnalysis() {
         const parsedBaziData = parseBaziData(contentToDisplay);
         STATE.baziData = parsedBaziData.userBazi;
         
-        // 显示结果
-        displayBaziPan();
+        // 显示结果 - 使用新的日历和表格样式
+        displayBaziPan();  // 这个函数已经更新为显示日历和表格格式
+        
+        // 处理并显示分析内容
         await processAndDisplayAnalysis(contentToDisplay);
         
         // 隐藏加载弹窗
@@ -847,17 +885,39 @@ async function startAnalysis() {
         
         console.log('服务器接口分析完成，总字数:', contentToDisplay.length);
         
-        // 如果已支付，更新UI
-        if (STATE.isPaymentUnlocked) {
-            console.log('当前服务已支付，自动解锁');
+        // 滚动到结果区域
+        const analysisResultSection = UI.analysisResultSection();
+        if (analysisResultSection) {
             setTimeout(() => {
-                PaymentManager.updateUIAfterPayment();
-            }, 500);
+                analysisResultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 300);
+        }
+        
+        // 检查支付状态
+        if (paymentData && paymentData.verified) {
+            const savedService = localStorage.getItem('last_analysis_service');
+            if (savedService === STATE.currentService && !STATE.isPaymentUnlocked) {
+                console.log('当前服务已支付，自动解锁');
+                setTimeout(() => {
+                    PaymentManager.updateUIAfterPayment();
+                }, 500);
+            }
         }
         
     } catch (error) {
         console.error('分析失败:', error);
         hideLoadingModal();
+        
+        // 在八字区域显示错误信息
+        const baziGrid = UI.baziGrid();
+        if (baziGrid) {
+            baziGrid.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #dc3545; font-size: 16px;">
+                    <div style="margin-bottom: 10px;">❌ 分析失败</div>
+                    <div style="color: #666; font-size: 14px;">${error.message}</div>
+                </div>
+            `;
+        }
         
         let errorMessage = '命理分析失败，请稍后再试。';
         if (error.message.includes('401')) {
@@ -871,6 +931,24 @@ async function startAnalysis() {
         alert(errorMessage + '\n\n错误详情：' + error.message);
     }
 }
+
+// ============ 【页面初始化】 ============
+window.addEventListener('DOMContentLoaded', initApp);
+
+// 导出给全局使用
+window.switchService = switchService;
+window.startAnalysis = startAnalysis;
+window.showPaymentModal = showPaymentModal;
+window.closePaymentModal = closePaymentModal;
+window.confirmPayment = confirmPayment;
+window.downloadReport = downloadReport;
+window.newAnalysis = newAnalysis;
+window.handlePaymentSuccess = handlePaymentSuccess;
+
+// ✅ 导出对象
+window.PaymentManager = PaymentManager;
+window.STATE = STATE;
+window.UI = UI;
 
 function downloadReport() {
     console.log('📥 尝试下载报告...');
@@ -992,4 +1070,5 @@ if (typeof STATE !== 'undefined') {
 
 // ✅ 也导出UI对象（如果需要在其他地方使用）
 window.UI = UI;
+
 
