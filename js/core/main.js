@@ -366,19 +366,15 @@ function checkPaymentSuccessFromURL() {
         const paymentSuccess = urlParams.get('payment_success');
         const from = urlParams.get('from');
         
-        // 只处理支付宝的回调
         if (paymentSuccess === 'true' && from === 'alipay') {
             console.log('✅ 检测到支付宝支付成功回调');
             
-            // 获取订单号（支付宝回调可能会带 out_trade_no）
             const orderId = urlParams.get('out_trade_no') || 
-                            urlParams.get('order_id') || 
-                            localStorage.getItem('paid_order_id');
+                           urlParams.get('order_id') || 
+                           localStorage.getItem('paid_order_id');
             
             if (orderId) {
                 console.log('订单ID:', orderId);
-                
-                // 保存到localStorage
                 localStorage.setItem('paid_order_id', orderId);
                 
                 // 清理URL参数
@@ -389,6 +385,13 @@ function checkPaymentSuccessFromURL() {
                 } catch (e) {
                     console.log('URL清理失败:', e);
                 }
+                
+                // 立即触发解锁
+                setTimeout(() => {
+                    if (window.PaymentManager && window.PaymentManager.unlockContent) {
+                        window.PaymentManager.unlockContent(orderId);
+                    }
+                }, 1000);
                 
                 return orderId;
             }
@@ -492,12 +495,17 @@ async function initApp() {
     console.log('🚀 应用初始化开始...');
     
     try {
+        // 检查URL支付回调
         const urlOrderId = checkPaymentSuccessFromURL();
         if (urlOrderId) {
             console.log('✅ 检测到URL支付回调，订单ID:', urlOrderId);
         }
         
+        // 初始化支付检查
         await PaymentManager.initPaymentCheck();
+        
+        // 确保CSS样式已加载
+        loadReportStyles();
         
         console.log('3. 常规初始化...');
         initFormOptions();
@@ -513,6 +521,20 @@ async function initApp() {
         
     } catch (error) {
         console.error('❌ 应用初始化失败:', error);
+    }
+}
+
+// 添加样式加载函数
+function loadReportStyles() {
+    // 确保报告相关的CSS已加载
+    const existingStyle = document.getElementById('report-styles');
+    if (!existingStyle) {
+        const style = document.createElement('link');
+        style.id = 'report-styles';
+        style.rel = 'stylesheet';
+        style.href = 'css/styles.css';
+        document.head.appendChild(style);
+        console.log('✅ 报告样式已加载');
     }
 }
 
@@ -875,4 +897,5 @@ if (typeof STATE !== 'undefined') {
 
 // ✅ 也导出UI对象（如果需要在其他地方使用）
 window.UI = UI;
+
 
