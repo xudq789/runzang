@@ -289,26 +289,38 @@ export function displayPredictorInfo() {
 
 // ============ 【八字排盘日历格式】 ============
 
-// 创建八字排盘日历格式（添加十神标注颜色）
+// 创建八字排盘日历格式
 function createBaziCalendar(baziData) {
-    if (!baziData) return '<div style="text-align:center;padding:40px;color:#666;font-family:\'SimSun\',\'宋体\',serif;font-size:16px;">八字数据加载中...</div>';
+    console.log('创建八字排盘，数据:', baziData);
+    
+    if (!baziData || !baziData.yearColumn) {
+        return `
+            <div class="calendar-placeholder">
+                <div style="text-align:center;">
+                    <div style="font-size:40px;margin-bottom:15px;color:#d4b483;">⏳</div>
+                    <div style="font-size:18px;color:#7d6e63;margin-bottom:10px;">八字排盘数据加载中...</div>
+                    <div style="font-size:14px;color:#999;">正在计算天干地支，请稍候</div>
+                </div>
+            </div>
+        `;
+    }
     
     // 十神颜色映射
     const shishenColors = {
-        '比肩': '#2e7d32',     // 深绿
-        '劫财': '#558b2f',     // 绿
-        '食神': '#1565c0',     // 深蓝
-        '伤官': '#0277bd',     // 蓝
-        '偏财': '#ef6c00',     // 橙
-        '正财': '#f57f17',     // 浅橙
-        '七杀': '#c62828',     // 深红
-        '正官': '#d32f2f',     // 红
-        '偏印': '#5d4037',     // 深棕
-        '正印': '#8d6e63',     // 棕
-        '日主': '#6a1b9a'      // 紫
+        '比肩': '#2e7d32',
+        '劫财': '#558b2f',
+        '食神': '#1565c0',
+        '伤官': '#0277bd',
+        '偏财': '#ef6c00',
+        '正财': '#f57f17',
+        '七杀': '#c62828',
+        '正官': '#d32f2f',
+        '偏印': '#5d4037',
+        '正印': '#8d6e63',
+        '日主': '#6a1b9a'
     };
     
-    // 十神检测函数
+    // 获取十神颜色
     function getShishenColor(text) {
         if (!text) return '#333';
         for (const [key, color] of Object.entries(shishenColors)) {
@@ -319,34 +331,11 @@ function createBaziCalendar(baziData) {
         return '#666';
     }
     
-    // 格式化十神显示（添加颜色标签）
-    function formatShishen(text) {
-        if (!text) return '';
-        
-        let formatted = text;
-        for (const [key, color] of Object.entries(shishenColors)) {
-            if (text.includes(key)) {
-                const className = key === '比肩' ? 'shishen-bijian' :
-                                key === '劫财' ? 'shishen-jiecai' :
-                                key === '食神' ? 'shishen-shishen' :
-                                key === '伤官' ? 'shishen-shangguan' :
-                                key === '偏财' ? 'shishen-piancai' :
-                                key === '正财' ? 'shishen-zhengcai' :
-                                key === '七杀' ? 'shishen-qisha' :
-                                key === '正官' ? 'shishen-zhengguan' :
-                                key === '偏印' ? 'shishen-pianyin' :
-                                key === '正印' ? 'shishen-zhengyin' :
-                                key === '日主' ? 'shishen-rizhu' : '';
-                
-                if (className) {
-                    const regex = new RegExp(`(${key})`, 'g');
-                    formatted = formatted.replace(regex, 
-                        `<span class="${className}">$1</span>`);
-                }
-            }
-        }
-        return formatted;
-    }
+    // 确保有元素数据
+    const yearElement = baziData.yearElement || '';
+    const monthElement = baziData.monthElement || '';
+    const dayElement = baziData.dayElement || '';
+    const hourElement = baziData.hourElement || '';
     
     return `
         <div class="bazi-calendar">
@@ -357,46 +346,38 @@ function createBaziCalendar(baziData) {
             <div class="calendar-grid">
                 <div class="calendar-item year-item">
                     <div class="calendar-label">年柱</div>
-                    <div class="calendar-value" style="color:${getShishenColor(baziData.yearColumn)};">
+                    <div class="calendar-value" style="color:${getShishenColor(yearElement)};">
                         ${baziData.yearColumn}
                     </div>
-                    <div class="calendar-element">
-                        ${formatShishen(baziData.yearElement || '')}
-                    </div>
+                    <div class="calendar-element">${yearElement}</div>
                 </div>
                 <div class="calendar-item month-item">
                     <div class="calendar-label">月柱</div>
-                    <div class="calendar-value" style="color:${getShishenColor(baziData.monthColumn)};">
+                    <div class="calendar-value" style="color:${getShishenColor(monthElement)};">
                         ${baziData.monthColumn}
                     </div>
-                    <div class="calendar-element">
-                        ${formatShishen(baziData.monthElement || '')}
-                    </div>
+                    <div class="calendar-element">${monthElement}</div>
                 </div>
                 <div class="calendar-item day-item">
                     <div class="calendar-label">日柱</div>
-                    <div class="calendar-value" style="color:${getShishenColor(baziData.dayColumn)};">
+                    <div class="calendar-value" style="color:${getShishenColor(dayElement)};">
                         ${baziData.dayColumn}
                     </div>
-                    <div class="calendar-element">
-                        ${formatShishen(baziData.dayElement || '')}
-                    </div>
+                    <div class="calendar-element">${dayElement}</div>
                 </div>
                 <div class="calendar-item hour-item">
                     <div class="calendar-label">时柱</div>
-                    <div class="calendar-value" style="color:${getShishenColor(baziData.hourColumn)};">
+                    <div class="calendar-value" style="color:${getShishenColor(hourElement)};">
                         ${baziData.hourColumn}
                     </div>
-                    <div class="calendar-element">
-                        ${formatShishen(baziData.hourElement || '')}
-                    </div>
+                    <div class="calendar-element">${hourElement}</div>
                 </div>
             </div>
             <div class="calendar-footer">
-                <div class="calendar-note">※ 排盘基于真太阳时计算 • 十神标注已添加颜色</div>
-                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:15px; justify-content:center;">
+                <div class="calendar-note">※ 基于真太阳时计算 • 十神颜色标注</div>
+                <div class="shishen-legend">
                     ${Object.entries(shishenColors).map(([name, color]) => `
-                        <span style="font-size:12px; color:${color}; padding:4px 8px; background:white; border:1px solid ${color}40; border-radius:4px; font-weight:bold;">
+                        <span class="legend-item" style="color:${color};border-color:${color}40;">
                             ${name}
                         </span>
                     `).join('')}
@@ -406,8 +387,10 @@ function createBaziCalendar(baziData) {
     `;
 }
 
-// 更新 createDayunCalendar 函数
+// 创建大运排盘日历格式
 function createDayunCalendar() {
+    console.log('创建大运排盘，原始数据长度:', STATE.fullAnalysisResult?.length);
+    
     let dayunContent = '';
     if (STATE.fullAnalysisResult && STATE.fullAnalysisResult.includes('【大运排盘】')) {
         const startIndex = STATE.fullAnalysisResult.indexOf('【大运排盘】');
@@ -415,23 +398,32 @@ function createDayunCalendar() {
         if (endIndex === -1) endIndex = STATE.fullAnalysisResult.length;
         
         dayunContent = STATE.fullAnalysisResult.substring(startIndex, endIndex);
+        console.log('提取的大运内容长度:', dayunContent.length);
     }
     
     if (!dayunContent) {
-        return '<div class="calendar-placeholder">大运数据加载中...</div>';
+        return `
+            <div class="calendar-placeholder">
+                <div style="text-align:center;">
+                    <div style="font-size:40px;margin-bottom:15px;color:#4dabf5;">📊</div>
+                    <div style="font-size:18px;color:#7d6e63;margin-bottom:10px;">大运排盘数据加载中...</div>
+                    <div style="font-size:14px;color:#999;">正在推算十年运势，请稍候</div>
+                </div>
+            </div>
+        `;
     }
     
     // 解析大运内容
     const lines = dayunContent.split('\n').filter(line => line.trim());
-    let qiyunInfo = '';
-    let dayunList = '';
+    let qiyunInfo = [];
+    let dayunList = [];
     
     lines.forEach(line => {
         const trimmedLine = line.trim();
         if (trimmedLine.includes('起运岁数') || trimmedLine.includes('起运时间')) {
-            qiyunInfo += `<div class="qiyun-item">${trimmedLine}</div>`;
+            qiyunInfo.push(trimmedLine);
         } else if (trimmedLine.includes('第') && trimmedLine.includes('步大运')) {
-            dayunList += `<div class="dayun-item">${trimmedLine}</div>`;
+            dayunList.push(trimmedLine);
         }
     });
     
@@ -441,14 +433,19 @@ function createDayunCalendar() {
                 <div class="calendar-title">📈 大运排盘</div>
                 <div class="calendar-subtitle">命运流转 • 十年一运</div>
             </div>
-            <div class="qiyun-info">
-                ${qiyunInfo || '<div class="calendar-placeholder">起运信息加载中...</div>'}
-            </div>
+            ${qiyunInfo.length > 0 ? `
+                <div class="qiyun-info">
+                    ${qiyunInfo.map(item => `<div class="qiyun-item">${item}</div>`).join('')}
+                </div>
+            ` : ''}
             <div class="dayun-list">
-                ${dayunList || '<div class="calendar-placeholder">大运信息加载中...</div>'}
+                ${dayunList.length > 0 ? 
+                    dayunList.map(item => `<div class="dayun-item">${item}</div>`).join('') : 
+                    '<div class="calendar-placeholder">大运信息加载中...</div>'
+                }
             </div>
             <div class="calendar-footer">
-                <div class="calendar-note">※ 大运推算遵循"男命阳顺阴逆，女命阳逆阴顺"原则</div>
+                <div class="calendar-note">※ 每十年为一步大运，推算人生运势起伏</div>
             </div>
         </div>
     `;
@@ -1281,6 +1278,7 @@ export function displayDayunPan() {
     // 不执行任何操作，因为大运已经在八字排盘中显示
     return;
 }
+
 
 
 
