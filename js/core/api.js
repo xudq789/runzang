@@ -1,3 +1,31 @@
+import { API_BASE_URL } from './config.js';
+
+/**
+ * 根据订单号获取 AI 查询完整结果内容（用于已支付时拉取完整内容）
+ * @param {string} orderId - 订单号
+ * @returns {Promise<string|null>} 完整内容字符串，失败或未找到返回 null
+ */
+export async function fetchAiResultContent(orderId) {
+    if (!orderId) return null;
+    try {
+        const url = `${API_BASE_URL}/api/ai/result/${orderId}`;
+        const response = await fetch(url, {
+            method: 'GET',
+            mode: 'cors',
+            headers: { 'X-API-Key': 'runzang-payment-security-key-2025-1234567890' }
+        });
+        if (!response.ok) return null;
+        const data = await response.json();
+        if (data.success && data.data && data.data.content) {
+            return data.data.content;
+        }
+        return null;
+    } catch (error) {
+        console.error('获取AI结果失败:', error);
+        return null;
+    }
+}
+
 // 解析八字数据从AI回复中
 export function parseBaziData(analysisResult) {
     console.log('解析八字数据...');

@@ -38,7 +38,7 @@ body {
 .disclaimer-wrapper {
     display: flex;
     width: max-content;
-    animation: scrollLeft 30s linear infinite;
+    animation: scrollLeft 28s linear infinite;
 }
 
 .disclaimer-content {
@@ -46,8 +46,9 @@ body {
     padding: 0 20px;
 }
 
+/* 0%：文字“开头”在右侧可见（左缘在 100vw 略偏左），然后向左滚出 */
 @keyframes scrollLeft {
-    0% { transform: translateX(100%); }
+    0% { transform: translateX(calc(100vw - 8%)); }
     100% { transform: translateX(-100%); }
 }
 

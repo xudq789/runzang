@@ -2,7 +2,7 @@
 'use strict';
 
 import { DOM, formatDate, hideElement, showElement, generateOrderId, calculateBazi } from './utils.js';
-import { SERVICES, STATE, PAYMENT_CONFIG } from './config.js';
+import { SERVICES, STATE, PAYMENT_CONFIG, API_BASE_URL } from './config.js';
 
 // UI元素集合
 export const UI = {
@@ -60,6 +60,20 @@ export const UI = {
     paymentAmount: () => DOM.id('payment-amount'),
     paymentOrderId: () => DOM.id('payment-order-id')
 };
+
+// 结果区 DOM 缓存，减少重复 getElementById
+const _resultDOMCache = { _filled: false };
+function getResultDOM() {
+    if (!_resultDOMCache._filled) {
+        _resultDOMCache.predictorInfoGrid = DOM.id('predictor-info-grid');
+        _resultDOMCache.baziGrid = DOM.id('bazi-grid');
+        _resultDOMCache.freeAnalysisText = DOM.id('free-analysis-text');
+        _resultDOMCache.lockedAnalysisText = DOM.id('locked-analysis-text');
+        _resultDOMCache.lockedOverlay = DOM.id('locked-overlay');
+        _resultDOMCache._filled = true;
+    }
+    return _resultDOMCache;
+}
 
 // 初始化表单选项
 export function initFormOptions() {
@@ -240,7 +254,7 @@ export function updateUnlockInfo() {
 
 // 显示预测者信息
 export function displayPredictorInfo() {
-    const predictorInfoGrid = UI.predictorInfoGrid();
+    const predictorInfoGrid = getResultDOM().predictorInfoGrid;
     if (!predictorInfoGrid || !STATE.userData) return;
     
     predictorInfoGrid.innerHTML = '';
@@ -450,7 +464,7 @@ function createAnalysisSection(title, content) {
 
 // ============ 【显示八字排盘结果 - 日历格式】 ============
 export function displayBaziPan() {
-    const baziGrid = UI.baziGrid();
+    const baziGrid = getResultDOM().baziGrid;
     if (!baziGrid) return;
     
     baziGrid.innerHTML = '';
@@ -534,12 +548,12 @@ function formatTitle(title) {
 
 // ============ 【处理并显示分析结果】 ============
 
-// 处理并显示分析结果 - 宋体格式
-export async function processAndDisplayAnalysis(result) {
+// 处理并显示分析结果 - 仅负责 UI 展示，不发起网络请求
+export function processAndDisplayAnalysis(result) {
     console.log('处理分析结果...');
     
-    const freeAnalysisText = UI.freeAnalysisText();
-    const lockedAnalysisText = UI.lockedAnalysisText();
+    const freeAnalysisText = getResultDOM().freeAnalysisText;
+    const lockedAnalysisText = getResultDOM().lockedAnalysisText;
     
     if (!freeAnalysisText || !lockedAnalysisText) return;
     
@@ -547,32 +561,7 @@ export async function processAndDisplayAnalysis(result) {
     freeAnalysisText.innerHTML = '';
     lockedAnalysisText.innerHTML = '';
     
-    // 如果已支付且有订单ID，从结果API获取完整内容
-    let contentToDisplay = result;
-    if (STATE.isPaymentUnlocked && STATE.currentOrderId) {
-        try {
-            console.log('🔗 已支付，获取完整内容，订单ID:', STATE.currentOrderId);
-            const resultResponse = await fetch(`https://runzang.top/api/ai/result/${STATE.currentOrderId}`, {
-                method: 'GET',
-                mode: 'cors',
-                headers: {
-                    'X-API-Key': 'runzang-payment-security-key-2025-1234567890'
-                }
-            });
-            
-            if (resultResponse.ok) {
-                const resultData = await resultResponse.json();
-                if (resultData.success && resultData.data && resultData.data.content) {
-                    contentToDisplay = resultData.data.content;
-                    STATE.fullAnalysisResult = contentToDisplay;
-                    console.log('✅ 已获取完整内容');
-                }
-            }
-        } catch (error) {
-            console.error('获取完整内容失败:', error);
-            // 继续使用部分内容
-        }
-    }
+    const contentToDisplay = result || '';
     
     // 定义免费部分（根据你的服务配置）
     const freeSections = [
@@ -631,21 +620,24 @@ export async function processAndDisplayAnalysis(result) {
 
 // 显示完整分析内容（支付后调用）
 export function showFullAnalysisContent() {
-    const lockedAnalysisText = UI.lockedAnalysisText();
-    const freeAnalysisText = UI.freeAnalysisText();
+    const { lockedAnalysisText, freeAnalysisText, lockedOverlay } = getResultDOM();
     
     if (lockedAnalysisText && lockedAnalysisText.innerHTML.trim() && freeAnalysisText) {
-        // 将锁定内容添加到免费内容中
         const currentContent = freeAnalysisText.innerHTML;
         freeAnalysisText.innerHTML = currentContent + lockedAnalysisText.innerHTML;
-        
-        // 隐藏锁定覆盖层
-        const lockedOverlay = document.getElementById('locked-overlay');
-        if (lockedOverlay) {
-            lockedOverlay.style.display = 'none';
-        }
-        
+        if (lockedOverlay) lockedOverlay.style.display = 'none';
         console.log('✅ 完整内容已显示');
+    }
+}
+
+// 结果区统一入口：预测者信息 + 八字排盘 + 分析展示 + 按是否解锁更新解锁区
+export function renderResultSection({ content, isUnlocked }) {
+    displayPredictorInfo();
+    displayBaziPan();
+    processAndDisplayAnalysis(content || '');
+    if (isUnlocked) {
+        updateUnlockInterface();
+        showFullAnalysisContent();
     }
 }
 
@@ -695,7 +687,7 @@ export async function showPaymentModal() {
             return;
         }
 
-        console.log('🔗 调用支付API: https://runzang.top/api/payment/create');
+        console.log('🔗 调用支付API:', `${API_BASE_URL}/api/payment/create`);
         console.log('请求数据:', {
             serviceType: STATE.currentService,
             amount: parseFloat(serviceConfig.price).toFixed(2),
@@ -703,7 +695,7 @@ export async function showPaymentModal() {
             paymentMethod: selectedMethod
         });
 
-        const response = await fetch('https://runzang.top/api/payment/create', {
+        const response = await fetch(`${API_BASE_URL}/api/payment/create`, {
             method: 'POST',
             mode: 'cors',  // 添加CORS模式
             headers: {
@@ -978,7 +970,7 @@ export function closePaymentModal() {
 
 // 更新解锁界面状态
 export function updateUnlockInterface() {
-    const lockedOverlay = DOM.id('locked-overlay');
+    const lockedOverlay = getResultDOM().lockedOverlay;
     if (!lockedOverlay) return;
     
     // 更新标题

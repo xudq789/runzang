@@ -311,10 +311,12 @@ export const STATE = {
     isDownloadLocked: true
 };
 
+// API 基础域名（公共配置，支付、AI 查询等均使用）
+export const API_BASE_URL = 'https://runzang.top';
+
 // 修改这个部分（大约在第230行）
 export const PAYMENT_CONFIG = {
-  GATEWAY_URL: 'https://runzang.top/api/payment'  // 只有这一行就够了
-  // 删除其他复杂的配置
+  GATEWAY_URL: `${API_BASE_URL}/api/payment`
 };
 
 
