@@ -287,112 +287,73 @@ export function displayPredictorInfo() {
     });
 }
 
+// ============ 【辅助函数：五行和十神颜色处理】 ============
+
+// 获取五行颜色
+function getElementColor(element) {
+    const colors = {
+        '金': '<span style="color: #FFD700;">金</span>',
+        '木': '<span style="color: #32CD32;">木</span>',
+        '水': '<span style="color: #1E90FF;">水</span>',
+        '火': '<span style="color: #FF4500;">火</span>',
+        '土': '<span style="color: #8B4513;">土</span>'
+    };
+    return colors[element] || element;
+}
+
+// 获取十神颜色
+function getShishenColor(shishen) {
+    const colors = {
+        '正官': '#4169E1',    // 蓝色
+        '七杀': '#DC143C',    // 深红色
+        '正印': '#32CD32',    // 绿色
+        '偏印': '#20B2AA',    // 浅绿色
+        '正财': '#FFD700',    // 金色
+        '偏财': '#FFA500',    // 橙色
+        '食神': '#9370DB',    // 紫色
+        '伤官': '#FF69B4',    // 粉色
+        '比肩': '#808080',    // 灰色
+        '劫财': '#A9A9A9'     // 深灰色
+    };
+    return colors[shishen] || '#333';
+}
+
 // ============ 【八字排盘日历格式】 ============
 
-// 创建八字排盘日历格式（添加十神标注颜色）
+// 创建八字排盘日历格式
 function createBaziCalendar(baziData) {
     if (!baziData) return '<div style="text-align:center;padding:20px;color:#666;font-family:\'SimSun\',\'宋体\',serif;">八字数据加载中...</div>';
     
-    // 十神颜色映射
-    const shishenColors = {
-        '比肩': '#2e7d32',     // 深绿
-        '劫财': '#558b2f',     // 绿
-        '食神': '#1565c0',     // 深蓝
-        '伤官': '#0277bd',     // 蓝
-        '偏财': '#ef6c00',     // 橙
-        '正财': '#f57f17',     // 浅橙
-        '七杀': '#c62828',     // 深红
-        '正官': '#d32f2f',     // 红
-        '偏印': '#5d4037',     // 深棕
-        '正印': '#8d6e63',     // 棕
-        '日主': '#6a1b9a'      // 紫
-    };
-    
-    // 十神检测函数
-    function getShishenColor(text) {
-        if (!text) return 'inherit';
-        for (const [key, color] of Object.entries(shishenColors)) {
-            if (text.includes(key)) {
-                return color;
-            }
-        }
-        return '#666';
-    }
-    
-    // 格式化十神显示
-    function formatShishen(text) {
-        if (!text) return '';
-        
-        let formatted = text;
-        for (const [key, color] of Object.entries(shishenColors)) {
-            if (text.includes(key)) {
-                const regex = new RegExp(`(${key})`, 'g');
-                formatted = formatted.replace(regex, 
-                    `<span style="color:${color}; font-weight:bold; padding:0 2px;">$1</span>`);
-            }
-        }
-        return formatted;
-    }
-    
     return `
-        <div class="bazi-calendar" style="height:100%;">
-            <div class="calendar-header" style="text-align:left; margin-bottom:15px;">
-                <div class="calendar-title" style="font-size:20px; color:#8b4513; font-weight:bold; font-family:'SimSun','宋体',serif; margin-bottom:5px;">
-                    📅 八字排盘
+        <div class="bazi-calendar">
+            <div class="calendar-header">
+                <div class="calendar-title">📅 八字排盘</div>
+                <div class="calendar-subtitle">生辰八字 • 命理基础</div>
+            </div>
+            <div class="calendar-grid">
+                <div class="calendar-item year-item">
+                    <div class="calendar-label">年柱</div>
+                    <div class="calendar-value" style="color: #8b4513;">${baziData.yearColumn}</div>
+                    <div class="calendar-element" style="color: #8b4513;">${getElementColor(baziData.yearElement)}</div>
                 </div>
-                <div class="calendar-subtitle" style="font-size:14px; color:#666; font-family:'SimSun','宋体',serif;">
-                    生辰八字 • 命理基础
+                <div class="calendar-item month-item">
+                    <div class="calendar-label">月柱</div>
+                    <div class="calendar-value" style="color: #d2691e;">${baziData.monthColumn}</div>
+                    <div class="calendar-element" style="color: #d2691e;">${getElementColor(baziData.monthElement)}</div>
+                </div>
+                <div class="calendar-item day-item">
+                    <div class="calendar-label">日柱</div>
+                    <div class="calendar-value" style="color: #a0522d;">${baziData.dayColumn}</div>
+                    <div class="calendar-element" style="color: #a0522d;">${getElementColor(baziData.dayElement)}</div>
+                </div>
+                <div class="calendar-item hour-item">
+                    <div class="calendar-label">时柱</div>
+                    <div class="calendar-value" style="color: #8b4513;">${baziData.hourColumn}</div>
+                    <div class="calendar-element" style="color: #8b4513;">${getElementColor(baziData.hourElement)}</div>
                 </div>
             </div>
-            <div class="calendar-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
-                <div class="calendar-item year-item" style="background:linear-gradient(135deg, #f8f4e8, #f0e6d6); border:1px solid #e8e0d0; border-radius:8px; padding:15px; min-height:100px; display:flex; flex-direction:column; justify-content:center;">
-                    <div class="calendar-label" style="font-size:13px; color:#666; margin-bottom:8px; text-align:center; font-family:'SimSun','宋体',serif;">年柱</div>
-                    <div class="calendar-value" style="font-size:24px; color:${getShishenColor(baziData.yearColumn)}; font-weight:bold; text-align:center; margin-bottom:10px; font-family:'KaiTi','楷体',serif; letter-spacing:2px;">
-                        ${baziData.yearColumn}
-                    </div>
-                    <div class="calendar-element" style="font-size:14px; color:#666; text-align:center; min-height:22px; font-family:'SimSun','宋体',serif; line-height:1.4;">
-                        ${formatShishen(baziData.yearElement || '')}
-                    </div>
-                </div>
-                <div class="calendar-item month-item" style="background:linear-gradient(135deg, #f8f4e8, #f0e6d6); border:1px solid #e8e0d0; border-radius:8px; padding:15px; min-height:100px; display:flex; flex-direction:column; justify-content:center;">
-                    <div class="calendar-label" style="font-size:13px; color:#666; margin-bottom:8px; text-align:center; font-family:'SimSun','宋体',serif;">月柱</div>
-                    <div class="calendar-value" style="font-size:24px; color:${getShishenColor(baziData.monthColumn)}; font-weight:bold; text-align:center; margin-bottom:10px; font-family:'KaiTi','楷体',serif; letter-spacing:2px;">
-                        ${baziData.monthColumn}
-                    </div>
-                    <div class="calendar-element" style="font-size:14px; color:#666; text-align:center; min-height:22px; font-family:'SimSun','宋体',serif; line-height:1.4;">
-                        ${formatShishen(baziData.monthElement || '')}
-                    </div>
-                </div>
-                <div class="calendar-item day-item" style="background:linear-gradient(135deg, #f8f4e8, #f0e6d6); border:1px solid #e8e0d0; border-radius:8px; padding:15px; min-height:100px; display:flex; flex-direction:column; justify-content:center;">
-                    <div class="calendar-label" style="font-size:13px; color:#666; margin-bottom:8px; text-align:center; font-family:'SimSun','宋体',serif;">日柱</div>
-                    <div class="calendar-value" style="font-size:24px; color:${getShishenColor(baziData.dayColumn)}; font-weight:bold; text-align:center; margin-bottom:10px; font-family:'KaiTi','楷体',serif; letter-spacing:2px;">
-                        ${baziData.dayColumn}
-                    </div>
-                    <div class="calendar-element" style="font-size:14px; color:#666; text-align:center; min-height:22px; font-family:'SimSun','宋体',serif; line-height:1.4;">
-                        ${formatShishen(baziData.dayElement || '')}
-                    </div>
-                </div>
-                <div class="calendar-item hour-item" style="background:linear-gradient(135deg, #f8f4e8, #f0e6d6); border:1px solid #e8e0d0; border-radius:8px; padding:15px; min-height:100px; display:flex; flex-direction:column; justify-content:center;">
-                    <div class="calendar-label" style="font-size:13px; color:#666; margin-bottom:8px; text-align:center; font-family:'SimSun','宋体',serif;">时柱</div>
-                    <div class="calendar-value" style="font-size:24px; color:${getShishenColor(baziData.hourColumn)}; font-weight:bold; text-align:center; margin-bottom:10px; font-family:'KaiTi','楷体',serif; letter-spacing:2px;">
-                        ${baziData.hourColumn}
-                    </div>
-                    <div class="calendar-element" style="font-size:14px; color:#666; text-align:center; min-height:22px; font-family:'SimSun','宋体',serif; line-height:1.4;">
-                        ${formatShishen(baziData.hourElement || '')}
-                    </div>
-                </div>
-            </div>
-            <div class="calendar-footer" style="margin-top:15px;">
-                <div class="calendar-note" style="font-size:13px; color:#999; font-family:'SimSun','宋体',serif; padding:10px; background:#f9f9f9; border-radius:6px; border-left:4px solid #e8e0d0; margin-bottom:10px;">
-                    ※ 排盘基于真太阳时计算 • 十神标注已添加颜色
-                </div>
-                <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; justify-content:center; padding:10px; background:#f5f5f5; border-radius:6px;">
-                    ${Object.entries(shishenColors).map(([name, color]) => `
-                        <span style="font-size:12px; color:${color}; padding:4px 10px; background:white; border:1px solid ${color}40; border-radius:4px; font-weight:bold; font-family:'SimSun','宋体',serif;">
-                            ${name}
-                        </span>
-                    `).join('')}
-                </div>
+            <div class="calendar-footer">
+                <div class="calendar-note">※ 排盘基于真太阳时计算</div>
             </div>
         </div>
     `;
@@ -410,7 +371,7 @@ function createDayunCalendar() {
     }
     
     if (!dayunContent) {
-        return '<div style="text-align:center;padding:20px;color:#666;font-family:\'SimSun\',\'宋体\',serif;height:100%;display:flex;align-items:center;justify-content:center;">大运数据加载中...</div>';
+        return '<div style="text-align:center;padding:20px;color:#666;font-family:\'SimSun\',\'宋体\',serif;">大运数据加载中...</div>';
     }
     
     // 解析大运内容
@@ -421,97 +382,32 @@ function createDayunCalendar() {
     lines.forEach(line => {
         const trimmedLine = line.trim();
         if (trimmedLine.includes('起运岁数') || trimmedLine.includes('起运时间')) {
-            qiyunInfo += `<div style="margin-bottom:12px; padding:12px; background:#f0f8ff; border-radius:8px; border-left:5px solid #4dabf5; font-family:'SimSun','宋体',serif; font-size:14px; color:#333; box-shadow:0 1px 3px rgba(77,171,245,0.1);">
-                <span style="color:#4dabf5; font-weight:bold;">🔹</span> ${trimmedLine}
-            </div>`;
+            qiyunInfo += `<div class="qiyun-item">${trimmedLine}</div>`;
         } else if (trimmedLine.includes('第') && trimmedLine.includes('步大运')) {
-            // 提取年份信息并添加颜色
-            const yearMatch = trimmedLine.match(/(\d{4})年/);
-            let coloredLine = trimmedLine;
-            if (yearMatch) {
-                coloredLine = coloredLine.replace(yearMatch[1], 
-                    `<span style="color:#c62828; font-weight:bold; background:#ffebee; padding:2px 4px; border-radius:3px;">${yearMatch[1]}</span>`);
-            }
-            
-            // 添加十步大运序号颜色
-            const stepMatch = trimmedLine.match(/第(\d+)步大运/);
-            if (stepMatch) {
-                const stepNum = parseInt(stepMatch[1]);
-                let stepColor = '#666';
-                let stepLabel = '';
-                if (stepNum <= 3) {
-                    stepColor = '#2e7d32';
-                    stepLabel = '（青少年运）';
-                } else if (stepNum <= 6) {
-                    stepColor = '#1565c0';
-                    stepLabel = '（中年运）';
-                } else {
-                    stepColor = '#8b4513';
-                    stepLabel = '（晚年运）';
-                }
-                
-                coloredLine = coloredLine.replace(`第${stepNum}步大运`, 
-                    `<span style="color:${stepColor}; font-weight:bold;">第${stepNum}步大运${stepLabel}</span>`);
-            }
-            
-            // 提取年龄范围并添加颜色
-            const ageMatch = trimmedLine.match(/约(\d+)-(\d+)岁/);
-            if (ageMatch) {
-                const startAge = ageMatch[1];
-                const endAge = ageMatch[2];
-                coloredLine = coloredLine.replace(`约${startAge}-${endAge}岁`, 
-                    `<span style="color:#8b4513; font-weight:bold;">约${startAge}-${endAge}岁</span>`);
-            }
-            
-            dayunList += `<div style="margin:12px 0; padding:15px; background:white; border:1px solid #e0e0e0; border-radius:8px; font-family:'SimSun','宋体',serif; font-size:14px; box-shadow:0 1px 4px rgba(0,0,0,0.05); transition:all 0.3s ease;">
-                <div style="display:flex; align-items:center; margin-bottom:8px;">
-                    <span style="font-size:16px; margin-right:8px;">📊</span>
-                    ${coloredLine}
-                </div>
-            </div>`;
+            dayunList += `<div class="dayun-item">${trimmedLine}</div>`;
         }
     });
     
     return `
-        <div class="dayun-calendar" style="height:100%;">
-            <div class="calendar-header" style="text-align:left; margin-bottom:15px;">
-                <div class="calendar-title" style="font-size:20px; color:#8b4513; font-weight:bold; font-family:'SimSun','宋体',serif; margin-bottom:5px;">
-                    📈 大运排盘
-                </div>
-                <div class="calendar-subtitle" style="font-size:14px; color:#666; font-family:'SimSun','宋体',serif;">
-                    命运流转 • 十年一运
-                </div>
+        <div class="dayun-calendar">
+            <div class="calendar-header">
+                <div class="calendar-title">📈 大运排盘</div>
+                <div class="calendar-subtitle">命运流转 • 十年一运</div>
             </div>
-            <div class="qiyun-info" style="margin-bottom:25px;">
-                ${qiyunInfo || '<div style="color:#999; text-align:center; padding:20px; background:#f9f9f9; border-radius:8px; font-family:\'SimSun\',\'宋体\',serif;">起运信息加载中...</div>'}
+            <div class="qiyun-info">
+                ${qiyunInfo}
             </div>
-            <div class="dayun-list" style="max-height:320px; overflow-y:auto; padding-right:10px; margin-bottom:15px;">
-                ${dayunList || '<div style="color:#999; text-align:center; padding:30px; background:#f9f9f9; border-radius:8px; font-family:\'SimSun\',\'宋体\',serif;">大运信息加载中...</div>'}
+            <div class="dayun-list">
+                ${dayunList}
             </div>
-            <div class="calendar-footer" style="margin-top:20px;">
-                <div class="calendar-note" style="font-size:13px; color:#999; font-family:'SimSun','宋体',serif; padding:12px; background:#f9f9f9; border-radius:6px; border-left:4px solid #e0e0e0; margin-bottom:15px;">
-                    ※ 大运推算遵循"男命阳顺阴逆，女命阳逆阴顺"原则 • 年份标红 • 年龄段颜色区分
-                </div>
-                <div style="display:flex; justify-content:center; gap:20px; margin-top:10px; padding:12px; background:#f5f5f5; border-radius:8px;">
-                    <div style="text-align:center;">
-                        <div style="width:20px; height:20px; background:#2e7d32; border-radius:50%; margin:0 auto 5px;"></div>
-                        <span style="font-size:12px; color:#2e7d32; font-weight:bold; font-family:'SimSun','宋体',serif;">青少年运</span>
-                    </div>
-                    <div style="text-align:center;">
-                        <div style="width:20px; height:20px; background:#1565c0; border-radius:50%; margin:0 auto 5px;"></div>
-                        <span style="font-size:12px; color:#1565c0; font-weight:bold; font-family:'SimSun','宋体',serif;">中年运</span>
-                    </div>
-                    <div style="text-align:center;">
-                        <div style="width:20px; height:20px; background:#8b4513; border-radius:50%; margin:0 auto 5px;"></div>
-                        <span style="font-size:12px; color:#8b4513; font-weight:bold; font-family:'SimSun','宋体',serif;">晚年运</span>
-                    </div>
-                </div>
+            <div class="calendar-footer">
+                <div class="calendar-note">※ 大运推算遵循"男命阳顺阴逆，女命阳逆阴顺"原则</div>
             </div>
         </div>
     `;
 }
 
-// 显示八字和大运排盘结果 - 并列显示
+// 显示八字排盘结果 - 日历格式
 export function displayBaziPan() {
     const baziGrid = UI.baziGrid();
     if (!baziGrid) return;
@@ -523,230 +419,100 @@ export function displayBaziPan() {
     container.className = 'bazi-dayun-container';
     container.style.cssText = `
         background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        padding: 30px;
-        margin-bottom: 30px;
-        border: 1px solid #e8e8e8;
-        font-family: 'SimSun', '宋体', serif;
-    `;
-    
-    // 添加主标题（带底纹颜色）- 左对齐
-    const mainTitle = document.createElement('div');
-    mainTitle.style.cssText = `
-        text-align: left;
-        margin-bottom: 30px;
-        padding: 25px;
-        background: linear-gradient(135deg, #f8f4e8, #f0e6d6);
-        border-radius: 12px;
-        border: 1px solid #e8e0d0;
-        border-left: 8px solid #8b4513;
-        box-shadow: 0 2px 8px rgba(139,69,19,0.1);
-    `;
-    mainTitle.innerHTML = `
-        <div style="font-size: 28px; color: #8b4513; font-weight: bold; font-family: 'SimSun', '宋体', serif; margin-bottom: 10px; display: flex; align-items: center; gap: 12px;">
-            <span style="font-size: 32px;">📜</span>
-            <span>命理排盘系统</span>
-        </div>
-        <div style="font-size: 16px; color: #666; font-family: 'SimSun', '宋体', serif; line-height: 1.6; padding-left: 40px;">
-            八字定根基 • 大运知起伏 • 十神辨喜忌 • 流年看运势
-        </div>
-    `;
-    container.appendChild(mainTitle);
-    
-    // 创建并列显示容器 - 调整高度
-    const parallelContainer = document.createElement('div');
-    parallelContainer.className = 'parallel-container';
-    parallelContainer.style.cssText = `
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        padding: 20px;
         margin-bottom: 25px;
-        min-height: 520px;
+        border: 1px solid #e8e8e8;
     `;
+    
+    // 添加标题
+    const titleDiv = document.createElement('div');
+    titleDiv.style.cssText = `
+        text-align: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e8e8e8;
+    `;
+    titleDiv.innerHTML = `
+        <div style="font-size: 24px; color: #8b4513; font-weight: bold; font-family: 'SimSun', '宋体', serif; margin-bottom: 5px;">
+            八字大运排盘
+        </div>
+        <div style="font-size: 14px; color: #666; font-family: 'SimSun', '宋体', serif;">
+            命理根基 • 运势轨迹
+        </div>
+    `;
+    container.appendChild(titleDiv);
     
     // 添加八字排盘
-    const baziColumn = document.createElement('div');
-    baziColumn.className = 'bazi-column';
-    baziColumn.style.cssText = `
-        background: #fefefe;
-        border-radius: 12px;
-        padding: 25px;
-        border: 1px solid #e0e0e0;
-        height: 100%;
-        overflow: hidden;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-        transition: all 0.3s ease;
+    const baziSection = document.createElement('div');
+    baziSection.innerHTML = createBaziCalendar(STATE.baziData);
+    container.appendChild(baziSection);
+    
+    // 添加分隔线
+    const separator = document.createElement('div');
+    separator.style.cssText = `
+        height: 1px;
+        background: linear-gradient(to right, transparent, #d4af37, transparent);
+        margin: 25px 0;
     `;
-    baziColumn.innerHTML = createBaziCalendar(STATE.baziData);
+    container.appendChild(separator);
     
     // 添加大运排盘
-    const dayunColumn = document.createElement('div');
-    dayunColumn.className = 'dayun-column';
-    dayunColumn.style.cssText = `
-        background: #fefefe;
-        border-radius: 12px;
-        padding: 25px;
-        border: 1px solid #e0e0e0;
-        height: 100%;
-        overflow: hidden;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-        transition: all 0.3s ease;
-    `;
-    dayunColumn.innerHTML = createDayunCalendar();
+    const dayunSection = document.createElement('div');
+    dayunSection.innerHTML = createDayunCalendar();
+    container.appendChild(dayunSection);
     
-    parallelContainer.appendChild(baziColumn);
-    parallelContainer.appendChild(dayunColumn);
-    container.appendChild(parallelContainer);
-    
-    // 添加说明区域
-    const explanationDiv = document.createElement('div');
-    explanationDiv.style.cssText = `
-        background: #f0f8ff;
-        border-radius: 12px;
-        padding: 22px;
-        margin-top: 30px;
-        border: 1px solid #d1e9ff;
-        font-family: 'SimSun', '宋体', serif;
-        font-size: 14px;
-        color: #555;
-        border-left: 6px solid #4dabf5;
-        box-shadow: 0 2px 8px rgba(77,171,245,0.1);
-    `;
-    explanationDiv.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px; color: #333; font-weight: 600; font-size: 16px;">
-            <span style="font-size: 20px;">📝</span>
-            <span>排盘说明</span>
-        </div>
-        <div style="line-height: 1.8;">
-            <div style="margin-bottom: 8px; padding-left: 32px;">• <strong>八字排盘</strong>：显示年、月、日、时四柱天干地支及十神关系，天干地支颜色对应十神类别</div>
-            <div style="margin-bottom: 8px; padding-left: 32px;">• <strong>大运排盘</strong>：推算人生运势起伏，每十年为一步大运，年份标红，年龄段以色块区分</div>
-            <div style="margin-bottom: 8px; padding-left: 32px;">• <strong>十神颜色</strong>：绿色-比劫 | 蓝色-食伤 | 橙色-财星 | 红色-官杀 | 棕色-印星 | 紫色-日主</div>
-            <div style="padding-left: 32px;">• <strong>使用提示</strong>：大运列表可滚动查看，鼠标悬停有效果反馈，所有内容均可自适应显示</div>
-        </div>
-    `;
-    
-    container.appendChild(explanationDiv);
     baziGrid.appendChild(container);
-    
-    // 添加CSS样式增强交互效果
-    const style = document.createElement('style');
-    style.textContent = `
-        .bazi-dayun-container {
-            animation: fadeIn 0.5s ease-out;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .bazi-column:hover, .dayun-column:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
-            border-color: #d4b483;
-        }
-        
-        .calendar-item:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        
-        .dayun-list::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        .dayun-list::-webkit-scrollbar-track {
-            background: #f5f5f5;
-            border-radius: 4px;
-        }
-        
-        .dayun-list::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #8b4513, #d4b483);
-            border-radius: 4px;
-        }
-        
-        .dayun-list::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #6b3410, #b4966a);
-        }
-        
-        .dayun-list > div:hover {
-            transform: translateX(3px);
-            box-shadow: 0 3px 12px rgba(0,0,0,0.1);
-            border-color: #8b4513;
-        }
-        
-        .calendar-value {
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }
-        
-        .calendar-item:hover .calendar-value {
-            transform: scale(1.05);
-        }
-    `;
-    document.head.appendChild(style);
 }
 
 // ============ 【分析报告格式化函数】 ============
 
-// 格式化标题（添加底纹颜色）
+// 格式化标题
 function formatTitle(title) {
-    // 为不同类型的标题添加不同底纹颜色
-    let backgroundColor = '';
-    let textColor = '#333';
-    
+    // 为不同类型的标题添加不同颜色
     if (title.includes('喜用') || title.includes('喜神') || title.includes('用神')) {
-        backgroundColor = 'linear-gradient(135deg, #e8f5e8, #d4f1d4)';  // 绿色底纹
-        textColor = '#2e7d32';
+        return `<span style="color: #32CD32;">${title}</span>`;
     } else if (title.includes('忌神') || title.includes('忌')) {
-        backgroundColor = 'linear-gradient(135deg, #ffeaea, #ffd4d4)';  // 红色底纹
-        textColor = '#c62828';
+        return `<span style="color: #FF4500;">${title}</span>`;
     } else if (title.includes('性格')) {
-        backgroundColor = 'linear-gradient(135deg, #e8f4fd, #d4e9fa)';  // 蓝色底纹
-        textColor = '#1565c0';
+        return `<span style="color: #1E90FF;">${title}</span>`;
     } else if (title.includes('职业') || title.includes('行业')) {
-        backgroundColor = 'linear-gradient(135deg, #f5f0e8, #e9e0d4)';  // 棕色底纹
-        textColor = '#5d4037';
+        return `<span style="color: #8b4513;">${title}</span>`;
     } else if (title.includes('富贵') || title.includes('财富')) {
-        backgroundColor = 'linear-gradient(135deg, #fff8e1, #ffeeb5)';  // 金色底纹
-        textColor = '#f57f17';
+        return `<span style="color: #FFD700;">${title}</span>`;
     } else if (title.includes('婚姻') || title.includes('感情')) {
-        backgroundColor = 'linear-gradient(135deg, #fce4ec, #f8bbd9)';  // 粉色底纹
-        textColor = '#ad1457';
+        return `<span style="color: #FF69B4;">${title}</span>`;
     } else if (title.includes('事业') || title.includes('财运')) {
-        backgroundColor = 'linear-gradient(135deg, #fff3e0, #ffe0b2)';  // 橙色底纹
-        textColor = '#ef6c00';
+        return `<span style="color: #FFA500;">${title}</span>`;
     } else if (title.includes('健康')) {
-        backgroundColor = 'linear-gradient(135deg, #e8f5e9, #c8e6c9)';  // 浅绿底纹
-        textColor = '#388e3c';
+        return `<span style="color: #32CD32;">${title}</span>`;
     } else {
-        backgroundColor = 'linear-gradient(135deg, #f5f5f5, #eeeeee)';  // 灰色底纹
-        textColor = '#424242';
+        return `<span style="color: #8b4513;">${title}</span>`;
     }
-    
-    return `
-        <span style="
-            display: inline-block;
-            padding: 8px 20px;
-            border-radius: 20px;
-            background: ${backgroundColor};
-            color: ${textColor};
-            font-weight: bold;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            border: 1px solid rgba(0,0,0,0.1);
-        ">
-            ${title}
-        </span>
-    `;
 }
 
-// 格式化报告内容（取消五行颜色标注）
+// 格式化报告内容
 function formatReportContent(text) {
-    // 处理喜用神颜色（保留底纹）
+    // 处理五行颜色
+    text = text.replace(/金/g, '<span class="wuxing-element wuxing-jin">金</span>')
+               .replace(/木/g, '<span class="wuxing-element wuxing-mu">木</span>')
+               .replace(/水/g, '<span class="wuxing-element wuxing-shui">水</span>')
+               .replace(/火/g, '<span class="wuxing-element wuxing-huo">火</span>')
+               .replace(/土/g, '<span class="wuxing-element wuxing-tu">土</span>');
+    
+    // 处理喜用神颜色
     text = text.replace(/喜神/g, '<span class="xiji-element xiji-xi">喜神</span>')
                .replace(/用神/g, '<span class="xiji-element xiji-yong">用神</span>')
-               .replace(/忌神/g, '<span class="xiji-element xiji-ji">忌神</span>');
+               .replace(/忌神/g, '<span class="xiji-element xiji-ji">忌神</span>')
+               .replace(/喜用/g, '<span class="xiji-element xiji-xiyong">喜用</span>');
+    
+    // 处理十神颜色
+    const shishenKeywords = ['正官', '七杀', '正印', '偏印', '正财', '偏财', '食神', '伤官', '比肩', '劫财'];
+    shishenKeywords.forEach(keyword => {
+        const color = getShishenColor(keyword);
+        text = text.replace(new RegExp(keyword, 'g'), `<span style="color: ${color};">${keyword}</span>`);
+    });
     
     // 处理段落
     const paragraphs = text.split('\n').filter(p => p.trim());
@@ -1464,6 +1230,3 @@ export function displayDayunPan() {
     // 不执行任何操作，因为大运已经在八字排盘中显示
     return;
 }
-
-
-
