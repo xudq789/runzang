@@ -532,35 +532,6 @@ function formatTitle(title) {
     }
 }
 
-// 修改后的 formatReportContent 函数
-function formatReportContent(text) {
-    // 删除五行颜色处理，只保留十神颜色
-    // text = text.replace(/金/g, '<span class="wuxing-element wuxing-jin">金</span>')
-    //           .replace(/木/g, '<span class="wuxing-element wuxing-mu">木</span>')
-    //           .replace(/水/g, '<span class="wuxing-element wuxing-shui">水</span>')
-    //           .replace(/火/g, '<span class="wuxing-element wuxing-huo">火</span>')
-    //           .replace(/土/g, '<span class="wuxing-element wuxing-tu">土</span>');
-    
-    // 处理喜用神颜色（保留）
-    text = text.replace(/喜神/g, '<span class="xiji-element xiji-xi">喜神</span>')
-               .replace(/用神/g, '<span class="xiji-element xiji-yong">用神</span>')
-               .replace(/忌神/g, '<span class="xiji-element xiji-ji">忌神</span>')
-               .replace(/喜用/g, '<span class="xiji-element xiji-xiyong">喜用</span>');
-    
-    // 处理十神颜色（保留）
-    const shishenKeywords = ['正官', '七杀', '正印', '偏印', '正财', '偏财', '食神', '伤官', '比肩', '劫财'];
-    shishenKeywords.forEach(keyword => {
-        const color = getShishenColor(keyword);
-        text = text.replace(new RegExp(keyword, 'g'), `<span style="color: ${color};">${keyword}</span>`);
-    });
-    
-    // 处理段落
-    const paragraphs = text.split('\n').filter(p => p.trim());
-    return paragraphs.map(para => `
-        <div class="report-paragraph">${para}</div>
-    `).join('');
-}
-
 // ============ 【创建分析段落（宋体格式）】 ============
 function createAnalysisSection(title, content) {
     const sectionTitle = title.replace(/【|】/g, '');
@@ -1296,6 +1267,7 @@ export function displayDayunPan() {
     // 不执行任何操作，因为大运已经在八字排盘中显示
     return;
 }
+
 
 
 
