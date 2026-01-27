@@ -287,308 +287,42 @@ export function displayPredictorInfo() {
     });
 }
 
-// ============ 【优化版八字和大运排盘显示函数】 ============
+// ============ 【辅助函数：五行和十神颜色处理】 ============
 
-// 显示八字和大运排盘结果 - 优化版（合并显示）
-export function displayBaziPan() {
-    const baziGrid = UI.baziGrid();
-    if (!baziGrid) return;
-    
-    // 清空内容
-    baziGrid.innerHTML = '';
-    
-    // 创建八字排盘卡片（包含大运）
-    const panCard = createBaziAndDayunCard();
-    baziGrid.appendChild(panCard);
+// 获取五行颜色
+function getElementColor(element) {
+    const colors = {
+        '金': '<span style="color: #FFD700;">金</span>',
+        '木': '<span style="color: #32CD32;">木</span>',
+        '水': '<span style="color: #1E90FF;">水</span>',
+        '火': '<span style="color: #FF4500;">火</span>',
+        '土': '<span style="color: #8B4513;">土</span>'
+    };
+    return colors[element] || element;
 }
 
-// 创建八字和大运排盘卡片
-function createBaziAndDayunCard() {
-    const card = document.createElement('div');
-    card.className = 'bazi-dayun-card';
-    card.style.cssText = `
-        background: white;
-        border-radius: 15px;
-        padding: 25px;
-        margin-bottom: 20px;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-        border: 2px solid var(--primary-color);
-        transition: all 0.3s ease;
-        overflow: hidden;
-    `;
-    
-    // 添加标题
-    const titleDiv = document.createElement('div');
-    titleDiv.className = 'pan-title';
-    titleDiv.style.cssText = `
-        color: var(--primary-color);
-        font-size: 22px;
-        font-weight: bold;
-        margin-bottom: 25px;
-        text-align: center;
-        position: relative;
-        padding-bottom: 12px;
-    `;
-    
-    titleDiv.innerHTML = `
-        八字排盘 & 大运排盘
-        <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); 
-            width: 100px; height: 4px; background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); 
-            border-radius: 2px;"></div>
-    `;
-    card.appendChild(titleDiv);
-    
-    // 创建八字排盘部分
-    const baziSection = createBaziSection();
-    card.appendChild(baziSection);
-    
-    // 创建大运排盘部分
-    const dayunSection = createDayunSection();
-    card.appendChild(dayunSection);
-    
-    return card;
+// 获取十神颜色
+function getShishenColor(shishen) {
+    const colors = {
+        '正官': '#4169E1',    // 蓝色
+        '七杀': '#DC143C',    // 深红色
+        '正印': '#32CD32',    // 绿色
+        '偏印': '#20B2AA',    // 浅绿色
+        '正财': '#FFD700',    // 金色
+        '偏财': '#FFA500',    // 橙色
+        '食神': '#9370DB',    // 紫色
+        '伤官': '#FF69B4',    // 粉色
+        '比肩': '#808080',    // 灰色
+        '劫财': '#A9A9A9'     // 深灰色
+    };
+    return colors[shishen] || '#333';
 }
 
-// 创建八字排盘部分
-function createBaziSection() {
-    const section = document.createElement('div');
-    section.className = 'bazi-section';
-    section.style.cssText = `
-        margin-bottom: 30px;
-        padding: 20px;
-        background: linear-gradient(135deg, #f9f5f0, #f0e6d6);
-        border-radius: 12px;
-        border: 2px solid var(--secondary-color);
-    `;
-    
-    // 八字排盘子标题
-    const subtitle = document.createElement('div');
-    subtitle.style.cssText = `
-        color: var(--primary-color);
-        font-size: 18px;
-        font-weight: bold;
-        margin-bottom: 20px;
-        padding-left: 10px;
-        border-left: 4px solid var(--secondary-color);
-    `;
-    subtitle.textContent = '八字排盘';
-    section.appendChild(subtitle);
-    
-    // 创建八字网格
-    const baziGrid = document.createElement('div');
-    baziGrid.style.cssText = `
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 15px;
-    `;
-    
-    // 获取八字数据
-    const baziData = STATE.baziData;
-    if (!baziData) {
-        baziGrid.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">八字数据加载中...</div>';
-        section.appendChild(baziGrid);
-        return section;
-    }
-    
-    // 四柱数据
-    const columns = [
-        { 
-            label: '年柱', 
-            value: baziData.yearColumn, 
-            element: baziData.yearElement, 
-            color: '#8b4513',
-            size: '42px'
-        },
-        { 
-            label: '月柱', 
-            value: baziData.monthColumn, 
-            element: baziData.monthElement, 
-            color: '#d4af37',
-            size: '42px'
-        },
-        { 
-            label: '日柱', 
-            value: baziData.dayColumn, 
-            element: baziData.dayElement, 
-            color: '#5c3d2e',
-            size: '42px'
-        },
-        { 
-            label: '时柱', 
-            value: baziData.hourColumn, 
-            element: baziData.hourElement, 
-            color: '#3a2c1e',
-            size: '42px'
-        }
-    ];
-    
-    columns.forEach(col => {
-        const columnDiv = document.createElement('div');
-        columnDiv.style.cssText = `
-            background: white;
-            border: 3px solid ${col.color};
-            border-radius: 10px;
-            padding: 20px 15px;
-            text-align: center;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        `;
-        
-        columnDiv.addEventListener('mouseenter', () => {
-            columnDiv.style.transform = 'translateY(-5px)';
-            columnDiv.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
-        });
-        
-        columnDiv.addEventListener('mouseleave', () => {
-            columnDiv.style.transform = 'translateY(0)';
-            columnDiv.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
-        });
-        
-        // 标签
-        const labelDiv = document.createElement('div');
-        labelDiv.style.cssText = `
-            color: ${col.color};
-            font-weight: bold;
-            margin-bottom: 15px;
-            font-size: 16px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        `;
-        labelDiv.textContent = col.label;
-        
-        // 值 - 使用更大字体
-        const valueDiv = document.createElement('div');
-        valueDiv.style.cssText = `
-            font-size: ${col.size};
-            font-weight: bold;
-            color: ${col.color};
-            margin-bottom: 10px;
-            font-family: 'SimSun', '宋体', 'STSong', serif;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
-            line-height: 1.2;
-        `;
-        valueDiv.textContent = col.value;
-        
-        // 五行
-        const elementDiv = document.createElement('div');
-        elementDiv.style.cssText = `
-            font-size: 16px;
-            color: #7d6e63;
-            font-weight: 600;
-            padding: 6px 12px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(249,249,249,0.8));
-            border-radius: 25px;
-            display: inline-block;
-            border: 1px solid rgba(0,0,0,0.1);
-        `;
-        elementDiv.textContent = col.element || '五行';
-        
-        columnDiv.appendChild(labelDiv);
-        columnDiv.appendChild(valueDiv);
-        columnDiv.appendChild(elementDiv);
-        baziGrid.appendChild(columnDiv);
-    });
-    
-    section.appendChild(baziGrid);
-    return section;
-}
-
-// 创建大运排盘部分
-function createDayunSection() {
-    const section = document.createElement('div');
-    section.className = 'dayun-section';
-    section.style.cssText = `
-        padding: 20px;
-        background: linear-gradient(135deg, #f0f5ff, #e6ecff);
-        border-radius: 12px;
-        border: 2px solid #3a7bd5;
-    `;
-    
-    // 大运排盘子标题
-    const subtitle = document.createElement('div');
-    subtitle.style.cssText = `
-        color: #3a7bd5;
-        font-size: 18px;
-        font-weight: bold;
-        margin-bottom: 20px;
-        padding-left: 10px;
-        border-left: 4px solid #3a7bd5;
-    `;
-    subtitle.textContent = '大运排盘';
-    section.appendChild(subtitle);
-    
-    // 从分析结果中提取大运信息
-    let dayunContent = '';
-    if (STATE.fullAnalysisResult && STATE.fullAnalysisResult.includes('【大运排盘】')) {
-        const startIndex = STATE.fullAnalysisResult.indexOf('【大运排盘】');
-        let endIndex = STATE.fullAnalysisResult.indexOf('【', startIndex + 1);
-        if (endIndex === -1) endIndex = STATE.fullAnalysisResult.length;
-        
-        dayunContent = STATE.fullAnalysisResult.substring(startIndex, endIndex);
-    }
-    
-    // 显示大运内容
-    if (dayunContent) {
-        const contentDiv = document.createElement('div');
-        contentDiv.style.cssText = `
-            font-size: 16px;
-            line-height: 1.8;
-            color: #333;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #3a7bd5;
-        `;
-        
-        // 格式化大运内容
-        const lines = dayunContent.split('\n');
-        lines.forEach(line => {
-            if (line.trim()) {
-                const lineDiv = document.createElement('div');
-                lineDiv.style.marginBottom = '10px';
-                
-                if (line.includes('起运岁数') || line.includes('起运时间')) {
-                    lineDiv.style.color = '#3a7bd5';
-                    lineDiv.style.fontWeight = 'bold';
-                    lineDiv.style.fontSize = '16px';
-                } else if (line.includes('第') && line.includes('步大运')) {
-                    lineDiv.style.color = '#333';
-                    lineDiv.style.fontWeight = '600';
-                    lineDiv.style.fontSize = '15px';
-                    lineDiv.style.padding = '8px 12px';
-                    lineDiv.style.background = 'rgba(58, 123, 213, 0.1)';
-                    lineDiv.style.borderRadius = '6px';
-                    lineDiv.style.borderLeft = '3px solid #3a7bd5';
-                }
-                
-                lineDiv.textContent = line.trim();
-                contentDiv.appendChild(lineDiv);
-            }
-        });
-        
-        section.appendChild(contentDiv);
-    } else {
-        const loadingDiv = document.createElement('div');
-        loadingDiv.style.cssText = `
-            text-align: center;
-            padding: 30px;
-            color: #666;
-            font-size: 16px;
-        `;
-        loadingDiv.textContent = '大运数据加载中...';
-        section.appendChild(loadingDiv);
-    }
-    
-    return section;
-}
-
-// ============ 【优化报告内容字体和付费解锁逻辑】 ============
+// ============ 【八字排盘日历格式】 ============
 
 // 创建八字排盘日历格式
 function createBaziCalendar(baziData) {
-    if (!baziData) return '<div style="text-align:center;padding:20px;color:#666;">八字数据加载中...</div>';
+    if (!baziData) return '<div style="text-align:center;padding:20px;color:#666;font-family:\'SimSun\',\'宋体\',serif;">八字数据加载中...</div>';
     
     return `
         <div class="bazi-calendar">
@@ -625,18 +359,6 @@ function createBaziCalendar(baziData) {
     `;
 }
 
-// 获取五行颜色
-function getElementColor(element) {
-    const colors = {
-        '金': '<span style="color: #FFD700;">金</span>',
-        '木': '<span style="color: #32CD32;">木</span>',
-        '水': '<span style="color: #1E90FF;">水</span>',
-        '火': '<span style="color: #FF4500;">火</span>',
-        '土': '<span style="color: #8B4513;">土</span>'
-    };
-    return colors[element] || element;
-}
-
 // 创建大运排盘日历格式
 function createDayunCalendar() {
     let dayunContent = '';
@@ -649,7 +371,7 @@ function createDayunCalendar() {
     }
     
     if (!dayunContent) {
-        return '<div style="text-align:center;padding:20px;color:#666;">大运数据加载中...</div>';
+        return '<div style="text-align:center;padding:20px;color:#666;font-family:\'SimSun\',\'宋体\',serif;">大运数据加载中...</div>';
     }
     
     // 解析大运内容
@@ -744,6 +466,75 @@ export function displayBaziPan() {
     baziGrid.appendChild(container);
 }
 
+// ============ 【分析报告格式化函数】 ============
+
+// 格式化标题
+function formatTitle(title) {
+    // 为不同类型的标题添加不同颜色
+    if (title.includes('喜用') || title.includes('喜神') || title.includes('用神')) {
+        return `<span style="color: #32CD32;">${title}</span>`;
+    } else if (title.includes('忌神') || title.includes('忌')) {
+        return `<span style="color: #FF4500;">${title}</span>`;
+    } else if (title.includes('性格')) {
+        return `<span style="color: #1E90FF;">${title}</span>`;
+    } else if (title.includes('职业') || title.includes('行业')) {
+        return `<span style="color: #8b4513;">${title}</span>`;
+    } else if (title.includes('富贵') || title.includes('财富')) {
+        return `<span style="color: #FFD700;">${title}</span>`;
+    } else if (title.includes('婚姻') || title.includes('感情')) {
+        return `<span style="color: #FF69B4;">${title}</span>`;
+    } else if (title.includes('事业') || title.includes('财运')) {
+        return `<span style="color: #FFA500;">${title}</span>`;
+    } else if (title.includes('健康')) {
+        return `<span style="color: #32CD32;">${title}</span>`;
+    } else {
+        return `<span style="color: #8b4513;">${title}</span>`;
+    }
+}
+
+// 格式化报告内容
+function formatReportContent(text) {
+    // 处理五行颜色
+    text = text.replace(/金/g, '<span class="wuxing-element wuxing-jin">金</span>')
+               .replace(/木/g, '<span class="wuxing-element wuxing-mu">木</span>')
+               .replace(/水/g, '<span class="wuxing-element wuxing-shui">水</span>')
+               .replace(/火/g, '<span class="wuxing-element wuxing-huo">火</span>')
+               .replace(/土/g, '<span class="wuxing-element wuxing-tu">土</span>');
+    
+    // 处理喜用神颜色
+    text = text.replace(/喜神/g, '<span class="xiji-element xiji-xi">喜神</span>')
+               .replace(/用神/g, '<span class="xiji-element xiji-yong">用神</span>')
+               .replace(/忌神/g, '<span class="xiji-element xiji-ji">忌神</span>')
+               .replace(/喜用/g, '<span class="xiji-element xiji-xiyong">喜用</span>');
+    
+    // 处理十神颜色
+    const shishenKeywords = ['正官', '七杀', '正印', '偏印', '正财', '偏财', '食神', '伤官', '比肩', '劫财'];
+    shishenKeywords.forEach(keyword => {
+        const color = getShishenColor(keyword);
+        text = text.replace(new RegExp(keyword, 'g'), `<span style="color: ${color};">${keyword}</span>`);
+    });
+    
+    // 处理段落
+    const paragraphs = text.split('\n').filter(p => p.trim());
+    return paragraphs.map(para => `
+        <div class="report-paragraph">${para}</div>
+    `).join('');
+}
+
+// 创建分析段落（宋体格式）
+function createAnalysisSection(title, content) {
+    const sectionTitle = title.replace(/【|】/g, '');
+    
+    return `
+        <div class="report-section">
+            <div class="report-title">${formatTitle(sectionTitle)}</div>
+            <div class="report-content">${formatReportContent(content)}</div>
+        </div>
+    `;
+}
+
+// ============ 【处理并显示分析结果】 ============
+
 // 处理并显示分析结果 - 宋体格式
 export function processAndDisplayAnalysis(result) {
     console.log('处理分析结果...');
@@ -810,83 +601,7 @@ export function processAndDisplayAnalysis(result) {
     console.log('分析结果处理完成');
 }
 
-// 创建分析段落（宋体格式）
-function createAnalysisSection(title, content) {
-    const sectionTitle = title.replace(/【|】/g, '');
-    
-    return `
-        <div class="report-section">
-            <div class="report-title">${formatTitle(sectionTitle)}</div>
-            <div class="report-content">${formatReportContent(content)}</div>
-        </div>
-    `;
-}
-
-// 格式化标题
-function formatTitle(title) {
-    // 为不同类型的标题添加不同颜色
-    if (title.includes('喜用') || title.includes('喜神') || title.includes('用神')) {
-        return `<span style="color: #32CD32;">${title}</span>`;
-    } else if (title.includes('忌神') || title.includes('忌')) {
-        return `<span style="color: #FF4500;">${title}</span>`;
-    } else if (title.includes('性格')) {
-        return `<span style="color: #1E90FF;">${title}</span>`;
-    } else if (title.includes('职业') || title.includes('行业')) {
-        return `<span style="color: #8b4513;">${title}</span>`;
-    } else if (title.includes('富贵') || title.includes('财富')) {
-        return `<span style="color: #FFD700;">${title}</span>`;
-    } else if (title.includes('婚姻') || title.includes('感情')) {
-        return `<span style="color: #FF69B4;">${title}</span>`;
-    } else {
-        return `<span style="color: #8b4513;">${title}</span>`;
-    }
-}
-
-// 格式化报告内容
-function formatReportContent(text) {
-    // 处理五行颜色
-    text = text.replace(/金/g, '<span class="wuxing-element wuxing-jin">金</span>')
-               .replace(/木/g, '<span class="wuxing-element wuxing-mu">木</span>')
-               .replace(/水/g, '<span class="wuxing-element wuxing-shui">水</span>')
-               .replace(/火/g, '<span class="wuxing-element wuxing-huo">火</span>')
-               .replace(/土/g, '<span class="wuxing-element wuxing-tu">土</span>');
-    
-    // 处理喜用神颜色
-    text = text.replace(/喜神/g, '<span class="xiji-element xiji-xi">喜神</span>')
-               .replace(/用神/g, '<span class="xiji-element xiji-yong">用神</span>')
-               .replace(/忌神/g, '<span class="xiji-element xiji-ji">忌神</span>')
-               .replace(/喜用/g, '<span class="xiji-element xiji-xiyong">喜用</span>');
-    
-    // 处理十神颜色
-    const shishenKeywords = ['正官', '七杀', '正印', '偏印', '正财', '偏财', '食神', '伤官', '比肩', '劫财'];
-    shishenKeywords.forEach(keyword => {
-        const color = getShishenColor(keyword);
-        text = text.replace(new RegExp(keyword, 'g'), `<span style="color: ${color};">${keyword}</span>`);
-    });
-    
-    // 处理段落
-    const paragraphs = text.split('\n').filter(p => p.trim());
-    return paragraphs.map(para => `
-        <div class="report-paragraph">${para}</div>
-    `).join('');
-}
-
-// 获取十神颜色
-function getShishenColor(shishen) {
-    const colors = {
-        '正官': '#4169E1',    // 蓝色
-        '七杀': '#DC143C',    // 深红色
-        '正印': '#32CD32',    // 绿色
-        '偏印': '#20B2AA',    // 浅绿色
-        '正财': '#FFD700',    // 金色
-        '偏财': '#FFA500',    // 橙色
-        '食神': '#9370DB',    // 紫色
-        '伤官': '#FF69B4',    // 粉色
-        '比肩': '#808080',    // 灰色
-        '劫财': '#A9A9A9'     // 深灰色
-    };
-    return colors[shishen] || '#333';
-}
+// ============ 【完整内容显示函数】 ============
 
 // 显示完整分析内容（支付后调用）
 export function showFullAnalysisContent() {
@@ -1507,3 +1222,11 @@ export function collectUserData() {
     }
 }
 
+// ============ 【兼容性处理】 ============
+
+// 空函数，用于兼容旧的 main.js 调用
+export function displayDayunPan() {
+    console.log('displayDayunPan: 大运排盘已合并到 displayBaziPan 中，无需单独调用');
+    // 不执行任何操作，因为大运已经在八字排盘中显示
+    return;
+}
