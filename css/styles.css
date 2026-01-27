@@ -3087,3 +3087,422 @@ input:focus, select:focus {
 .report-section:nth-child(2) { animation-delay: 0.2s; }
 .report-section:nth-child(3) { animation-delay: 0.3s; }
 .report-section:nth-child(4) { animation-delay: 0.4s; }
+
+/* ============ 【修复：八字大运排盘容器高度】 ============ */
+
+/* 排盘主容器 - 确保足够高度 */
+#bazi-dayun-container {
+    width: 100%;
+    margin: 0 auto 40px;
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* 并列容器 - 固定高度，确保内容完整显示 */
+.parallel-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    height: 650px; /* 固定高度，确保八字和大运都有足够空间 */
+}
+
+/* 列样式 - 填充高度 */
+.bazi-column,
+.dayun-column {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e8e0d0;
+    padding: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* 填充父容器高度 */
+    overflow: hidden; /* 防止内容溢出 */
+    transition: all 0.3s ease;
+}
+
+/* 日历容器 - 使用flex布局确保内容占满空间 */
+.bazi-calendar,
+.dayun-calendar {
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* 占满列的高度 */
+    width: 100%; /* 占满列的宽度 */
+}
+
+/* 日历头部 - 固定高度 */
+.calendar-header {
+    text-align: center;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #f0e6d6;
+    flex-shrink: 0; /* 防止头部被压缩 */
+}
+
+.calendar-title {
+    font-size: 24px;
+    color: #8b4513;
+    font-weight: bold;
+    margin-bottom: 8px;
+    font-family: 'SimSun', '宋体', serif;
+}
+
+.calendar-subtitle {
+    font-size: 16px;
+    color: #7d6e63;
+    font-family: 'SimSun', '宋体', serif;
+}
+
+/* 日历网格 - 占据主要空间 */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    flex: 1; /* 占据剩余空间 */
+    align-content: center; /* 垂直居中 */
+    min-height: 280px; /* 最小高度 */
+}
+
+.calendar-item {
+    background: linear-gradient(135deg, #f9f5f0, #f0e6d6);
+    border: 2px solid #e8e0d0;
+    border-radius: 12px;
+    padding: 25px 15px;
+    text-align: center;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 160px; /* 增加最小高度 */
+}
+
+.calendar-label {
+    font-size: 16px;
+    color: #7d6e63;
+    margin-bottom: 15px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.calendar-value {
+    font-size: 36px; /* 增大字体 */
+    font-weight: bold;
+    margin-bottom: 15px;
+    font-family: 'KaiTi', '楷体', serif;
+    height: 50px; /* 增加高度 */
+    line-height: 50px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.calendar-element {
+    font-size: 16px;
+    color: #5d4037;
+    font-weight: 600;
+    min-height: 24px;
+    margin-top: 10px;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* 十神图例 */
+.shishen-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+    flex-shrink: 0; /* 防止被压缩 */
+}
+
+.legend-item {
+    font-size: 12px;
+    padding: 5px 12px;
+    background: white;
+    border: 1px solid;
+    border-radius: 15px;
+    font-weight: bold;
+}
+
+/* 大运信息区域 */
+.qiyun-info {
+    background: #f0f8ff;
+    border: 1px solid #d1e9ff;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 25px;
+    flex-shrink: 0;
+}
+
+.qiyun-item {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 12px;
+    font-family: 'SimSun', '宋体', serif;
+    padding: 10px 0;
+    border-bottom: 1px dashed #d1e9ff;
+    line-height: 1.6;
+}
+
+.qiyun-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+/* 大运列表 - 占据主要空间 */
+.dayun-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex: 1; /* 占据剩余空间 */
+    overflow-y: auto;
+    padding-right: 10px;
+    min-height: 300px; /* 最小高度确保可见 */
+}
+
+.dayun-item {
+    background: white;
+    border: 1px solid #e8e0d0;
+    border-radius: 10px;
+    padding: 18px 20px;
+    font-size: 16px; /* 增大字体 */
+    color: #333;
+    font-family: 'SimSun', '宋体', serif;
+    transition: all 0.3s ease;
+    border-left: 5px solid #4dabf5;
+    line-height: 1.6;
+    flex-shrink: 0; /* 防止被压缩 */
+}
+
+.dayun-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 6px 15px rgba(77, 171, 245, 0.2);
+    border-left-color: #8b4513;
+}
+
+/* 日历底部 */
+.calendar-footer {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #f0e6d6;
+    text-align: center;
+    flex-shrink: 0; /* 防止被压缩 */
+}
+
+.calendar-note {
+    font-size: 14px;
+    color: #777;
+    font-style: italic;
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+/* 加载占位符 */
+.calendar-placeholder {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+    font-family: 'SimSun', '宋体', serif;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+/* 滚动条样式优化 */
+.dayun-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.dayun-list::-webkit-scrollbar-track {
+    background: #f5f5f5;
+    border-radius: 4px;
+}
+
+.dayun-list::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #8b4513, #d4b483);
+    border-radius: 4px;
+}
+
+.dayun-list::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #6b3410, #b4966a);
+}
+
+/* ============ 【H5响应式适配】 ============ */
+@media (max-width: 1024px) {
+    .parallel-container {
+        height: 600px;
+    }
+    
+    .calendar-grid {
+        gap: 15px;
+        min-height: 250px;
+    }
+    
+    .calendar-item {
+        padding: 20px 12px;
+        min-height: 140px;
+    }
+    
+    .calendar-value {
+        font-size: 32px;
+        height: 45px;
+        line-height: 45px;
+    }
+    
+    .calendar-element {
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .parallel-container {
+        grid-template-columns: 1fr;
+        gap: 25px;
+        height: auto; /* 移动端自适应高度 */
+        min-height: 1100px; /* 两列总高度 */
+    }
+    
+    .bazi-column,
+    .dayun-column {
+        height: 500px; /* 移动端固定每列高度 */
+        padding: 20px;
+    }
+    
+    .calendar-grid {
+        min-height: 220px;
+    }
+    
+    .calendar-item {
+        min-height: 130px;
+    }
+    
+    .calendar-value {
+        font-size: 28px;
+        height: 40px;
+        line-height: 40px;
+    }
+    
+    .calendar-title {
+        font-size: 22px;
+    }
+    
+    .calendar-subtitle {
+        font-size: 15px;
+    }
+    
+    .dayun-item {
+        padding: 16px 18px;
+        font-size: 15px;
+    }
+    
+    .qiyun-item {
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .parallel-container {
+        min-height: 1000px;
+    }
+    
+    .bazi-column,
+    .dayun-column {
+        height: 450px;
+        padding: 18px;
+    }
+    
+    .calendar-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .calendar-item {
+        min-height: 120px;
+        padding: 18px 10px;
+    }
+    
+    .calendar-value {
+        font-size: 26px;
+        height: 38px;
+        line-height: 38px;
+    }
+    
+    .calendar-title {
+        font-size: 20px;
+    }
+    
+    .calendar-label {
+        font-size: 14px;
+    }
+    
+    .dayun-item {
+        padding: 14px 16px;
+        font-size: 14px;
+    }
+}
+
+/* ============ 【大型屏幕优化】 ============ */
+@media (min-width: 1440px) {
+    .parallel-container {
+        height: 700px;
+        gap: 40px;
+    }
+    
+    .bazi-column,
+    .dayun-column {
+        padding: 30px;
+    }
+    
+    .calendar-grid {
+        gap: 25px;
+        min-height: 320px;
+    }
+    
+    .calendar-item {
+        min-height: 180px;
+        padding: 30px 20px;
+    }
+    
+    .calendar-value {
+        font-size: 40px;
+        height: 60px;
+        line-height: 60px;
+    }
+    
+    .calendar-element {
+        font-size: 18px;
+    }
+    
+    .calendar-title {
+        font-size: 28px;
+    }
+    
+    .calendar-subtitle {
+        font-size: 18px;
+    }
+    
+    .dayun-item {
+        font-size: 17px;
+        padding: 20px 25px;
+    }
+    
+    .qiyun-item {
+        font-size: 17px;
+    }
+}
+
+/* ============ 【确保父容器不会限制高度】 ============ */
+#bazi-grid {
+    min-height: 700px; /* 确保容器有足够高度 */
+    width: 100%;
+    overflow: visible; /* 允许内容显示 */
+}
+
+.result-container {
+    min-height: auto; /* 不限制高度 */
+    overflow: visible; /* 允许内容显示 */
+}
