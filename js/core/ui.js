@@ -319,8 +319,6 @@ function getShishenColor(shishen) {
 }
 
 // ============ 【八字排盘日历格式】 ============
-
-// 创建八字排盘日历格式 - 优化版
 function createBaziCalendar(baziData) {
     if (!baziData) return '<div style="text-align:center;padding:20px;color:#666;font-family:\'SimSun\',\'宋体\',serif;">八字数据加载中...</div>';
     
@@ -359,19 +357,41 @@ function createBaziCalendar(baziData) {
     `;
 }
 
-// 创建大运排盘表格格式
+// ============ 【大运排盘表格格式】 ============
 function createDayunCalendar() {
     // 从分析结果中提取大运信息
     if (!STATE.fullAnalysisResult) {
         return '<div style="text-align:center;padding:20px;color:#666;font-family:\'SimSun\',\'宋体\',serif;">大运数据加载中...</div>';
     }
     
-    // 这里需要根据实际的大运数据生成表格
-    // 示例数据，实际应从分析结果中解析
-    const dayunData = {
-        ages: ['8', '18', '28', '38', '48', '58', '68', '78'],
-        dayun: ['壬子', '辛亥', '庚戌', '己酉', '戊申', '丁未', '丙午', '乙巳']
-    };
+    // 这里需要根据实际的分析结果解析大运数据
+    // 示例数据格式：岁 8 18 28 38 48 58 68 78
+    //               大 壬 辛 庚 己 戊 丁 丙 乙
+    //               运 子 亥 戌 酉 申 未 午 巳
+    
+    // 尝试从分析结果中解析大运信息
+    let ages = ['8', '18', '28', '38', '48', '58', '68', '78'];
+    let stems = ['壬', '辛', '庚', '己', '戊', '丁', '丙', '乙'];
+    let branches = ['子', '亥', '戌', '酉', '申', '未', '午', '巳'];
+    
+    // 如果有真实的大运数据，替换上面的示例数据
+    if (STATE.fullAnalysisResult.includes('大运排盘')) {
+        // 这里可以添加解析大运数据的逻辑
+        // const dayunMatch = STATE.fullAnalysisResult.match(/大运排盘[\s\S]*?(岁\s+[\d\s]+)\s+(大\s+[\u4e00-\u9fa5\s]+)\s+(运\s+[\u4e00-\u9fa5\s]+)/);
+        // if (dayunMatch) {
+        //     // 解析年龄
+        //     const ageLine = dayunMatch[1];
+        //     ages = ageLine.replace('岁', '').trim().split(/\s+/);
+            
+        //     // 解析天干
+        //     const stemLine = dayunMatch[2];
+        //     stems = stemLine.replace('大', '').trim().split(/\s+/);
+            
+        //     // 解析地支
+        //     const branchLine = dayunMatch[3];
+        //     branches = branchLine.replace('运', '').trim().split(/\s+/);
+        // }
+    }
     
     return `
         <div class="dayun-calendar">
@@ -384,17 +404,17 @@ function createDayunCalendar() {
                     <thead>
                         <tr>
                             <th>岁</th>
-                            ${dayunData.ages.map(age => `<th>${age}</th>`).join('')}
+                            ${ages.map(age => `<th>${age}</th>`).join('')}
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td>大</td>
-                            ${dayunData.dayun.map(item => `<td>${item.substring(0, 1)}</td>`).join('')}
+                            ${stems.map(stem => `<td>${stem}</td>`).join('')}
                         </tr>
                         <tr>
                             <td>运</td>
-                            ${dayunData.dayun.map(item => `<td>${item.substring(1)}</td>`).join('')}
+                            ${branches.map(branch => `<td>${branch}</td>`).join('')}
                         </tr>
                     </tbody>
                 </table>
@@ -406,7 +426,41 @@ function createDayunCalendar() {
     `;
 }
 
-// 显示八字排盘结果 - 日历格式
+// ============ 【格式化报告内容】 ============
+function formatReportContent(text) {
+    // 只保留十神颜色处理，删除五行颜色处理
+    text = text.replace(/喜神/g, '<span class="xiji-element xiji-xi">喜神</span>')
+               .replace(/用神/g, '<span class="xiji-element xiji-yong">用神</span>')
+               .replace(/忌神/g, '<span class="xiji-element xiji-ji">忌神</span>')
+               .replace(/喜用/g, '<span class="xiji-element xiji-xiyong">喜用</span>');
+    
+    // 处理十神颜色
+    const shishenKeywords = ['正官', '七杀', '正印', '偏印', '正财', '偏财', '食神', '伤官', '比肩', '劫财'];
+    shishenKeywords.forEach(keyword => {
+        const color = getShishenColor(keyword);
+        text = text.replace(new RegExp(keyword, 'g'), `<span style="color: ${color};">${keyword}</span>`);
+    });
+    
+    // 处理段落
+    const paragraphs = text.split('\n').filter(p => p.trim());
+    return paragraphs.map(para => `
+        <div class="report-paragraph">${para}</div>
+    `).join('');
+}
+
+// ============ 【创建分析段落（宋体格式）】 ============
+function createAnalysisSection(title, content) {
+    const sectionTitle = title.replace(/【|】/g, '');
+    
+    return `
+        <div class="report-section">
+            <div class="report-title">${formatTitle(sectionTitle)}</div>
+            <div class="report-content">${formatReportContent(content)}</div>
+        </div>
+    `;
+}
+
+// ============ 【显示八字排盘结果 - 日历格式】 ============
 export function displayBaziPan() {
     const baziGrid = UI.baziGrid();
     if (!baziGrid) return;
@@ -420,8 +474,8 @@ export function displayBaziPan() {
         background: white;
         border-radius: 8px;
         box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-        padding: 20px;
-        margin-bottom: 25px;
+        padding: 25px;
+        margin-bottom: 30px;
         border: 1px solid #e8e8e8;
     `;
     
@@ -429,12 +483,12 @@ export function displayBaziPan() {
     const titleDiv = document.createElement('div');
     titleDiv.style.cssText = `
         text-align: center;
-        margin-bottom: 25px;
-        padding-bottom: 15px;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
         border-bottom: 2px solid #e8e8e8;
     `;
     titleDiv.innerHTML = `
-        <div style="font-size: 24px; color: #8b4513; font-weight: bold; font-family: 'SimSun', '宋体', serif; margin-bottom: 5px;">
+        <div style="font-size: 24px; color: #8b4513; font-weight: bold; font-family: 'SimSun', '宋体', serif; margin-bottom: 8px;">
             八字大运排盘
         </div>
         <div style="font-size: 14px; color: #666; font-family: 'SimSun', '宋体', serif;">
@@ -443,25 +497,24 @@ export function displayBaziPan() {
     `;
     container.appendChild(titleDiv);
     
-    // 添加八字排盘
-    const baziSection = document.createElement('div');
-    baziSection.innerHTML = createBaziCalendar(STATE.baziData);
-    container.appendChild(baziSection);
+    // 创建并列容器
+    const parallelContainer = document.createElement('div');
+    parallelContainer.className = 'parallel-container';
     
-    // 添加分隔线
-    const separator = document.createElement('div');
-    separator.style.cssText = `
-        height: 1px;
-        background: linear-gradient(to right, transparent, #d4af37, transparent);
-        margin: 25px 0;
-    `;
-    container.appendChild(separator);
+    // 添加八字排盘列
+    const baziColumn = document.createElement('div');
+    baziColumn.className = 'bazi-column';
+    baziColumn.innerHTML = createBaziCalendar(STATE.baziData);
     
-    // 添加大运排盘
-    const dayunSection = document.createElement('div');
-    dayunSection.innerHTML = createDayunCalendar();
-    container.appendChild(dayunSection);
+    // 添加大运排盘列
+    const dayunColumn = document.createElement('div');
+    dayunColumn.className = 'dayun-column';
+    dayunColumn.innerHTML = createDayunCalendar();
     
+    parallelContainer.appendChild(baziColumn);
+    parallelContainer.appendChild(dayunColumn);
+    
+    container.appendChild(parallelContainer);
     baziGrid.appendChild(container);
 }
 
@@ -1229,4 +1282,5 @@ export function displayDayunPan() {
     // 不执行任何操作，因为大运已经在八字排盘中显示
     return;
 }
+
 
