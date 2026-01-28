@@ -1442,7 +1442,6 @@ function displayDayunPan() {
 }
 
 // ============ 【统一导出】 ============
-
 export {
     UI,
     initFormOptions,
@@ -1451,6 +1450,7 @@ export {
     updateUnlockInfo,
     displayPredictorInfo,
     displayBaziPan,
+    displayDayunPan,  // 确保导出此函数
     processAndDisplayAnalysis,
     showFullAnalysisContent,
     showPaymentModal,
@@ -1466,8 +1466,8 @@ export {
     hideAnalysisResult,
     validateForm,
     collectUserData,
-    resetFormErrors,
-    displayDayunPan
+    resetFormErrors
 };
+
 
 
