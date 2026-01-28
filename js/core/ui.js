@@ -434,49 +434,24 @@ function extractDayunData(text) {
     return result;
 }
 
-// 大运排盘表格格式 - 从分析结果中提取真实数据
+// ui.js 中更新createDayunCalendar函数
 function createDayunCalendar() {
     const isHehun = STATE.currentService === '八字合婚';
     const hasPartnerData = STATE.partnerData && STATE.partnerBaziData;
     
-    let userDayunData = { ages: [], ganzhi: [] };
-    let partnerDayunData = { ages: [], ganzhi: [] };
+    // 使用导入的extractDayunData函数
+    let userDayunData = extractDayunData(STATE.fullAnalysisResult, 'user');
+    let partnerDayunData = isHehun ? extractDayunData(STATE.fullAnalysisResult, 'partner') : { ages: [], ganzhi: [] };
     
-    // 从分析结果中提取用户大运数据
-    if (STATE.fullAnalysisResult) {
-        userDayunData = extractDayunDataV2(STATE.fullAnalysisResult, 'user');
-        console.log('用户大运数据:', userDayunData);
-    }
-    
-    // 如果是八字合婚且有伴侣数据，尝试提取伴侣大运数据
-    if (isHehun && hasPartnerData && STATE.fullAnalysisResult) {
-        partnerDayunData = extractDayunDataV2(STATE.fullAnalysisResult, 'partner');
-        console.log('伴侣大运数据:', partnerDayunData);
-    }
+    console.log('用户大运数据:', userDayunData);
+    console.log('伴侣大运数据:', partnerDayunData);
     
     // 确保数据长度一致
     const maxLength = Math.min(userDayunData.ages.length, userDayunData.ganzhi.length, 8);
-    
     const userAges = userDayunData.ages.slice(0, maxLength);
     const userGanzhi = userDayunData.ganzhi.slice(0, maxLength);
     
-    // 如果没有数据，显示提示
-    if (maxLength === 0) {
-        return `
-            <div class="dayun-calendar">
-                <div class="calendar-header">
-                    <div class="calendar-title">📈 ${isHehun && hasPartnerData ? '双方大运排盘' : '大运排盘'}</div>
-                    <div class="calendar-subtitle">命运流转 • 十年一运</div>
-                </div>
-                <div style="text-align: center; padding: 40px; color: #666; font-family: 'SimSun', '宋体', serif;">
-                    <div style="margin-bottom: 15px; font-size: 18px;">大运数据解析中...</div>
-                    <div style="font-size: 14px; color: #999;">正在从分析结果中提取大运信息</div>
-                </div>
-            </div>
-        `;
-    }
-    
-    // 如果是八字合婚，显示双人大运对比表格
+    // 如果是八字合婚，显示双人大运对比
     if (isHehun && hasPartnerData && partnerDayunData.ages.length > 0) {
         const partnerMaxLength = Math.min(partnerDayunData.ages.length, partnerDayunData.ganzhi.length, 8);
         const partnerAges = partnerDayunData.ages.slice(0, partnerMaxLength);
@@ -489,69 +464,66 @@ function createDayunCalendar() {
                     <div class="calendar-subtitle">命运同步 • 十年一运</div>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-                    <!-- 用户大运表格 -->
-                    <div>
-                        <div style="font-size: 18px; color: #8b4513; font-weight: bold; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #f0e6d6; text-align: center;">
-                            ${STATE.userData?.name || '用户'} 大运
-                        </div>
-                        <div class="dayun-table-container">
-                            <table class="dayun-table dayun-table-vertical">
-                                <thead>
-                                    <tr>
-                                        <th>岁</th>
-                                        <th>大运</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${userAges.map((age, index) => `
-                                        <tr>
-                                            <td class="age-cell">${age}</td>
-                                            <td class="ganzhi-cell">${userGanzhi[index] || ''}</td>
-                                        </tr>
+                <!-- 双人大运横向对比表格 -->
+                <div class="dayun-table-container">
+                    <table class="dayun-table dayun-table-horizontal">
+                        <thead>
+                            <tr>
+                                <th rowspan="2" style="background: linear-gradient(135deg, #f9f5f0, #f0e6d6);">项目</th>
+                                <th colspan="${Math.max(userAges.length, partnerAges.length)}" style="background: linear-gradient(135deg, #e8f4fd, #d4e9fa);">大运阶段</th>
+                            </tr>
+                            <tr>
+                                ${userAges.map((age, index) => `
+                                    <th class="age-header" style="background: linear-gradient(135deg, #f0f8ff, #e6f2ff);">
+                                        <div class="age-header-inner">
+                                            <span class="age-number">${age}</span>
+                                            <span class="age-label">岁</span>
+                                        </div>
+                                    </th>
+                                `).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 用户大运行 -->
+                            <tr class="user-dayun-row">
+                                <td class="person-name" style="background: linear-gradient(135deg, #f9f5f0, #f0e6d6); color: #8b4513; font-weight: bold;">
+                                    ${STATE.userData?.name || '用户'}大运
+                                </td>
+                                ${userGanzhi.map(ganzhi => `
+                                    <td class="ganzhi-cell vertical-text" style="font-family: 'SimSun', '宋体', serif;">
+                                        ${ganzhi}
+                                    </td>
+                                `).join('')}
+                            </tr>
+                            
+                            <!-- 伴侣大运行（如果是八字合婚） -->
+                            ${isHehun && hasPartnerData && partnerAges.length > 0 ? `
+                                <tr class="partner-dayun-row">
+                                    <td class="person-name" style="background: linear-gradient(135deg, #f0e6d6, #e8d4b9); color: #d2691e; font-weight: bold;">
+                                        ${STATE.partnerData?.partnerName || '伴侣'}大运
+                                    </td>
+                                    ${partnerGanzhi.map(ganzhi => `
+                                        <td class="ganzhi-cell vertical-text" style="font-family: 'SimSun', '宋体', serif;">
+                                            ${ganzhi}
+                                        </td>
                                     `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <!-- 伴侣大运表格 -->
-                    <div>
-                        <div style="font-size: 18px; color: #d2691e; font-weight: bold; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #f0e6d6; text-align: center;">
-                            ${STATE.partnerData?.partnerName || '伴侣'} 大运
-                        </div>
-                        <div class="dayun-table-container">
-                            <table class="dayun-table dayun-table-vertical">
-                                <thead>
-                                    <tr>
-                                        <th>岁</th>
-                                        <th>大运</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${partnerAges.map((age, index) => `
-                                        <tr>
-                                            <td class="age-cell">${age}</td>
-                                            <td class="ganzhi-cell">${partnerGanzhi[index] || ''}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                                </tr>
+                            ` : ''}
+                        </tbody>
+                    </table>
                 </div>
                 
                 <div class="calendar-footer">
                     <div class="calendar-note">※ 大运推算遵循"男命阳顺阴逆，女命阳逆阴顺"原则</div>
                     <div class="calendar-note" style="color: #666; margin-top: 8px;">
-                        提示：对比双方大运走势，分析婚姻运势同步情况
+                        提示：横向对比双方大运走势，分析婚姻运势同步情况
                     </div>
                 </div>
             </div>
         `;
     }
     
-    // 单人大运表格
+    // 单人大运表格（横向布局，字体竖排）
     return `
         <div class="dayun-calendar">
             <div class="calendar-header">
@@ -559,20 +531,31 @@ function createDayunCalendar() {
                 <div class="calendar-subtitle">命运流转 • 十年一运</div>
             </div>
             <div class="dayun-table-container">
-                <table class="dayun-table dayun-table-vertical">
+                <table class="dayun-table dayun-table-horizontal">
                     <thead>
                         <tr>
                             <th>岁</th>
-                            <th>大运</th>
+                            ${userAges.map(age => `
+                                <th class="age-header">
+                                    <div class="age-header-inner">
+                                        <span class="age-number">${age}</span>
+                                        <span class="age-label">岁</span>
+                                    </div>
+                                </th>
+                            `).join('')}
                         </tr>
                     </thead>
                     <tbody>
-                        ${userAges.map((age, index) => `
-                            <tr>
-                                <td class="age-cell">${age}</td>
-                                <td class="ganzhi-cell">${userGanzhi[index] || ''}</td>
-                            </tr>
-                        `).join('')}
+                        <tr>
+                            <td class="ganzhi-label" style="background: linear-gradient(135deg, #f9f5f0, #f0e6d6); font-weight: bold; color: #8b4513;">
+                                大运
+                            </td>
+                            ${userGanzhi.map(ganzhi => `
+                                <td class="ganzhi-cell vertical-text" style="font-family: 'SimSun', '宋体', serif;">
+                                    ${ganzhi}
+                                </td>
+                            `).join('')}
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -1732,6 +1715,7 @@ export {
     resetFormErrors,
     displayDayunPan
 };
+
 
 
 
