@@ -6,6 +6,16 @@
         <img :src="heroImage" :alt="app.currentService" class="hero-image" />
       </section>
       <FormSection @submit="onAnalyze" />
+      <section class="detail-section" v-if="detailImage">
+        <div class="image-placeholder" v-show="!detailImageLoaded">正在加载图片...</div>
+        <img
+          :src="detailImage"
+          :alt="app.currentService + '明细图'"
+          class="detail-image"
+          :class="{ loaded: detailImageLoaded }"
+          @load="detailImageLoaded = true"
+        />
+      </section>
       <p v-if="app.error" class="error-msg">{{ app.error }}</p>
       <ResultSection
         v-show="app.showResult"
@@ -20,7 +30,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useAppStore } from '../stores/app.js'
 import { useConfigStore } from '../stores/config.js'
 import { useAnalysis } from '../composables/useAnalysis.js'
@@ -37,8 +47,12 @@ const { initPaymentCheck } = usePayment()
 
 const showPayment = ref(false)
 const resultRef = ref(null)
+const detailImageLoaded = ref(false)
 
 const heroImage = computed(() => config.getService(app.currentService)?.heroImage || '')
+const detailImage = computed(() => config.getService(app.currentService)?.detailImage || '')
+
+watch(detailImage, () => { detailImageLoaded.value = false })
 
 async function onAnalyze() {
   try {
@@ -99,5 +113,38 @@ onMounted(() => {
 .container { max-width: 1200px; margin: 0 auto; padding: 0 16px 48px; }
 .hero-section { height: 40vh; min-height: 260px; max-height: 360px; overflow: hidden; background: #f0e6d6; border-radius: 0 0 12px 12px; margin-bottom: 24px; }
 .hero-image { width: 100%; height: 100%; object-fit: cover; }
+.detail-section {
+  position: relative;
+  width: 100%;
+  height: 50vh;
+  min-height: 300px;
+  max-height: 400px;
+  overflow: hidden;
+  margin: 0 0 24px 0;
+  background: #f0e6d6;
+  border-radius: 12px;
+}
+.detail-section .image-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5f1e8, #e8dfd0);
+  color: #888;
+  font-size: 14px;
+}
+.detail-section .detail-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: opacity 0.5s ease;
+  opacity: 0;
+}
+.detail-section .detail-image.loaded {
+  opacity: 1;
+}
 .error-msg { color: var(--error-color); padding: 12px; margin-top: 12px; }
 </style>
