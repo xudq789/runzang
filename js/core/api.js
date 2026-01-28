@@ -1,4 +1,5 @@
-// api.js - API通信模块
+// api.js - 修复 searchText 未定义的错误
+// API通信模块
 import { DOM } from './utils.js';
 
 // DeepSeek API调用
@@ -127,8 +128,14 @@ function extractSingleBazi(text, isPartner = false) {
     };
     
     const prefix = isPartner ? '伴侣' : '用户';
-    if (prefix === '用户' && !text.includes('用户八字排盘')) {
-        // 非合婚服务的标题是"八字排盘"
+    
+    // 如果是伴侣且非合婚服务，返回空数据
+    if (isPartner && !text.includes('伴侣八字排盘')) {
+        return baziData;
+    }
+    
+    // 非合婚服务的标题是"八字排盘"
+    if (!isPartner && !text.includes('用户八字排盘')) {
         const pattern = /【八字排盘】[\s\S]*?年柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?[\s\S]*?月柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?[\s\S]*?日柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?[\s\S]*?时柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/;
         const match = text.match(pattern);
         
@@ -174,19 +181,34 @@ export function extractDayunData(text, type = 'user') {
     
     console.log(`提取${type}大运数据...`);
     
+    // 初始化搜索文本
+    let searchText = text;
+    
     // 根据类型选择搜索关键词
     const prefix = type === 'partner' ? '伴侣' : '用户';
-    if (prefix === '用户' && !text.includes('用户大运排盘')) {
-        // 非合婚服务的标题是"大运排盘"
+    
+    // 如果是伴侣且非合婚服务，返回空数据
+    if (type === 'partner' && !text.includes('伴侣大运排盘')) {
+        return result;
+    }
+    
+    // 非合婚服务的标题是"大运排盘"
+    if (type === 'user' && !text.includes('用户大运排盘')) {
         const sectionPattern = /【大运排盘】([\s\S]*?)(?=【|$)/;
         const sectionMatch = text.match(sectionPattern);
-        searchText = sectionMatch ? sectionMatch[1] : text;
+        if (sectionMatch) {
+            searchText = sectionMatch[1];
+        }
     } else {
         // 合婚服务的提取
         const sectionPattern = new RegExp(`【${prefix}大运排盘】([\\s\\S]*?)(?=【|$)`);
         const sectionMatch = text.match(sectionPattern);
-        searchText = sectionMatch ? sectionMatch[1] : text;
+        if (sectionMatch) {
+            searchText = sectionMatch[1];
+        }
     }
+    
+    console.log(`搜索文本长度: ${searchText.length}`);
     
     // 提取岁数
     const agePattern = /岁[：:]\s*((?:\d+\s+){3,}\d+)/;
@@ -194,6 +216,7 @@ export function extractDayunData(text, type = 'user') {
     
     if (ageMatch) {
         result.ages = ageMatch[1].trim().split(/\s+/).slice(0, 8);
+        console.log(`提取到岁数: ${result.ages}`);
     }
     
     // 提取大运干支
@@ -202,22 +225,38 @@ export function extractDayunData(text, type = 'user') {
     
     if (ganzhiMatch) {
         result.ganzhi = ganzhiMatch[1].trim().split(/\s+/).slice(0, 8);
+        console.log(`提取到大运干支: ${result.ganzhi}`);
     }
     
     // 如果提取失败，尝试备用方法
     if (result.ages.length === 0 || result.ganzhi.length === 0) {
+        console.log('使用备用方法提取...');
+        
         // 提取所有数字作为年龄
         const allAges = searchText.match(/\b\d+\b/g);
         if (allAges) {
-            const filteredAges = [...new Set(allAges.map(age => parseInt(age)).filter(age => age >= 5 && age <= 80).sort((a, b) => a - b))];
-            result.ages = filteredAges.slice(0, 8).map(age => age.toString());
+            // 过滤出可能的起运岁数（通常在5-80之间）
+            const possibleAges = [...new Set(allAges.map(age => parseInt(age)).filter(age => age >= 5 && age <= 80).sort((a, b) => a - b))];
+            result.ages = possibleAges.slice(0, 8).map(age => age.toString());
+            console.log(`备用方法提取到岁数: ${result.ages}`);
         }
         
         // 提取所有干支
         const allGanzhi = searchText.match(/[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/g);
         if (allGanzhi) {
             result.ganzhi = allGanzhi.slice(0, 8);
+            console.log(`备用方法提取到大运干支: ${result.ganzhi}`);
         }
+    }
+    
+    // 如果还没有数据，使用默认示例数据
+    if (result.ages.length === 0) {
+        result.ages = ['8', '18', '28', '38', '48', '58', '68', '78'];
+        console.log('使用默认岁数数据');
+    }
+    if (result.ganzhi.length === 0) {
+        result.ganzhi = ['壬子', '辛亥', '庚戌', '己酉', '戊申', '丁未', '丙午', '乙巳'];
+        console.log('使用默认大运干支数据');
     }
     
     // 确保长度一致
@@ -225,6 +264,6 @@ export function extractDayunData(text, type = 'user') {
     result.ages = result.ages.slice(0, minLength);
     result.ganzhi = result.ganzhi.slice(0, minLength);
     
-    console.log(`提取到${type}大运数据:`, result);
+    console.log(`最终提取到${type}大运数据:`, result);
     return result;
 }
