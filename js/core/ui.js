@@ -61,8 +61,10 @@ export const UI = {
     paymentOrderId: () => DOM.id('payment-order-id')
 };
 
+// ============ 【公共函数定义（不直接导出）】 ============
+
 // 初始化表单选项
-export function initFormOptions() {
+function initFormOptions() {
     // 年份选项 (1900-2024)
     const years = [];
     for (let i = 1900; i <= 2024; i++) years.push(i);
@@ -108,7 +110,7 @@ export function initFormOptions() {
 }
 
 // 设置默认表单值
-export function setDefaultValues() {
+function setDefaultValues() {
     // 用户默认值
     UI.name().value = '张三';
     UI.gender().value = 'male';
@@ -131,7 +133,7 @@ export function setDefaultValues() {
 }
 
 // 更新服务显示
-export function updateServiceDisplay(serviceName) {
+function updateServiceDisplay(serviceName) {
     // 更新导航激活状态
     DOM.getAll('.service-nav a').forEach(link => {
         link.classList.remove('active');
@@ -195,7 +197,7 @@ export function updateServiceDisplay(serviceName) {
 }
 
 // 更新解锁价格和项目
-export function updateUnlockInfo() {
+function updateUnlockInfo() {
     // 确保使用当前服务
     const currentService = STATE.currentService;
     console.log('updateUnlockInfo: 当前服务=', currentService, '解锁状态=', STATE.isPaymentUnlocked);
@@ -239,7 +241,7 @@ export function updateUnlockInfo() {
 }
 
 // 显示预测者信息
-export function displayPredictorInfo() {
+function displayPredictorInfo() {
     const predictorInfoGrid = UI.predictorInfoGrid();
     if (!predictorInfoGrid || !STATE.userData) return;
     
@@ -287,26 +289,26 @@ export function displayPredictorInfo() {
     });
 }
 
-// ============ 【辅助函数：五行和十神颜色处理】 ============
+// ============ 【内部辅助函数（不导出）】 ============
 
 // 获取十神颜色
 function getShishenColor(shishen) {
     const colors = {
-        '正官': '#4169E1',    // 蓝色
-        '七杀': '#DC143C',    // 深红色
-        '正印': '#32CD32',    // 绿色
-        '偏印': '#20B2AA',    // 浅绿色
-        '正财': '#FFD700',    // 金色
-        '偏财': '#FFA500',    // 橙色
-        '食神': '#9370DB',    // 紫色
-        '伤官': '#FF69B4',    // 粉色
-        '比肩': '#808080',    // 灰色
-        '劫财': '#A9A9A9'     // 深灰色
+        '正官': '#4169E1',
+        '七杀': '#DC143C',
+        '正印': '#32CD32',
+        '偏印': '#20B2AA',
+        '正财': '#FFD700',
+        '偏财': '#FFA500',
+        '食神': '#9370DB',
+        '伤官': '#FF69B4',
+        '比肩': '#808080',
+        '劫财': '#A9A9A9'
     };
     return colors[shishen] || '#333';
 }
 
-// ============ 【八字排盘日历格式】 ============
+// 八字排盘日历格式
 function createBaziCalendar(baziData) {
     if (!baziData) return '<div style="text-align:center;padding:20px;color:#666;font-family:\'SimSun\',\'宋体\',serif;">八字数据加载中...</div>';
     
@@ -345,19 +347,14 @@ function createBaziCalendar(baziData) {
     `;
 }
 
-// ============ 【大运排盘表格格式】 ============
+// 大运排盘表格格式
 function createDayunCalendar() {
     // 从分析结果中提取大运信息
     if (!STATE.fullAnalysisResult) {
         return '<div style="text-align:center;padding:20px;color:#666;font-family:\'SimSun\',\'宋体\',serif;">大运数据加载中...</div>';
     }
     
-    // 这里需要根据实际的分析结果解析大运数据
-    // 示例数据格式：岁 8 18 28 38 48 58 68 78
-    //               大 壬 辛 庚 己 戊 丁 丙 乙
-    //               运 子 亥 戌 酉 申 未 午 巳
-    
-    // 尝试从分析结果中解析大运信息
+    // 示例数据
     let ages = ['8', '18', '28', '38', '48', '58', '68', '78'];
     let stems = ['壬', '辛', '庚', '己', '戊', '丁', '丙', '乙'];
     let branches = ['子', '亥', '戌', '酉', '申', '未', '午', '巳'];
@@ -365,20 +362,6 @@ function createDayunCalendar() {
     // 如果有真实的大运数据，替换上面的示例数据
     if (STATE.fullAnalysisResult.includes('大运排盘')) {
         // 这里可以添加解析大运数据的逻辑
-        // const dayunMatch = STATE.fullAnalysisResult.match(/大运排盘[\s\S]*?(岁\s+[\d\s]+)\s+(大\s+[\u4e00-\u9fa5\s]+)\s+(运\s+[\u4e00-\u9fa5\s]+)/);
-        // if (dayunMatch) {
-        //     // 解析年龄
-        //     const ageLine = dayunMatch[1];
-        //     ages = ageLine.replace('岁', '').trim().split(/\s+/);
-            
-        //     // 解析天干
-        //     const stemLine = dayunMatch[2];
-        //     stems = stemLine.replace('大', '').trim().split(/\s+/);
-            
-        //     // 解析地支
-        //     const branchLine = dayunMatch[3];
-        //     branches = branchLine.replace('运', '').trim().split(/\s+/);
-        // }
     }
     
     return `
@@ -414,9 +397,33 @@ function createDayunCalendar() {
     `;
 }
 
-// ============ 【格式化报告内容 - 唯一版本】 ============
+// 格式化标题
+function formatTitle(title) {
+    // 为不同类型的标题添加不同颜色
+    if (title.includes('喜用') || title.includes('喜神') || title.includes('用神')) {
+        return `<span style="color: #32CD32;">${title}</span>`;
+    } else if (title.includes('忌神') || title.includes('忌')) {
+        return `<span style="color: #FF4500;">${title}</span>`;
+    } else if (title.includes('性格')) {
+        return `<span style="color: #1E90FF;">${title}</span>`;
+    } else if (title.includes('职业') || title.includes('行业')) {
+        return `<span style="color: #8b4513;">${title}</span>`;
+    } else if (title.includes('富贵') || title.includes('财富')) {
+        return `<span style="color: #FFD700;">${title}</span>`;
+    } else if (title.includes('婚姻') || title.includes('感情')) {
+        return `<span style="color: #FF69B4;">${title}</span>`;
+    } else if (title.includes('事业') || title.includes('财运')) {
+        return `<span style="color: #FFA500;">${title}</span>`;
+    } else if (title.includes('健康')) {
+        return `<span style="color: #32CD32;">${title}</span>`;
+    } else {
+        return `<span style="color: #8b4513;">${title}</span>`;
+    }
+}
+
+// 格式化报告内容
 function formatReportContent(text) {
-    // 只保留十神颜色处理，删除五行颜色处理
+    // 只保留十神颜色处理
     text = text.replace(/喜神/g, '<span class="xiji-element xiji-xi">喜神</span>')
                .replace(/用神/g, '<span class="xiji-element xiji-yong">用神</span>')
                .replace(/忌神/g, '<span class="xiji-element xiji-ji">忌神</span>')
@@ -436,7 +443,7 @@ function formatReportContent(text) {
     `).join('');
 }
 
-// ============ 【创建分析段落（宋体格式）】 ============
+// 创建分析段落
 function createAnalysisSection(title, content) {
     const sectionTitle = title.replace(/【|】/g, '');
     
@@ -448,8 +455,10 @@ function createAnalysisSection(title, content) {
     `;
 }
 
-// ============ 【显示八字排盘结果 - 日历格式】 ============
-export function displayBaziPan() {
+// ============ 【更多公共函数】 ============
+
+// 显示八字排盘结果
+function displayBaziPan() {
     const baziGrid = UI.baziGrid();
     if (!baziGrid) return;
     
@@ -506,63 +515,8 @@ export function displayBaziPan() {
     baziGrid.appendChild(container);
 }
 
-// ============ 【分析报告格式化函数】 ============
-
-// ============ 【格式化标题】 ============
-function formatTitle(title) {
-    // 为不同类型的标题添加不同颜色
-    if (title.includes('喜用') || title.includes('喜神') || title.includes('用神')) {
-        return `<span style="color: #32CD32;">${title}</span>`;
-    } else if (title.includes('忌神') || title.includes('忌')) {
-        return `<span style="color: #FF4500;">${title}</span>`;
-    } else if (title.includes('性格')) {
-        return `<span style="color: #1E90FF;">${title}</span>`;
-    } else if (title.includes('职业') || title.includes('行业')) {
-        return `<span style="color: #8b4513;">${title}</span>`;
-    } else if (title.includes('富贵') || title.includes('财富')) {
-        return `<span style="color: #FFD700;">${title}</span>`;
-    } else if (title.includes('婚姻') || title.includes('感情')) {
-        return `<span style="color: #FF69B4;">${title}</span>`;
-    } else if (title.includes('事业') || title.includes('财运')) {
-        return `<span style="color: #FFA500;">${title}</span>`;
-    } else if (title.includes('健康')) {
-        return `<span style="color: #32CD32;">${title}</span>`;
-    } else {
-        return `<span style="color: #8b4513;">${title}</span>`;
-    }
-}
-
-// 导出所有必要的函数
-export {
-    UI,
-    initFormOptions,
-    setDefaultValues,
-    updateServiceDisplay,
-    updateUnlockInfo,
-    displayPredictorInfo,
-    displayBaziPan,
-    processAndDisplayAnalysis,
-    showPaymentModal,
-    closePaymentModal,
-    updateUnlockInterface,
-    showFullAnalysisContent,
-    lockDownloadButton,
-    unlockDownloadButton,
-    resetUnlockInterface,
-    animateButtonStretch,
-    showLoadingModal,
-    hideLoadingModal
-    // 注意：以下函数已经在定义时用 export 导出了，所以这里不需要再次导出
-    // showAnalysisResult,
-    // hideAnalysisResult,
-    // validateForm,
-    // collectUserData
-};
-
-// ============ 【处理并显示分析结果】 ============
-
-// 处理并显示分析结果 - 宋体格式
-export function processAndDisplayAnalysis(result) {
+// 处理并显示分析结果
+function processAndDisplayAnalysis(result) {
     console.log('处理分析结果...');
     
     const freeAnalysisText = UI.freeAnalysisText();
@@ -574,7 +528,7 @@ export function processAndDisplayAnalysis(result) {
     freeAnalysisText.innerHTML = '';
     lockedAnalysisText.innerHTML = '';
     
-    // 定义免费部分（根据你的服务配置）
+    // 定义免费部分
     const freeSections = [
         '【八字喜用分析】',
         '【性格特点】',
@@ -627,10 +581,8 @@ export function processAndDisplayAnalysis(result) {
     console.log('分析结果处理完成');
 }
 
-// ============ 【完整内容显示函数】 ============
-
 // 显示完整分析内容（支付后调用）
-export function showFullAnalysisContent() {
+function showFullAnalysisContent() {
     const lockedAnalysisText = UI.lockedAnalysisText();
     const freeAnalysisText = UI.freeAnalysisText();
     
@@ -652,7 +604,7 @@ export function showFullAnalysisContent() {
 // ============ 【支付弹窗相关函数】 ============
 
 // 显示支付弹窗 - 支持支付宝和微信支付
-export async function showPaymentModal() {
+async function showPaymentModal() {
     console.log('调用支付接口...');
 
     // 检查完整分析是否已完成
@@ -690,7 +642,7 @@ export async function showPaymentModal() {
         // 3. 调用后端支付接口
         const frontendOrderId = 'RUNZ-FRONT-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
 
-        console.log('🔗 调用支付API: http://runzang.top/api/payment/create');
+        console.log('🔗 调用支付API: https://runzang.top/api/payment/create');
         console.log('请求数据:', {
             serviceType: STATE.currentService,
             amount: parseFloat(serviceConfig.price).toFixed(2),
@@ -700,7 +652,7 @@ export async function showPaymentModal() {
 
         const response = await fetch('https://runzang.top/api/payment/create', {
             method: 'POST',
-            mode: 'cors',  // 添加CORS模式
+            mode: 'cors',
             headers: {
                 'Content-Type': 'application/json',
                 'X-API-Key': 'runzang-payment-security-key-2025-1234567890'
@@ -961,7 +913,7 @@ function saveAnalysisData() {
 }
 
 // 关闭支付弹窗
-export function closePaymentModal() {
+function closePaymentModal() {
     const paymentModal = UI.paymentModal();
     if (paymentModal) {
         hideElement(paymentModal);
@@ -972,7 +924,7 @@ export function closePaymentModal() {
 // ============ 【解锁界面相关函数】 ============
 
 // 更新解锁界面状态
-export function updateUnlockInterface() {
+function updateUnlockInterface() {
     const lockedOverlay = DOM.id('locked-overlay');
     if (!lockedOverlay) return;
     
@@ -1016,7 +968,7 @@ export function updateUnlockInterface() {
 }
 
 // 锁定下载按钮
-export function lockDownloadButton() {
+function lockDownloadButton() {
     const downloadBtn = UI.downloadReportBtn();
     const downloadBtnText = DOM.id('download-btn-text');
     
@@ -1030,7 +982,7 @@ export function lockDownloadButton() {
 }
 
 // 解锁下载按钮
-export function unlockDownloadButton() {
+function unlockDownloadButton() {
     const downloadBtn = UI.downloadReportBtn();
     const downloadBtnText = DOM.id('download-btn-text');
     
@@ -1052,7 +1004,7 @@ export function unlockDownloadButton() {
 }
 
 // 重置解锁界面
-export function resetUnlockInterface() {
+function resetUnlockInterface() {
     console.log('resetUnlockInterface: 重置解锁界面');
     
     const lockedOverlay = DOM.id('locked-overlay');
@@ -1106,7 +1058,7 @@ export function resetUnlockInterface() {
 // ============ 【其他UI函数】 ============
 
 // 按钮拉伸动画
-export function animateButtonStretch() {
+function animateButtonStretch() {
     const button = UI.analyzeBtn();
     if (!button) return;
     
@@ -1126,7 +1078,7 @@ export function animateButtonStretch() {
 }
 
 // 显示加载弹窗
-export function showLoadingModal() {
+function showLoadingModal() {
     const loadingModal = UI.loadingModal();
     if (loadingModal) {
         showElement(loadingModal);
@@ -1135,7 +1087,7 @@ export function showLoadingModal() {
 }
 
 // 隐藏加载弹窗
-export function hideLoadingModal() {
+function hideLoadingModal() {
     const loadingModal = UI.loadingModal();
     if (loadingModal) {
         hideElement(loadingModal);
@@ -1144,7 +1096,7 @@ export function hideLoadingModal() {
 }
 
 // 显示分析结果区域
-export function showAnalysisResult() {
+function showAnalysisResult() {
     const analysisResultSection = UI.analysisResultSection();
     if (analysisResultSection) {
         showElement(analysisResultSection);
@@ -1158,7 +1110,7 @@ export function showAnalysisResult() {
 }
 
 // 隐藏分析结果区域
-export function hideAnalysisResult() {
+function hideAnalysisResult() {
     const analysisResultSection = UI.analysisResultSection();
     if (analysisResultSection) {
         hideElement(analysisResultSection);
@@ -1166,14 +1118,14 @@ export function hideAnalysisResult() {
 }
 
 // 重置表单错误状态
-export function resetFormErrors() {
+function resetFormErrors() {
     DOM.getAll('.error').forEach(error => {
         error.style.display = 'none';
     });
 }
 
 // 验证表单
-export function validateForm() {
+function validateForm() {
     console.log('验证表单...');
     let isValid = true;
     
@@ -1221,7 +1173,7 @@ export function validateForm() {
 }
 
 // 收集用户数据
-export function collectUserData() {
+function collectUserData() {
     STATE.userData = {
         name: UI.name().value,
         gender: UI.gender().value === 'male' ? '男' : '女',
@@ -1248,22 +1200,37 @@ export function collectUserData() {
     }
 }
 
-// ============ 【兼容性处理】 ============
-
 // 空函数，用于兼容旧的 main.js 调用
-export function displayDayunPan() {
+function displayDayunPan() {
     console.log('displayDayunPan: 大运排盘已合并到 displayBaziPan 中，无需单独调用');
-    // 不执行任何操作，因为大运已经在八字排盘中显示
     return;
 }
-// 文件结束
 
+// ============ 【统一导出】 ============
 
-
-
-
-
-
-
-
-
+export {
+    UI,
+    initFormOptions,
+    setDefaultValues,
+    updateServiceDisplay,
+    updateUnlockInfo,
+    displayPredictorInfo,
+    displayBaziPan,
+    processAndDisplayAnalysis,
+    showFullAnalysisContent,
+    showPaymentModal,
+    closePaymentModal,
+    updateUnlockInterface,
+    lockDownloadButton,
+    unlockDownloadButton,
+    resetUnlockInterface,
+    animateButtonStretch,
+    showLoadingModal,
+    hideLoadingModal,
+    showAnalysisResult,
+    hideAnalysisResult,
+    validateForm,
+    collectUserData,
+    resetFormErrors,
+    displayDayunPan
+};
