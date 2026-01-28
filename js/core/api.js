@@ -235,50 +235,107 @@ function getElementByGanzhi(ganzhi) {
     return ganElements[gan] || zhiElements[zhi] || '';
 }
 
-// 解析单个八字（辅助函数）
-function parseSingleBazi(baziText) {
-    const baziData = {
-        yearColumn: '',
-        yearElement: '',
-        monthColumn: '',
-        monthElement: '',
-        dayColumn: '',
-        dayElement: '',
-        hourColumn: '',
-        hourElement: ''
+// 导出辅助函数供ui.js使用
+export function extractDayunDataV2(text, type = 'user') {
+    const result = {
+        ages: [],
+        ganzhi: [] // 合并的干支
     };
     
-    const lines = baziText.split('\n');
+    if (!text) return result;
     
-    lines.forEach(line => {
-        const trimmedLine = line.trim();
-        if (trimmedLine.includes('年柱')) {
-            const match = trimmedLine.match(/年柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
-            if (match) {
-                baziData.yearColumn = match[1] || '';
-                baziData.yearElement = match[2] || '';
-            }
-        } else if (trimmedLine.includes('月柱')) {
-            const match = trimmedLine.match(/月柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
-            if (match) {
-                baziData.monthColumn = match[1] || '';
-                baziData.monthElement = match[2] || '';
-            }
-        } else if (trimmedLine.includes('日柱')) {
-            const match = trimmedLine.match(/日柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
-            if (match) {
-                baziData.dayColumn = match[1] || '';
-                baziData.dayElement = match[2] || '';
-            }
-        } else if (trimmedLine.includes('时柱')) {
-            const match = trimmedLine.match(/时柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
-            if (match) {
-                baziData.hourColumn = match[1] || '';
-                baziData.hourElement = match[2] || '';
+    console.log(`提取${type}大运数据...`);
+    
+    // 根据类型选择搜索关键词
+    let searchText = text;
+    if (type === 'partner') {
+        const partnerMatch = text.match(/【伴侣大运排盘】([\s\S]*?)(?=【|$)/);
+        if (partnerMatch) {
+            searchText = partnerMatch[1];
+        }
+    }
+    
+    // 尝试多种模式匹配
+    // 模式1：完整的大运格式
+    const pattern1 = /岁[：:]\s*([\d\s]+)[\n\r]+大运[：:]\s*([\S\s]+?)(?=[\n\r]+|$)/;
+    const match1 = searchText.match(pattern1);
+    
+    if (match1) {
+        console.log('使用模式1提取');
+        // 提取岁数
+        const ages = match1[1].trim().split(/\s+/);
+        result.ages = ages.slice(0, 8);
+        
+        // 提取大运干支（可能有多行）
+        const ganzhiText = match1[2].replace(/\n/g, ' ').trim();
+        // 提取干支对
+        const ganzhiMatches = ganzhiText.match(/[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/g);
+        if (ganzhiMatches) {
+            result.ganzhi = ganzhiMatches.slice(0, 8);
+        }
+    }
+    
+    // 模式2：表格格式
+    if (result.ages.length === 0 || result.ganzhi.length === 0) {
+        const pattern2 = /岁数[：:]\s*([\d\s]+)[\n\r]+大运[：:]\s*([\S\s]+?)(?=[\n\r]+|$)/;
+        const match2 = searchText.match(pattern2);
+        
+        if (match2) {
+            console.log('使用模式2提取');
+            const ages = match2[1].trim().split(/\s+/);
+            result.ages = ages.slice(0, 8);
+            
+            const ganzhiText = match2[2].replace(/\n/g, ' ').trim();
+            const ganzhiMatches = ganzhiText.match(/[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/g);
+            if (ganzhiMatches) {
+                result.ganzhi = ganzhiMatches.slice(0, 8);
             }
         }
-    });
+    }
     
-    return baziData;
+    // 模式3：寻找大运段落
+    if (result.ages.length === 0 || result.ganzhi.length === 0) {
+        const lines = searchText.split('\n');
+        let inDayunSection = false;
+        let ageLine = '';
+        let ganzhiLine = '';
+        
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith('岁') || trimmed.startsWith('岁数')) {
+                ageLine = trimmed;
+                inDayunSection = true;
+            } else if (inDayunSection && (trimmed.includes('大运') || trimmed.includes('大干'))) {
+                ganzhiLine = trimmed;
+            }
+        }
+        
+        if (ageLine) {
+            const ageMatch = ageLine.match(/(\d+)/g);
+            if (ageMatch) {
+                result.ages = ageMatch.slice(0, 8);
+            }
+        }
+        
+        if (ganzhiLine) {
+            const ganzhiMatches = ganzhiLine.match(/[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/g);
+            if (ganzhiMatches) {
+                result.ganzhi = ganzhiMatches.slice(0, 8);
+            }
+        }
+    }
+    
+    // 确保年龄和干支数量一致
+    const minLength = Math.min(result.ages.length, result.ganzhi.length, 8);
+    if (minLength > 0) {
+        result.ages = result.ages.slice(0, minLength);
+        result.ganzhi = result.ganzhi.slice(0, minLength);
+    } else {
+        // 使用默认示例数据
+        result.ages = ['8', '18', '28', '38', '48', '58', '68', '78'];
+        result.ganzhi = ['壬子', '辛亥', '庚戌', '己酉', '戊申', '丁未', '丙午', '乙巳'];
+    }
+    
+    console.log(`提取到${type}大运数据:`, result);
+    return result;
 }
-
