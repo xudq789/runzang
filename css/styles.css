@@ -1278,3 +1278,243 @@ input:focus, select:focus {
     margin-right: 10px;
     font-weight: bold;
 }
+
+/* 大运横向表格容器 */
+.dayun-horizontal-container {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #ccc transparent;
+}
+
+.dayun-horizontal-container::-webkit-scrollbar {
+    height: 6px;
+}
+
+.dayun-horizontal-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.dayun-horizontal-container::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 3px;
+}
+
+.dayun-horizontal-container::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+
+/* 八字排盘网格响应式 */
+.bazi-grid-horizontal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+    /* 八字排盘项 */
+    .bazi-item {
+        min-width: calc(50% - 10px) !important;
+        max-width: calc(50% - 10px) !important;
+        padding: 12px 8px !important;
+    }
+    
+    .bazi-value {
+        font-size: 22px !important;
+        height: 32px !important;
+        line-height: 32px !important;
+    }
+    
+    .bazi-label {
+        font-size: 13px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .bazi-element {
+        font-size: 12px !important;
+        padding: 3px 8px !important;
+    }
+    
+    /* 大运横向表格 */
+    .dayun-horizontal-table {
+        min-width: 500px !important;
+    }
+    
+    .dayun-label {
+        width: 60px !important;
+        font-size: 13px !important;
+    }
+    
+    .dayun-cell {
+        min-width: 50px !important;
+        padding: 6px 3px !important;
+    }
+    
+    /* 岁行 */
+    .dayun-cell div:first-child {
+        font-size: 12px !important;
+    }
+    
+    .dayun-cell div:last-child {
+        font-size: 10px !important;
+    }
+    
+    /* 天干地支行 */
+    .dayun-row .dayun-cell div {
+        font-size: 16px !important;
+        height: 24px !important;
+        line-height: 24px !important;
+    }
+    
+    /* 容器内边距 */
+    .bazi-container,
+    .partner-bazi-container,
+    .dayun-container,
+    .partner-dayun-container {
+        padding: 15px !important;
+        margin-bottom: 20px !important;
+        border-radius: 8px !important;
+    }
+    
+    /* 标题 */
+    .bazi-container > div:first-child,
+    .partner-bazi-container > div:first-child,
+    .dayun-container > div:first-child,
+    .partner-dayun-container > div:first-child {
+        margin-bottom: 20px !important;
+        padding-bottom: 12px !important;
+    }
+    
+    .bazi-container > div:first-child > div:first-child,
+    .partner-bazi-container > div:first-child > div:first-child,
+    .dayun-container > div:first-child > div:first-child,
+    .partner-dayun-container > div:first-child > div:first-child {
+        font-size: 18px !important;
+        margin-bottom: 4px !important;
+    }
+    
+    .bazi-container > div:first-child > div:last-child,
+    .partner-bazi-container > div:first-child > div:last-child,
+    .dayun-container > div:first-child > div:last-child,
+    .partner-dayun-container > div:first-child > div:last-child {
+        font-size: 12px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .bazi-item {
+        min-width: calc(50% - 6px) !important;
+        max-width: calc(50% - 6px) !important;
+        padding: 10px 6px !important;
+    }
+    
+    .bazi-value {
+        font-size: 20px !important;
+        height: 28px !important;
+        line-height: 28px !important;
+    }
+    
+    .bazi-element {
+        font-size: 11px !important;
+    }
+    
+    .dayun-horizontal-table {
+        min-width: 400px !important;
+    }
+    
+    .dayun-label {
+        width: 50px !important;
+        font-size: 12px !important;
+    }
+    
+    .dayun-cell {
+        min-width: 40px !important;
+        padding: 4px 2px !important;
+    }
+    
+    .dayun-row .dayun-cell div {
+        font-size: 14px !important;
+        height: 20px !important;
+        line-height: 20px !important;
+    }
+    
+    /* 减少间距 */
+    .bazi-grid-horizontal {
+        gap: 8px !important;
+    }
+    
+    .dayun-row {
+        padding: 8px !important;
+        margin-bottom: 8px !important;
+    }
+}
+
+/* 横屏优化 */
+@media (max-width: 768px) and (orientation: landscape) {
+    .bazi-item {
+        min-width: calc(25% - 12px) !important;
+        max-width: calc(25% - 12px) !important;
+    }
+    
+    .dayun-horizontal-table {
+        min-width: 400px !important;
+    }
+}
+
+/* 平板设备优化 */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .bazi-item {
+        min-width: calc(25% - 15px) !important;
+        max-width: calc(25% - 15px) !important;
+    }
+    
+    .dayun-horizontal-table {
+        min-width: 550px !important;
+    }
+    
+    .dayun-cell {
+        min-width: 55px !important;
+    }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+    .dayun-cell,
+    .bazi-item {
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .dayun-cell:active,
+    .bazi-item:active {
+        opacity: 0.8;
+    }
+}
+
+/* 暗色模式支持 */
+@media (prefers-color-scheme: dark) {
+    .bazi-container,
+    .partner-bazi-container,
+    .dayun-container,
+    .partner-dayun-container {
+        background: #2c2c2c !important;
+        border-color: #444 !important;
+    }
+    
+    .bazi-item {
+        background: #3a3a3a !important;
+        border-color: #555 !important;
+        color: #eee !important;
+    }
+    
+    .bazi-value {
+        color: #fff !important;
+    }
+    
+    .bazi-element {
+        background: #444 !important;
+        color: #ccc !important;
+        border-color: #555 !important;
+    }
+}
