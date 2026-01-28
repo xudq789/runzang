@@ -401,90 +401,6 @@ function checkPaymentSuccessFromURL() {
     }
 }
 
-// ============ 【缺失的 parseBaziData 函数】 ============
-function parseBaziData(analysisResult) {
-    console.log('解析八字数据...');
-    
-    const result = {
-        userBazi: null,
-        partnerBazi: null
-    };
-    
-    try {
-        // 解析用户八字
-        let userBaziText = '';
-        
-        // 尝试从【八字排盘】提取
-        const userBaziMatch = analysisResult.match(/【八字排盘】([\s\S]*?)(?:【|$)/);
-        if (userBaziMatch && userBaziMatch[1]) {
-            userBaziText = userBaziMatch[1];
-            result.userBazi = parseSingleBazi(userBaziText);
-        }
-        
-        // 如果是八字合婚，解析伴侣八字
-        if (analysisResult.includes('【伴侣八字排盘】')) {
-            const partnerBaziMatch = analysisResult.match(/【伴侣八字排盘】([\s\S]*?)(?:【|$)/);
-            if (partnerBaziMatch && partnerBaziMatch[1]) {
-                result.partnerBazi = parseSingleBazi(partnerBaziMatch[1]);
-            }
-        }
-        
-    } catch (error) {
-        console.error('解析八字数据出错:', error);
-    }
-    
-    return result;
-}
-
-// 解析单个八字（辅助函数）
-function parseSingleBazi(baziText) {
-    const baziData = {
-        yearColumn: '',
-        yearElement: '',
-        monthColumn: '',
-        monthElement: '',
-        dayColumn: '',
-        dayElement: '',
-        hourColumn: '',
-        hourElement: ''
-    };
-    
-    const lines = baziText.split('\n');
-    
-    lines.forEach(line => {
-        const trimmedLine = line.trim();
-        
-        // 支持多种分隔符：：和:
-        if (trimmedLine.includes('年柱')) {
-            const match = trimmedLine.match(/年柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
-            if (match) {
-                baziData.yearColumn = match[1] || '';
-                baziData.yearElement = match[2] || '';
-            }
-        } else if (trimmedLine.includes('月柱')) {
-            const match = trimmedLine.match(/月柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
-            if (match) {
-                baziData.monthColumn = match[1] || '';
-                baziData.monthElement = match[2] || '';
-            }
-        } else if (trimmedLine.includes('日柱')) {
-            const match = trimmedLine.match(/日柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
-            if (match) {
-                baziData.dayColumn = match[1] || '';
-                baziData.dayElement = match[2] || '';
-            }
-        } else if (trimmedLine.includes('时柱')) {
-            const match = trimmedLine.match(/时柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
-            if (match) {
-                baziData.hourColumn = match[1] || '';
-                baziData.hourElement = match[2] || '';
-            }
-        }
-    });
-    
-    return baziData;
-}
-
 // ============ 【导入核心模块】 ============
 import { SERVICES, STATE } from './config.js';
 import { checkAPIStatus, parseBaziData, callDeepSeekAPI } from './api.js';
@@ -1084,6 +1000,7 @@ if (typeof STATE !== 'undefined') {
 
 // ✅ 也导出UI对象（如果需要在其他地方使用）
 window.UI = UI;
+
 
 
 
