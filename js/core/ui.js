@@ -551,11 +551,12 @@ export {
     resetUnlockInterface,
     animateButtonStretch,
     showLoadingModal,
-    hideLoadingModal,
-    //showAnalysisResult,
-    //hideAnalysisResult,
-    //validateForm,
-    //collectUserData
+    hideLoadingModal
+    // 注意：以下函数已经在定义时用 export 导出了，所以这里不需要再次导出
+    // showAnalysisResult,
+    // hideAnalysisResult,
+    // validateForm,
+    // collectUserData
 };
 
 // ============ 【处理并显示分析结果】 ============
@@ -1255,6 +1256,8 @@ export function displayDayunPan() {
     // 不执行任何操作，因为大运已经在八字排盘中显示
     return;
 }
+// 文件结束
+
 
 
 
