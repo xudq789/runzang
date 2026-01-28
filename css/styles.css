@@ -1275,3 +1275,176 @@ input:focus, select:focus {
         font-size: 16px !important;
     }
 }
+
+/* 大运横向表格容器 */
+.dayun-table-horizontal {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'SimSun', '宋体', serif;
+    text-align: center;
+    min-width: 400px;
+}
+
+.dayun-table-horizontal th {
+    background: linear-gradient(135deg, #e8f4fd, #d4e9fa);
+    color: #3a7bd5;
+    font-weight: bold;
+    font-size: 16px;
+    padding: 12px 8px;
+    border: 1px solid #bbdefb;
+    min-width: 60px;
+    position: relative;
+}
+
+.dayun-table-horizontal .age-header {
+    background: linear-gradient(135deg, #f0f8ff, #e6f2ff);
+    color: #3a7bd5;
+    padding: 8px 4px;
+    min-width: 50px;
+}
+
+.age-header-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.age-number {
+    font-size: 18px;
+    font-weight: bold;
+    color: #3a7bd5;
+    margin-bottom: 2px;
+}
+
+.age-label {
+    font-size: 12px;
+    color: #666;
+}
+
+/* 竖排文字样式 */
+.vertical-text {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    font-size: 22px;
+    font-weight: bold;
+    letter-spacing: 8px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8b4513;
+    background: linear-gradient(135deg, #f9f5f0, #f0e6d6);
+    border: 1px solid #e8d4b9;
+    padding: 10px 4px;
+    min-width: 50px;
+}
+
+/* 单人大运的标签单元格 */
+.ganzhi-label {
+    background: linear-gradient(135deg, #f9f5f0, #f0e6d6);
+    font-weight: bold;
+    font-size: 18px;
+    color: #8b4513;
+    padding: 15px 10px;
+    border: 1px solid #e8d4b9;
+    min-width: 60px;
+}
+
+/* 合婚对比表格的行样式 */
+.person-name {
+    font-size: 16px;
+    padding: 15px 10px;
+    text-align: center;
+    border: 1px solid #e0e0e0;
+    min-width: 100px;
+}
+
+.user-dayun-row td.ganzhi-cell {
+    background: linear-gradient(135deg, #f9f5f0, #f0e6d6);
+    border-color: #e8d4b9;
+    color: #8b4513;
+}
+
+.partner-dayun-row td.ganzhi-cell {
+    background: linear-gradient(135deg, #f0e6d6, #e8d4b9);
+    border-color: #d4b989;
+    color: #d2691e;
+}
+
+/* 悬停效果 */
+.dayun-table-horizontal tbody tr:hover td {
+    background-color: #f0f8ff;
+    opacity: 0.9;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .dayun-table-horizontal {
+        font-size: 14px;
+        min-width: 350px;
+    }
+    
+    .vertical-text {
+        font-size: 18px;
+        letter-spacing: 6px;
+        height: 100px;
+        padding: 8px 3px;
+    }
+    
+    .age-number {
+        font-size: 16px;
+    }
+    
+    .age-header {
+        padding: 6px 3px;
+        min-width: 45px;
+    }
+    
+    .person-name {
+        font-size: 14px;
+        padding: 12px 8px;
+        min-width: 80px;
+    }
+    
+    .ganzhi-label {
+        font-size: 16px;
+        padding: 12px 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dayun-table-horizontal {
+        font-size: 12px;
+        min-width: 320px;
+    }
+    
+    .vertical-text {
+        font-size: 16px;
+        letter-spacing: 4px;
+        height: 80px;
+        padding: 6px 2px;
+    }
+    
+    .age-number {
+        font-size: 14px;
+    }
+    
+    .age-header {
+        padding: 4px 2px;
+        min-width: 40px;
+    }
+    
+    .person-name {
+        font-size: 12px;
+        padding: 10px 6px;
+        min-width: 70px;
+    }
+    
+    .ganzhi-label {
+        font-size: 14px;
+        padding: 10px 6px;
+    }
+}
