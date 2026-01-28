@@ -536,6 +536,8 @@ function displayBaziPan() {
 
 // ============ 【大运排盘显示函数 - 独立显示】 ============
 function displayDayunPan() {
+    console.log('显示大运排盘...');
+    
     // 移除原有的大运容器（如果有）
     const existingDayun = document.querySelector('.dayun-container');
     if (existingDayun) {
@@ -591,40 +593,41 @@ function displayDayunPan() {
     baziGrid.appendChild(dayunContainer);
     
     // 如果是八字合婚，显示伴侣大运
-    if (STATE.currentService === '八字合婚' && STATE.partnerDayunData) {
-        const partnerDayunContainer = document.createElement('div');
-        partnerDayunContainer.className = 'partner-dayun-container';
-        partnerDayunContainer.style.cssText = `
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-            padding: 25px;
-            margin-bottom: 30px;
-            border: 1px solid #e8e8e8;
-            border-left: 4px solid #FF69B4;
-        `;
-        
-        const partnerTitle = document.createElement('div');
-        partnerTitle.style.cssText = `
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e8e8e8;
-        `;
-        partnerTitle.innerHTML = `
-            <div style="font-size: 24px; color: #FF69B4; font-weight: bold; font-family: 'SimSun', '宋体', serif; margin-bottom: 8px;">
-                伴侣大运排盘
-            </div>
-            <div style="font-size: 14px; color: #666; font-family: 'SimSun', '宋体', serif;">
-                伴侣运势 • 同步分析
-            </div>
-        `;
-        
-        partnerDayunContainer.appendChild(partnerTitle);
-        
-        const partnerDayunContent = STATE.partnerDayunData || '正在提取伴侣大运信息...';
-        partnerDayunContainer.innerHTML += createDayunTable(partnerDayunContent);
-        baziGrid.appendChild(partnerDayunContainer);
+    if (STATE.currentService === '八字合婚') {
+        const partnerDayunContent = parsePartnerDayunFromResult(STATE.fullAnalysisResult);
+        if (partnerDayunContent) {
+            const partnerDayunContainer = document.createElement('div');
+            partnerDayunContainer.className = 'partner-dayun-container';
+            partnerDayunContainer.style.cssText = `
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+                padding: 25px;
+                margin-bottom: 30px;
+                border: 1px solid #e8e8e8;
+                border-left: 4px solid #FF69B4;
+            `;
+            
+            const partnerTitle = document.createElement('div');
+            partnerTitle.style.cssText = `
+                text-align: center;
+                margin-bottom: 30px;
+                padding-bottom: 20px;
+                border-bottom: 2px solid #e8e8e8;
+            `;
+            partnerTitle.innerHTML = `
+                <div style="font-size: 24px; color: #FF69B4; font-weight: bold; font-family: 'SimSun', '宋体', serif; margin-bottom: 8px;">
+                    伴侣大运排盘
+                </div>
+                <div style="font-size: 14px; color: #666; font-family: 'SimSun', '宋体', serif;">
+                    伴侣运势 • 同步分析
+                </div>
+            `;
+            
+            partnerDayunContainer.appendChild(partnerTitle);
+            partnerDayunContainer.innerHTML += partnerDayunContent;
+            baziGrid.appendChild(partnerDayunContainer);
+        }
     }
 }
 
@@ -634,29 +637,58 @@ function parseDayunFromResult(analysisResult) {
     
     try {
         // 查找大运排盘部分
-        const dayunMatch = analysisResult.match(/【大运排盘】([\s\S]*?)【/);
-        if (dayunMatch && dayunMatch[1]) {
-            return createDayunTable(dayunMatch[1]);
-        }
+        let dayunText = '';
         
-        // 查找伴侣大运排盘（八字合婚）
-        if (analysisResult.includes('【伴侣大运排盘】')) {
-            const partnerDayunMatch = analysisResult.match(/【伴侣大运排盘】([\s\S]*?)【/);
-            if (partnerDayunMatch && partnerDayunMatch[1]) {
-                STATE.partnerDayunData = partnerDayunMatch[1];
+        if (analysisResult.includes('【大运排盘】')) {
+            const dayunMatch = analysisResult.match(/【大运排盘】([\s\S]*?)【/);
+            if (dayunMatch && dayunMatch[1]) {
+                dayunText = dayunMatch[1];
+            }
+        } else if (analysisResult.includes('大运排盘')) {
+            // 备用匹配模式
+            const startIndex = analysisResult.indexOf('大运排盘');
+            if (startIndex !== -1) {
+                const endIndex = analysisResult.indexOf('【', startIndex + 1);
+                if (endIndex !== -1) {
+                    dayunText = analysisResult.substring(startIndex + 5, endIndex).trim();
+                } else {
+                    dayunText = analysisResult.substring(startIndex + 5).trim();
+                }
             }
         }
         
-        return createDayunTable(analysisResult);
+        if (dayunText) {
+            return createDayunTable(dayunText, 'user');
+        }
+        
+        return createDayunTable('正在提取大运信息...', 'user');
         
     } catch (error) {
         console.error('解析大运数据失败:', error);
+        return createDayunTable('大运数据解析失败', 'user');
+    }
+}
+
+// ============ 【解析伴侣大运数据】 ============
+function parsePartnerDayunFromResult(analysisResult) {
+    if (!analysisResult || !analysisResult.includes('【伴侣大运排盘】')) {
+        return null;
+    }
+    
+    try {
+        const partnerDayunMatch = analysisResult.match(/【伴侣大运排盘】([\s\S]*?)【/);
+        if (partnerDayunMatch && partnerDayunMatch[1]) {
+            return createDayunTable(partnerDayunMatch[1], 'partner');
+        }
+        return null;
+    } catch (error) {
+        console.error('解析伴侣大运数据失败:', error);
         return null;
     }
 }
 
 // ============ 【创建大运表格】 ============
-function createDayunTable(dayunText) {
+function createDayunTable(dayunText, type = 'user') {
     if (!dayunText) {
         return '<div style="text-align:center;padding:20px;color:#666;font-family:\'SimSun\',\'宋体\',serif;">大运数据加载中...</div>';
     }
@@ -690,22 +722,32 @@ function createDayunTable(dayunText) {
         });
     }
     
+    // 如果还是没有，显示原始文本
+    if (dayunRows.length === 0) {
+        dayunRows = lines.slice(0, 10); // 最多显示10行
+    }
+    
+    const isPartner = type === 'partner';
+    const mainColor = isPartner ? '#FF69B4' : '#3a7bd5';
+    const bgColor = isPartner ? '#fff5f5' : '#f0f8ff';
+    const borderColor = isPartner ? '#ffc1cc' : '#d1e9ff';
+    
     return `
-        <div class="dayun-detail-container">
+        <div class="dayun-detail-container ${isPartner ? 'partner' : 'user'}">
             <!-- 起运信息 -->
             ${qiyunInfo ? `
-                <div class="qiyun-section" style="margin-bottom: 25px; padding: 20px; background: linear-gradient(135deg, #f0f8ff, #e6f2ff); border-radius: 8px; border: 1px solid #d1e9ff;">
-                    <div style="font-size: 16px; color: #3a7bd5; font-weight: bold; margin-bottom: 15px; text-align: center;">起运信息</div>
+                <div class="qiyun-section" style="margin-bottom: 25px; padding: 20px; background: linear-gradient(135deg, ${bgColor}, ${isPartner ? '#ffe6e6' : '#e6f2ff'}); border-radius: 8px; border: 1px solid ${borderColor};">
+                    <div style="font-size: 16px; color: ${mainColor}; font-weight: bold; margin-bottom: 15px; text-align: center;">起运信息</div>
                     ${qiyunInfo}
                 </div>
             ` : ''}
             
             <!-- 大运表格 -->
             <div class="dayun-table-section">
-                <div style="font-size: 16px; color: #3a7bd5; font-weight: bold; margin-bottom: 15px; text-align: center;">大运详细</div>
+                <div style="font-size: 16px; color: ${mainColor}; font-weight: bold; margin-bottom: 15px; text-align: center;">大运详细</div>
                 ${dayunRows.length > 0 ? `
                     <div class="dayun-table-container">
-                        <table class="dayun-table">
+                        <table class="dayun-table ${isPartner ? 'partner' : 'user'}">
                             <thead>
                                 <tr>
                                     <th>大运</th>
@@ -715,22 +757,36 @@ function createDayunTable(dayunText) {
                                 </tr>
                             </thead>
                             <tbody>
-                                ${dayunRows.map(row => {
+                                ${dayunRows.map((row, index) => {
                                     // 解析大运行
                                     const match = row.match(/第(\d+)步大运[:：]?\s*([^\s(]+)\s*(?:\(([^,]+),([^)]+)\))?/);
                                     if (match) {
                                         return `
                                             <tr>
-                                                <td style="font-weight: bold; color: #8b4513;">第${match[1]}步</td>
+                                                <td style="font-weight: bold; color: ${isPartner ? '#FF69B4' : '#8b4513'};">第${match[1]}步</td>
                                                 <td style="font-size: 18px; font-weight: bold; color: #333;">${match[2] || ''}</td>
                                                 <td>${match[3] || ''}</td>
                                                 <td>${match[4] || ''}</td>
                                             </tr>
                                         `;
                                     }
+                                    
+                                    // 如果是其他格式的大运信息
+                                    const simpleMatch = row.match(/(第\d+步大运|大运\d+)[:：]?\s*(.+)/);
+                                    if (simpleMatch) {
+                                        return `
+                                            <tr>
+                                                <td style="font-weight: bold; color: ${isPartner ? '#FF69B4' : '#8b4513'};">${simpleMatch[1] || '大运'}</td>
+                                                <td colspan="3">${simpleMatch[2] || row}</td>
+                                            </tr>
+                                        `;
+                                    }
+                                    
+                                    // 普通文本行
+                                    const colspan = index === 0 ? 4 : 4;
                                     return `
                                         <tr>
-                                            <td colspan="4" style="padding: 15px; text-align: center; color: #666;">${row}</td>
+                                            <td colspan="${colspan}" style="padding: 15px; text-align: center; color: #666;">${row}</td>
                                         </tr>
                                     `;
                                 }).join('')}
@@ -1435,12 +1491,6 @@ function collectUserData() {
     }
 }
 
-// 空函数，用于兼容旧的 main.js 调用
-function displayDayunPan() {
-    console.log('displayDayunPan: 大运排盘已合并到 displayBaziPan 中，无需单独调用');
-    return;
-}
-
 // ============ 【统一导出】 ============
 export {
     UI,
@@ -1450,7 +1500,7 @@ export {
     updateUnlockInfo,
     displayPredictorInfo,
     displayBaziPan,
-    displayDayunPan,  // 确保导出此函数
+    displayDayunPan,  // 只导出这一个
     processAndDisplayAnalysis,
     showFullAnalysisContent,
     showPaymentModal,
@@ -1467,7 +1517,9 @@ export {
     validateForm,
     collectUserData,
     resetFormErrors
+    // 删除这里的 displayDayunPan 重复导出
 };
+
 
 
 
