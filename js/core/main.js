@@ -256,9 +256,23 @@ const PaymentManager = {
                 }
             }
             
-            // 这里调用了 parseBaziData
-            const parsedBaziData = parseBaziData(savedResult);
+            // 这里使用导入的 parseBaziData 函数
+        const parsedBaziData = window.parseBaziData ? window.parseBaziData(savedResult) : null;
+        
+        if (parsedBaziData) {
             STATE.baziData = parsedBaziData.userBazi;
+        } else {
+            // 如果全局没有，尝试使用导入的版本
+            try {
+                // 确保 parseBaziData 可从 api.js 模块访问
+                const apiModule = await import('./api.js');
+                const parsedBaziData = apiModule.parseBaziData(savedResult);
+                STATE.baziData = parsedBaziData.userBazi;
+            } catch (error) {
+                console.error('无法解析八字数据:', error);
+                STATE.baziData = null;
+            }
+        }
             
             updateServiceDisplay(savedService);
             displayPredictorInfo();
@@ -956,5 +970,6 @@ if (typeof STATE !== 'undefined') {
 
 // ✅ 也导出UI对象（如果需要在其他地方使用）
 window.UI = UI;
+
 
 
