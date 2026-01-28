@@ -4,6 +4,7 @@
 import { DOM, formatDate, hideElement, showElement, generateOrderId, calculateBazi } from './utils.js';
 import { SERVICES, STATE, PAYMENT_CONFIG } from './config.js';
 import { parseBaziData } from './api.js';
+import { extractDayunData } from './api.js';
 
 // UI元素集合
 const UI = {
@@ -1715,6 +1716,7 @@ export {
     resetFormErrors,
     displayDayunPan
 };
+
 
 
 
