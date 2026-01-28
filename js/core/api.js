@@ -1,3 +1,4 @@
+// api.js - 完整修正版
 // API通信模块
 import { DOM } from './utils.js';
 
@@ -100,20 +101,20 @@ export function parseBaziData(analysisResult) {
     
     const result = {
         userBazi: null,
-        partnerBazi: null,
-        userDayun: null,
-        partnerDayun: null
+        partnerBazi: null
     };
     
-    // 提取八字数据
+    // 提取用户八字数据
     result.userBazi = extractSingleBazi(analysisResult, false);
+    
+    // 提取伴侣八字数据
     result.partnerBazi = extractSingleBazi(analysisResult, true);
     
     console.log('解析到的八字数据:', result);
     return result;
 }
 
-// 提取单个八字（改进版）
+// 提取单个八字
 function extractSingleBazi(text, isPartner = false) {
     const baziData = {
         yearColumn: '',
@@ -126,8 +127,7 @@ function extractSingleBazi(text, isPartner = false) {
         hourElement: ''
     };
     
-    // 根据是否伴侣选择搜索模式
-    const prefix = isPartner ? '伴侣' : '';
+    const prefix = isPartner ? '伴侣' : '用户';
     const pattern = new RegExp(`【${prefix}八字排盘】[\\s\\S]*?年柱[：:]\\s*([^\\s(]+)(?:\\s*\\(([^)]+)\\))?[\\s\\S]*?月柱[：:]\\s*([^\\s(]+)(?:\\s*\\(([^)]+)\\))?[\\s\\S]*?日柱[：:]\\s*([^\\s(]+)(?:\\s*\\(([^)]+)\\))?[\\s\\S]*?时柱[：:]\\s*([^\\s(]+)(?:\\s*\\(([^)]+)\\))?`);
     
     const match = text.match(pattern);
@@ -141,38 +141,52 @@ function extractSingleBazi(text, isPartner = false) {
         baziData.dayElement = match[6] || '';
         baziData.hourColumn = match[7] || '';
         baziData.hourElement = match[8] || '';
-        
-        // 如果没有提取到元素，使用默认的
-        if (!baziData.yearElement && baziData.yearColumn) {
-            baziData.yearElement = getElementByGanzhi(baziData.yearColumn);
-        }
-        if (!baziData.monthElement && baziData.monthColumn) {
-            baziData.monthElement = getElementByGanzhi(baziData.monthColumn);
-        }
-        if (!baziData.dayElement && baziData.dayColumn) {
-            baziData.dayElement = getElementByGanzhi(baziData.dayColumn);
-        }
-        if (!baziData.hourElement && baziData.hourColumn) {
-            baziData.hourElement = getElementByGanzhi(baziData.hourColumn);
-        }
     } else {
         // 备用提取方式
         const lines = text.split('\n');
+        let inTargetSection = false;
+        let sectionFound = false;
+        
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
-            if (isPartner && line.includes('伴侣八字排盘')) {
-                // 从这一行开始查找八字
-                for (let j = i; j < Math.min(i + 10, lines.length); j++) {
-                    extractFromLine(lines[j].trim(), baziData);
+            
+            if (line.includes(`【${prefix}八字排盘】`)) {
+                inTargetSection = true;
+                sectionFound = true;
+                continue;
+            }
+            
+            if (inTargetSection) {
+                if (line.includes('【')) {
+                    // 遇到下一个章节，停止
+                    break;
                 }
-                break;
-            } else if (!isPartner && line.includes('八字排盘') && !line.includes('伴侣')) {
-                for (let j = i; j < Math.min(i + 10, lines.length); j++) {
-                    extractFromLine(lines[j].trim(), baziData);
-                }
-                break;
+                
+                extractFromLine(line, baziData);
             }
         }
+        
+        // 如果没找到特定章节，尝试通用提取
+        if (!sectionFound) {
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                extractFromLine(line, baziData);
+            }
+        }
+    }
+    
+    // 如果没有提取到元素，使用默认的
+    if (!baziData.yearElement && baziData.yearColumn) {
+        baziData.yearElement = getElementByGanzhi(baziData.yearColumn);
+    }
+    if (!baziData.monthElement && baziData.monthColumn) {
+        baziData.monthElement = getElementByGanzhi(baziData.monthColumn);
+    }
+    if (!baziData.dayElement && baziData.dayColumn) {
+        baziData.dayElement = getElementByGanzhi(baziData.dayColumn);
+    }
+    if (!baziData.hourElement && baziData.hourColumn) {
+        baziData.hourElement = getElementByGanzhi(baziData.hourColumn);
     }
     
     return baziData;
@@ -183,25 +197,25 @@ function extractFromLine(line, baziData) {
         const match = line.match(/年柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
         if (match) {
             baziData.yearColumn = match[1] || '';
-            baziData.yearElement = match[2] || getElementByGanzhi(match[1] || '');
+            baziData.yearElement = match[2] || '';
         }
     } else if (line.includes('月柱')) {
         const match = line.match(/月柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
         if (match) {
             baziData.monthColumn = match[1] || '';
-            baziData.monthElement = match[2] || getElementByGanzhi(match[1] || '');
+            baziData.monthElement = match[2] || '';
         }
     } else if (line.includes('日柱')) {
         const match = line.match(/日柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
         if (match) {
             baziData.dayColumn = match[1] || '';
-            baziData.dayElement = match[2] || getElementByGanzhi(match[1] || '');
+            baziData.dayElement = match[2] || '';
         }
     } else if (line.includes('时柱')) {
         const match = line.match(/时柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
         if (match) {
             baziData.hourColumn = match[1] || '';
-            baziData.hourElement = match[2] || getElementByGanzhi(match[1] || '');
+            baziData.hourElement = match[2] || '';
         }
     }
 }
@@ -235,11 +249,11 @@ function getElementByGanzhi(ganzhi) {
     return ganElements[gan] || zhiElements[zhi] || '';
 }
 
-// 导出辅助函数供ui.js使用
-export function extractDayunDataV2(text, type = 'user') {
+// 提取大运数据（增强版）
+export function extractDayunData(text, type = 'user') {
     const result = {
         ages: [],
-        ganzhi: [] // 合并的干支
+        ganzhi: []
     };
     
     if (!text) return result;
@@ -247,17 +261,14 @@ export function extractDayunDataV2(text, type = 'user') {
     console.log(`提取${type}大运数据...`);
     
     // 根据类型选择搜索关键词
-    let searchText = text;
-    if (type === 'partner') {
-        const partnerMatch = text.match(/【伴侣大运排盘】([\s\S]*?)(?=【|$)/);
-        if (partnerMatch) {
-            searchText = partnerMatch[1];
-        }
-    }
+    const prefix = type === 'partner' ? '伴侣' : '用户';
+    const sectionPattern = new RegExp(`【${prefix}大运排盘】([\\s\\S]*?)(?=【|$)`);
+    const sectionMatch = text.match(sectionPattern);
     
-    // 尝试多种模式匹配
-    // 模式1：完整的大运格式
-    const pattern1 = /岁[：:]\s*([\d\s]+)[\n\r]+大运[：:]\s*([\S\s]+?)(?=[\n\r]+|$)/;
+    let searchText = sectionMatch ? sectionMatch[1] : text;
+    
+    // 模式1：标准的"岁："和"大运："格式
+    const pattern1 = /岁[：:]\s*((?:\d+\s+){3,}\d+)[\s\S]*?大运[：:]\s*((?:[^\s]+\s+){3,}[^\s]+)/;
     const match1 = searchText.match(pattern1);
     
     if (match1) {
@@ -266,18 +277,14 @@ export function extractDayunDataV2(text, type = 'user') {
         const ages = match1[1].trim().split(/\s+/);
         result.ages = ages.slice(0, 8);
         
-        // 提取大运干支（可能有多行）
-        const ganzhiText = match1[2].replace(/\n/g, ' ').trim();
-        // 提取干支对
-        const ganzhiMatches = ganzhiText.match(/[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/g);
-        if (ganzhiMatches) {
-            result.ganzhi = ganzhiMatches.slice(0, 8);
-        }
+        // 提取大运干支
+        const ganzhi = match1[2].trim().split(/\s+/);
+        result.ganzhi = ganzhi.slice(0, 8);
     }
     
     // 模式2：表格格式
-    if (result.ages.length === 0 || result.ganzhi.length === 0) {
-        const pattern2 = /岁数[：:]\s*([\d\s]+)[\n\r]+大运[：:]\s*([\S\s]+?)(?=[\n\r]+|$)/;
+    if (result.ages.length === 0) {
+        const pattern2 = /岁数[：:]\s*((?:\d+\s+){3,}\d+)[\s\S]*?大运[：:]\s*((?:[^\s]+\s+){3,}[^\s]+)/;
         const match2 = searchText.match(pattern2);
         
         if (match2) {
@@ -285,56 +292,44 @@ export function extractDayunDataV2(text, type = 'user') {
             const ages = match2[1].trim().split(/\s+/);
             result.ages = ages.slice(0, 8);
             
-            const ganzhiText = match2[2].replace(/\n/g, ' ').trim();
-            const ganzhiMatches = ganzhiText.match(/[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/g);
-            if (ganzhiMatches) {
-                result.ganzhi = ganzhiMatches.slice(0, 8);
-            }
+            const ganzhi = match2[2].trim().split(/\s+/);
+            result.ganzhi = ganzhi.slice(0, 8);
         }
     }
     
-    // 模式3：寻找大运段落
-    if (result.ages.length === 0 || result.ganzhi.length === 0) {
-        const lines = searchText.split('\n');
-        let inDayunSection = false;
-        let ageLine = '';
-        let ganzhiLine = '';
-        
-        for (const line of lines) {
-            const trimmed = line.trim();
-            if (trimmed.startsWith('岁') || trimmed.startsWith('岁数')) {
-                ageLine = trimmed;
-                inDayunSection = true;
-            } else if (inDayunSection && (trimmed.includes('大运') || trimmed.includes('大干'))) {
-                ganzhiLine = trimmed;
-            }
+    // 模式3：提取所有数字作为年龄，提取所有干支作为大运
+    if (result.ages.length === 0) {
+        const ageMatches = searchText.match(/\b\d+\b/g);
+        if (ageMatches) {
+            // 过滤出可能的起运岁数（通常在5-80之间）
+            const possibleAges = ageMatches
+                .map(age => parseInt(age))
+                .filter(age => age >= 5 && age <= 80)
+                .sort((a, b) => a - b);
+            
+            // 去重并取前8个
+            result.ages = [...new Set(possibleAges)].slice(0, 8).map(age => age.toString());
         }
         
-        if (ageLine) {
-            const ageMatch = ageLine.match(/(\d+)/g);
-            if (ageMatch) {
-                result.ages = ageMatch.slice(0, 8);
-            }
-        }
-        
-        if (ganzhiLine) {
-            const ganzhiMatches = ganzhiLine.match(/[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/g);
-            if (ganzhiMatches) {
-                result.ganzhi = ganzhiMatches.slice(0, 8);
-            }
+        // 提取干支
+        const ganzhiMatches = searchText.match(/[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/g);
+        if (ganzhiMatches) {
+            result.ganzhi = ganzhiMatches.slice(0, 8);
         }
     }
     
-    // 确保年龄和干支数量一致
-    const minLength = Math.min(result.ages.length, result.ganzhi.length, 8);
-    if (minLength > 0) {
-        result.ages = result.ages.slice(0, minLength);
-        result.ganzhi = result.ganzhi.slice(0, minLength);
-    } else {
-        // 使用默认示例数据
+    // 如果还没有数据，使用默认示例数据
+    if (result.ages.length === 0) {
         result.ages = ['8', '18', '28', '38', '48', '58', '68', '78'];
+    }
+    if (result.ganzhi.length === 0) {
         result.ganzhi = ['壬子', '辛亥', '庚戌', '己酉', '戊申', '丁未', '丙午', '乙巳'];
     }
+    
+    // 确保数组长度一致
+    const maxLength = Math.min(result.ages.length, result.ganzhi.length, 8);
+    result.ages = result.ages.slice(0, maxLength);
+    result.ganzhi = result.ganzhi.slice(0, maxLength);
     
     console.log(`提取到${type}大运数据:`, result);
     return result;
