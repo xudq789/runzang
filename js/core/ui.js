@@ -555,7 +555,7 @@ export {
     showAnalysisResult,
     hideAnalysisResult,
     validateForm,
-    collectUserData
+    //collectUserData
 };
 
 // ============ 【处理并显示分析结果】 ============
@@ -1255,6 +1255,7 @@ export function displayDayunPan() {
     // 不执行任何操作，因为大运已经在八字排盘中显示
     return;
 }
+
 
 
 
