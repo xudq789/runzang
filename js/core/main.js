@@ -412,6 +412,7 @@ import {
     updateUnlockInfo,
     displayPredictorInfo,
     displayBaziPan,
+    displayDayunPan,  // 确保这行存在
     processAndDisplayAnalysis,
     showPaymentModal,
     closePaymentModal,
@@ -426,8 +427,7 @@ import {
     showAnalysisResult,
     hideAnalysisResult,
     validateForm,
-    collectUserData,
-    //displayDayunPan
+    collectUserData
 } from './ui.js';
 
 import { CesuanModule } from '../modules/cesuan.js';
@@ -1030,6 +1030,7 @@ if (typeof STATE !== 'undefined') {
 
 // ✅ 也导出UI对象（如果需要在其他地方使用）
 window.UI = UI;
+
 
 
 
