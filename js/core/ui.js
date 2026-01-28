@@ -787,7 +787,7 @@ function displayBaziPan() {
     addResponsiveStyles();
 }
 
-// 处理并显示分析结果
+// 处理并显示分析结果 - 宋体格式
 function processAndDisplayAnalysis(result) {
     console.log('处理分析结果...');
     
@@ -799,6 +799,28 @@ function processAndDisplayAnalysis(result) {
     // 清空内容
     freeAnalysisText.innerHTML = '';
     lockedAnalysisText.innerHTML = '';
+    
+    // 提取八字数据
+    const parsedBaziData = parseBaziData(result);
+    STATE.baziData = parsedBaziData.userBazi;
+    
+    // 如果是八字合婚，尝试提取伴侣八字数据
+    if (STATE.currentService === '八字合婚' && STATE.partnerData) {
+        // 注意：这里假设分析结果中包含了伴侣的八字信息
+        // 实际可能需要从API返回的特定格式中提取
+        STATE.partnerBaziData = parsedBaziData.partnerBazi || {
+            yearColumn: '待解析',
+            monthColumn: '待解析', 
+            dayColumn: '待解析',
+            hourColumn: '待解析',
+            yearElement: '待解析',
+            monthElement: '待解析',
+            dayElement: '待解析',
+            hourElement: '待解析'
+        };
+        
+        console.log('伴侣八字数据:', STATE.partnerBaziData);
+    }
     
     // 定义免费部分
     const freeSections = [
@@ -1506,6 +1528,7 @@ export {
     resetFormErrors,
     displayDayunPan
 };
+
 
 
 
