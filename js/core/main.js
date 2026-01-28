@@ -699,6 +699,7 @@ async function startAnalysis() {
     STATE.fullAnalysisResult = '';
     STATE.baziData = null;
     STATE.partnerBaziData = null;
+    STATE.partnerDayunData = null;
     
     STATE.isPaymentUnlocked = false;
     STATE.isDownloadLocked = true;
@@ -755,12 +756,30 @@ async function startAnalysis() {
         // 保存完整结果
         STATE.fullAnalysisResult = analysisResult;
         
-        // 提取八字数据
+        // 提取八字数据 - 修正：解析双方数据
         const parsedBaziData = parseBaziData(analysisResult);
         STATE.baziData = parsedBaziData.userBazi;
         
-        // 显示结果 - 使用新的日历和表格样式
-        displayBaziPan();  // 这个函数已经更新为显示日历和表格格式
+        // 如果是八字合婚，保存伴侣八字数据
+        if (STATE.currentService === '八字合婚') {
+            STATE.partnerBaziData = parsedBaziData.partnerBazi;
+            
+            // 解析伴侣大运数据
+            if (analysisResult.includes('【伴侣大运排盘】')) {
+                const partnerDayunMatch = analysisResult.match(/【伴侣大运排盘】([\s\S]*?)【/);
+                if (partnerDayunMatch && partnerDayunMatch[1]) {
+                    STATE.partnerDayunData = partnerDayunMatch[1];
+                }
+            }
+        }
+        
+        // 显示结果 - 先显示八字排盘
+        displayBaziPan();
+        
+        // 显示大运排盘
+        setTimeout(() => {
+            displayDayunPan();
+        }, 100);
         
         // 处理并显示分析内容
         processAndDisplayAnalysis(analysisResult);
@@ -956,5 +975,6 @@ if (typeof STATE !== 'undefined') {
 
 // ✅ 也导出UI对象（如果需要在其他地方使用）
 window.UI = UI;
+
 
 
