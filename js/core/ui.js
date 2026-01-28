@@ -787,6 +787,123 @@ function displayBaziPan() {
     addResponsiveStyles();
 }
 
+// 添加响应式样式
+function addResponsiveStyles() {
+    const styleId = 'bazi-dayun-responsive-styles';
+    if (document.getElementById(styleId)) {
+        return;
+    }
+    
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+        /* 电脑端边距优化 */
+        @media (min-width: 769px) {
+            .bazi-dayun-container {
+                padding: 35px 40px !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+                max-width: 900px !important;
+            }
+            
+            .calendar-grid {
+                gap: 20px !important;
+            }
+            
+            .calendar-item {
+                padding: 25px !important;
+            }
+            
+            .calendar-value {
+                font-size: 32px !important;
+                height: 45px !important;
+                line-height: 45px !important;
+            }
+            
+            .dayun-table {
+                font-size: 16px !important;
+            }
+        }
+        
+        /* H5端边距优化 */
+        @media (max-width: 768px) {
+            .bazi-dayun-container {
+                padding: 20px 15px !important;
+                margin: 0 -10px 30px -10px !important;
+                width: calc(100% + 20px) !important;
+                border-radius: 8px !important;
+            }
+            
+            .calendar-grid {
+                gap: 10px !important;
+            }
+            
+            .calendar-item {
+                padding: 18px 12px !important;
+            }
+            
+            .calendar-value {
+                font-size: 26px !important;
+                height: 36px !important;
+                line-height: 36px !important;
+            }
+            
+            .dayun-table th,
+            .dayun-table td {
+                padding: 10px 8px !important;
+                min-width: 50px !important;
+                font-size: 14px !important;
+            }
+        }
+        
+        /* 小屏幕H5优化 */
+        @media (max-width: 480px) {
+            .bazi-dayun-container {
+                padding: 15px 10px !important;
+                margin: 0 -8px 25px -8px !important;
+                width: calc(100% + 16px) !important;
+                border-radius: 6px !important;
+            }
+            
+            .calendar-grid {
+                grid-template-columns: 1fr !important;
+                gap: 8px !important;
+            }
+            
+            .calendar-item {
+                padding: 16px 10px !important;
+            }
+            
+            .calendar-value {
+                font-size: 24px !important;
+            }
+            
+            .dayun-table {
+                font-size: 13px !important;
+                min-width: 350px !important;
+            }
+            
+            .dayun-table th,
+            .dayun-table td {
+                padding: 8px 6px !important;
+                min-width: 45px !important;
+                font-size: 13px !important;
+            }
+        }
+        
+        /* 合婚双人排盘样式 */
+        .bazi-section + .bazi-section {
+            margin-top: 20px;
+        }
+        
+        /* 大运对比表格样式 */
+        .dayun-table-container + .dayun-table-container {
+            margin-top: 25px;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
 // 处理并显示分析结果 - 宋体格式
 function processAndDisplayAnalysis(result) {
     console.log('处理分析结果...');
@@ -1528,6 +1645,7 @@ export {
     resetFormErrors,
     displayDayunPan
 };
+
 
 
 
