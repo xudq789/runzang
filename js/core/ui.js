@@ -439,34 +439,26 @@ function createDayunCalendar() {
     const isHehun = STATE.currentService === '八字合婚';
     const hasPartnerData = STATE.partnerData && STATE.partnerBaziData;
     
-    let userDayunData = { ages: [], stems: [], branches: [] };
-    let partnerDayunData = { ages: [], stems: [], branches: [] };
+    let userDayunData = { ages: [], ganzhi: [] };
+    let partnerDayunData = { ages: [], ganzhi: [] };
     
     // 从分析结果中提取用户大运数据
     if (STATE.fullAnalysisResult) {
-        userDayunData = extractDayunData(STATE.fullAnalysisResult);
+        userDayunData = extractDayunDataV2(STATE.fullAnalysisResult, 'user');
         console.log('用户大运数据:', userDayunData);
     }
     
     // 如果是八字合婚且有伴侣数据，尝试提取伴侣大运数据
     if (isHehun && hasPartnerData && STATE.fullAnalysisResult) {
-        // 注意：这里假设伴侣数据也在同一个分析结果中
-        // 实际可能需要从单独的伴侣分析结果中提取
-        partnerDayunData = extractDayunData(STATE.fullAnalysisResult);
+        partnerDayunData = extractDayunDataV2(STATE.fullAnalysisResult, 'partner');
         console.log('伴侣大运数据:', partnerDayunData);
     }
     
     // 确保数据长度一致
-    const maxLength = Math.min(
-        userDayunData.ages.length,
-        userDayunData.stems.length,
-        userDayunData.branches.length,
-        8
-    );
+    const maxLength = Math.min(userDayunData.ages.length, userDayunData.ganzhi.length, 8);
     
     const userAges = userDayunData.ages.slice(0, maxLength);
-    const userStems = userDayunData.stems.slice(0, maxLength);
-    const userBranches = userDayunData.branches.slice(0, maxLength);
+    const userGanzhi = userDayunData.ganzhi.slice(0, maxLength);
     
     // 如果没有数据，显示提示
     if (maxLength === 0) {
@@ -486,16 +478,9 @@ function createDayunCalendar() {
     
     // 如果是八字合婚，显示双人大运对比表格
     if (isHehun && hasPartnerData && partnerDayunData.ages.length > 0) {
-        const partnerMaxLength = Math.min(
-            partnerDayunData.ages.length,
-            partnerDayunData.stems.length,
-            partnerDayunData.branches.length,
-            8
-        );
-        
+        const partnerMaxLength = Math.min(partnerDayunData.ages.length, partnerDayunData.ganzhi.length, 8);
         const partnerAges = partnerDayunData.ages.slice(0, partnerMaxLength);
-        const partnerStems = partnerDayunData.stems.slice(0, partnerMaxLength);
-        const partnerBranches = partnerDayunData.branches.slice(0, partnerMaxLength);
+        const partnerGanzhi = partnerDayunData.ganzhi.slice(0, partnerMaxLength);
         
         return `
             <div class="dayun-calendar">
@@ -504,57 +489,55 @@ function createDayunCalendar() {
                     <div class="calendar-subtitle">命运同步 • 十年一运</div>
                 </div>
                 
-                <!-- 用户大运表格 -->
-                <div style="margin-bottom: 30px;">
-                    <div style="font-size: 18px; color: #8b4513; font-weight: bold; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #f0e6d6;">
-                        ${STATE.userData?.name || '用户'} 大运
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <!-- 用户大运表格 -->
+                    <div>
+                        <div style="font-size: 18px; color: #8b4513; font-weight: bold; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #f0e6d6; text-align: center;">
+                            ${STATE.userData?.name || '用户'} 大运
+                        </div>
+                        <div class="dayun-table-container">
+                            <table class="dayun-table dayun-table-vertical">
+                                <thead>
+                                    <tr>
+                                        <th>岁</th>
+                                        <th>大运</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${userAges.map((age, index) => `
+                                        <tr>
+                                            <td class="age-cell">${age}</td>
+                                            <td class="ganzhi-cell">${userGanzhi[index] || ''}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div class="dayun-table-container">
-                        <table class="dayun-table">
-                            <thead>
-                                <tr>
-                                    <th>岁</th>
-                                    ${userAges.map(age => `<th>${age}</th>`).join('')}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>大</td>
-                                    ${userStems.map(stem => `<td>${stem}</td>`).join('')}
-                                </tr>
-                                <tr>
-                                    <td>运</td>
-                                    ${userBranches.map(branch => `<td>${branch}</td>`).join('')}
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                
-                <!-- 伴侣大运表格 -->
-                <div>
-                    <div style="font-size: 18px; color: #d2691e; font-weight: bold; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #f0e6d6;">
-                        ${STATE.partnerData?.partnerName || '伴侣'} 大运
-                    </div>
-                    <div class="dayun-table-container">
-                        <table class="dayun-table">
-                            <thead>
-                                <tr>
-                                    <th>岁</th>
-                                    ${partnerAges.map(age => `<th>${age}</th>`).join('')}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>大</td>
-                                    ${partnerStems.map(stem => `<td>${stem}</td>`).join('')}
-                                </tr>
-                                <tr>
-                                    <td>运</td>
-                                    ${partnerBranches.map(branch => `<td>${branch}</td>`).join('')}
-                                </tr>
-                            </tbody>
-                        </table>
+                    
+                    <!-- 伴侣大运表格 -->
+                    <div>
+                        <div style="font-size: 18px; color: #d2691e; font-weight: bold; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #f0e6d6; text-align: center;">
+                            ${STATE.partnerData?.partnerName || '伴侣'} 大运
+                        </div>
+                        <div class="dayun-table-container">
+                            <table class="dayun-table dayun-table-vertical">
+                                <thead>
+                                    <tr>
+                                        <th>岁</th>
+                                        <th>大运</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${partnerAges.map((age, index) => `
+                                        <tr>
+                                            <td class="age-cell">${age}</td>
+                                            <td class="ganzhi-cell">${partnerGanzhi[index] || ''}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
                 
@@ -576,22 +559,20 @@ function createDayunCalendar() {
                 <div class="calendar-subtitle">命运流转 • 十年一运</div>
             </div>
             <div class="dayun-table-container">
-                <table class="dayun-table">
+                <table class="dayun-table dayun-table-vertical">
                     <thead>
                         <tr>
                             <th>岁</th>
-                            ${userAges.map(age => `<th>${age}</th>`).join('')}
+                            <th>大运</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>大</td>
-                            ${userStems.map(stem => `<td>${stem}</td>`).join('')}
-                        </tr>
-                        <tr>
-                            <td>运</td>
-                            ${userBranches.map(branch => `<td>${branch}</td>`).join('')}
-                        </tr>
+                        ${userAges.map((age, index) => `
+                            <tr>
+                                <td class="age-cell">${age}</td>
+                                <td class="ganzhi-cell">${userGanzhi[index] || ''}</td>
+                            </tr>
+                        `).join('')}
                     </tbody>
                 </table>
             </div>
@@ -601,6 +582,111 @@ function createDayunCalendar() {
             </div>
         </div>
     `;
+}
+
+// 新增：改进的大运数据提取函数（支持干支合并）
+function extractDayunDataV2(text, type = 'user') {
+    const result = {
+        ages: [],
+        ganzhi: [] // 合并的干支
+    };
+    
+    if (!text) return result;
+    
+    console.log(`提取${type}大运数据...`);
+    
+    // 根据类型选择搜索关键词
+    let searchText = text;
+    if (type === 'partner') {
+        const partnerMatch = text.match(/【伴侣大运排盘】([\s\S]*?)(?=【|$)/);
+        if (partnerMatch) {
+            searchText = partnerMatch[1];
+        }
+    }
+    
+    // 尝试多种模式匹配
+    // 模式1：完整的大运格式
+    const pattern1 = /岁[：:]\s*([\d\s]+)[\n\r]+大运[：:]\s*([\S\s]+?)(?=[\n\r]+|$)/;
+    const match1 = searchText.match(pattern1);
+    
+    if (match1) {
+        console.log('使用模式1提取');
+        // 提取岁数
+        const ages = match1[1].trim().split(/\s+/);
+        result.ages = ages.slice(0, 8);
+        
+        // 提取大运干支（可能有多行）
+        const ganzhiText = match1[2].replace(/\n/g, ' ').trim();
+        // 提取干支对
+        const ganzhiMatches = ganzhiText.match(/[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/g);
+        if (ganzhiMatches) {
+            result.ganzhi = ganzhiMatches.slice(0, 8);
+        }
+    }
+    
+    // 模式2：表格格式
+    if (result.ages.length === 0 || result.ganzhi.length === 0) {
+        const pattern2 = /岁数[：:]\s*([\d\s]+)[\n\r]+大运[：:]\s*([\S\s]+?)(?=[\n\r]+|$)/;
+        const match2 = searchText.match(pattern2);
+        
+        if (match2) {
+            console.log('使用模式2提取');
+            const ages = match2[1].trim().split(/\s+/);
+            result.ages = ages.slice(0, 8);
+            
+            const ganzhiText = match2[2].replace(/\n/g, ' ').trim();
+            const ganzhiMatches = ganzhiText.match(/[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/g);
+            if (ganzhiMatches) {
+                result.ganzhi = ganzhiMatches.slice(0, 8);
+            }
+        }
+    }
+    
+    // 模式3：寻找大运段落
+    if (result.ages.length === 0 || result.ganzhi.length === 0) {
+        const lines = searchText.split('\n');
+        let inDayunSection = false;
+        let ageLine = '';
+        let ganzhiLine = '';
+        
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith('岁') || trimmed.startsWith('岁数')) {
+                ageLine = trimmed;
+                inDayunSection = true;
+            } else if (inDayunSection && (trimmed.includes('大运') || trimmed.includes('大干'))) {
+                ganzhiLine = trimmed;
+            }
+        }
+        
+        if (ageLine) {
+            const ageMatch = ageLine.match(/(\d+)/g);
+            if (ageMatch) {
+                result.ages = ageMatch.slice(0, 8);
+            }
+        }
+        
+        if (ganzhiLine) {
+            const ganzhiMatches = ganzhiLine.match(/[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/g);
+            if (ganzhiMatches) {
+                result.ganzhi = ganzhiMatches.slice(0, 8);
+            }
+        }
+    }
+    
+    // 确保年龄和干支数量一致
+    const minLength = Math.min(result.ages.length, result.ganzhi.length, 8);
+    if (minLength > 0) {
+        result.ages = result.ages.slice(0, minLength);
+        result.ganzhi = result.ganzhi.slice(0, minLength);
+    } else {
+        // 使用默认示例数据
+        result.ages = ['8', '18', '28', '38', '48', '58', '68', '78'];
+        result.ganzhi = ['壬子', '辛亥', '庚戌', '己酉', '戊申', '丁未', '丙午', '乙巳'];
+    }
+    
+    console.log(`提取到${type}大运数据:`, result);
+    return result;
 }
 
 // 格式化标题
@@ -1641,6 +1727,7 @@ export {
     resetFormErrors,
     displayDayunPan
 };
+
 
 
 
