@@ -754,7 +754,6 @@ async function startAnalysis() {
         
         // 保存完整结果
         STATE.fullAnalysisResult = analysisResult;
-        console.log('✅ AI分析结果已保存，长度:', analysisResult.length);
         
         // 提取八字数据
         const parsedBaziData = parseBaziData(analysisResult);
@@ -763,44 +762,15 @@ async function startAnalysis() {
         // 如果是八字合婚，保存伴侣八字数据
         if (STATE.currentService === '八字合婚') {
             STATE.partnerBaziData = parsedBaziData.partnerBazi;
-            console.log('✅ 伴侣八字数据已保存');
         }
         
-        // 隐藏加载弹窗
-        hideLoadingModal();
-        
-        // 显示结果 - 先显示八字排盘
+        // 显示结果 - 先显示八字排盘（按顺序：用户->伴侣）
         displayBaziPan();
-        console.log('✅ 八字排盘显示完成');
         
-        // 显示大运排盘（稍后显示，确保DOM已更新）
+        // 显示大运排盘（按顺序：用户->伴侣）
         setTimeout(() => {
-            try {
-                displayDayunPan();
-                console.log('✅ 大运排盘显示完成');
-            } catch (error) {
-                console.error('显示大运排盘失败:', error);
-                // 降级处理：显示原始文本
-                const baziGrid = UI.baziGrid();
-                if (baziGrid) {
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'dayun-error';
-                    errorDiv.style.cssText = `
-                        background: #fff5f5;
-                        border: 1px solid #ffcdd2;
-                        border-radius: 8px;
-                        padding: 20px;
-                        margin-top: 20px;
-                        color: #c62828;
-                    `;
-                    errorDiv.innerHTML = `
-                        <div style="font-weight: bold; margin-bottom: 10px;">⚠️ 大运排盘显示异常</div>
-                        <div style="color: #666; font-size: 14px;">${error.message}</div>
-                    `;
-                    baziGrid.appendChild(errorDiv);
-                }
-            }
-        }, 300);
+            displayDayunPan();
+        }, 100);
         
         // 处理并显示分析内容
         processAndDisplayAnalysis(analysisResult);
@@ -1030,6 +1000,7 @@ if (typeof STATE !== 'undefined') {
 
 // ✅ 也导出UI对象（如果需要在其他地方使用）
 window.UI = UI;
+
 
 
 
