@@ -784,11 +784,6 @@ function displayBaziPan() {
     baziGrid.appendChild(container);
     
     // 添加响应式样式
-    addResponsiveStyles();
-}
-
-// 添加响应式样式
-function addResponsiveStyles() {
     const styleId = 'bazi-dayun-responsive-styles';
     if (document.getElementById(styleId)) {
         return;
@@ -1645,6 +1640,7 @@ export {
     resetFormErrors,
     displayDayunPan
 };
+
 
 
 
