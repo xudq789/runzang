@@ -94,7 +94,7 @@ export async function checkAPIStatus() {
     }
 }
 
-// 解析八字数据从AI回复中
+// 在 api.js 中增强 parseBaziData 函数
 export function parseBaziData(analysisResult) {
     console.log('解析八字数据...');
     
@@ -103,31 +103,29 @@ export function parseBaziData(analysisResult) {
         partnerBazi: null
     };
     
-    // 如果是八字合婚，需要解析两个八字
-    if (analysisResult.includes('【八字排盘】') && analysisResult.includes('【伴侣八字排盘】')) {
+    try {
         // 解析用户八字
-        const userBaziText = analysisResult.match(/【八字排盘】([\s\S]*?)【/);
-        if (userBaziText && userBaziText[1]) {
-            result.userBazi = parseSingleBazi(userBaziText[1]);
+        let userBaziText = '';
+        
+        // 尝试从【八字排盘】提取
+        const userBaziMatch = analysisResult.match(/【八字排盘】([\s\S]*?)(?:【|$)/);
+        if (userBaziMatch && userBaziMatch[1]) {
+            userBaziText = userBaziMatch[1];
+            result.userBazi = parseSingleBazi(userBaziText);
         }
         
-        // 解析伴侣八字
-        const partnerBaziText = analysisResult.match(/【伴侣八字排盘】([\s\S]*?)【/);
-        if (partnerBaziText && partnerBaziText[1]) {
-            result.partnerBazi = parseSingleBazi(partnerBaziText[1]);
+        // 如果是八字合婚，解析伴侣八字
+        if (analysisResult.includes('【伴侣八字排盘】')) {
+            const partnerBaziMatch = analysisResult.match(/【伴侣八字排盘】([\s\S]*?)(?:【|$)/);
+            if (partnerBaziMatch && partnerBaziMatch[1]) {
+                result.partnerBazi = parseSingleBazi(partnerBaziMatch[1]);
+            }
         }
-    } else {
-        // 其他服务：只解析用户的八字
-        const baziTextMatch = analysisResult.match(/【八字排盘】([\s\S]*?)【/);
-        if (baziTextMatch && baziTextMatch[1]) {
-            result.userBazi = parseSingleBazi(baziTextMatch[1]);
-        } else {
-            // 备用方案：从整个文本中提取
-            result.userBazi = parseSingleBazi(analysisResult);
-        }
+        
+    } catch (error) {
+        console.error('解析八字数据出错:', error);
     }
     
-    console.log('解析到的八字数据:', result);
     return result;
 }
 
@@ -179,4 +177,5 @@ function parseSingleBazi(baziText) {
     
     return baziData;
 }
+
 
