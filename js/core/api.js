@@ -1,15 +1,10 @@
 // API通信模块
-// 确保 DOM 从正确的路径导入
-try {
-    import { DOM } from './utils.js';
-} catch (error) {
-    // 如果导入失败，创建一个简单的DOM工具
-    const DOM = {
-        id: (id) => document.getElementById(id),
-        get: (selector) => document.querySelector(selector),
-        getAll: (selector) => document.querySelectorAll(selector)
-    };
-}
+// 简单的DOM工具函数
+const DOM = {
+    id: (id) => document.getElementById(id),
+    get: (selector) => document.querySelector(selector),
+    getAll: (selector) => document.querySelectorAll(selector)
+};
 
 // DeepSeek API调用
 export async function callDeepSeekAPI(prompt) {
@@ -104,7 +99,7 @@ export async function checkAPIStatus() {
     }
 }
 
-// 在 api.js 中增强 parseBaziData 函数
+// 解析八字数据
 export function parseBaziData(analysisResult) {
     console.log('解析八字数据...');
     
@@ -139,7 +134,7 @@ export function parseBaziData(analysisResult) {
     return result;
 }
 
-// 解析单个八字（辅助函数）- 增强版
+// 解析单个八字（辅助函数）
 function parseSingleBazi(baziText) {
     const baziData = {
         yearColumn: '',
@@ -187,6 +182,3 @@ function parseSingleBazi(baziText) {
     
     return baziData;
 }
-
-
-
