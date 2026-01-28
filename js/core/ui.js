@@ -457,81 +457,93 @@ function createAnalysisSection(title, content) {
 
 // ============ 【更多公共函数】 ============
 
-// ============ 【八字排盘显示函数 - 独立显示】 ============
+// ============ 【八字排盘显示函数 - 优化显示顺序】 ============
 function displayBaziPan() {
     const baziGrid = UI.baziGrid();
     if (!baziGrid) return;
     
     baziGrid.innerHTML = '';
     
-    // 创建八字排盘容器
-    const baziContainer = document.createElement('div');
-    baziContainer.className = 'bazi-container';
-    baziContainer.style.cssText = `
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-        padding: 25px;
-        margin-bottom: 30px;
-        border: 1px solid #e8e8e8;
-    `;
+    // 1. 先显示用户八字排盘
+    if (STATE.baziData) {
+        const userContainer = createBaziContainer(STATE.baziData, 'user');
+        baziGrid.appendChild(userContainer);
+    }
     
-    // 添加标题
-    const titleDiv = document.createElement('div');
-    titleDiv.style.cssText = `
-        text-align: center;
-        margin-bottom: 30px;
-        padding-bottom: 20px;
-        border-bottom: 2px solid #e8e8e8;
-    `;
-    titleDiv.innerHTML = `
-        <div style="font-size: 24px; color: #8b4513; font-weight: bold; font-family: 'SimSun', '宋体', serif; margin-bottom: 8px;">
-            八字排盘
-        </div>
-        <div style="font-size: 14px; color: #666; font-family: 'SimSun', '宋体', serif;">
-            命理根基 • 生辰八字
-        </div>
-    `;
-    baziContainer.appendChild(titleDiv);
-    
-    // 添加八字排盘内容
-    baziContainer.innerHTML += createBaziCalendar(STATE.baziData);
-    baziGrid.appendChild(baziContainer);
-    
-    // 如果是八字合婚，显示伴侣八字
+    // 2. 如果是八字合婚，再显示伴侣八字排盘
     if (STATE.currentService === '八字合婚' && STATE.partnerBaziData) {
-        const partnerContainer = document.createElement('div');
-        partnerContainer.className = 'partner-bazi-container';
-        partnerContainer.style.cssText = `
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-            padding: 25px;
-            margin-bottom: 30px;
-            border: 1px solid #e8e8e8;
-            border-left: 4px solid #FF69B4;
-        `;
-        
-        const partnerTitle = document.createElement('div');
-        partnerTitle.style.cssText = `
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #e8e8e8;
-        `;
-        partnerTitle.innerHTML = `
-            <div style="font-size: 24px; color: #FF69B4; font-weight: bold; font-family: 'SimSun', '宋体', serif; margin-bottom: 8px;">
-                伴侣八字排盘
-            </div>
-            <div style="font-size: 14px; color: #666; font-family: 'SimSun', '宋体', serif;">
-                伴侣命理 • 配对分析
-            </div>
-        `;
-        
-        partnerContainer.appendChild(partnerTitle);
-        partnerContainer.innerHTML += createBaziCalendar(STATE.partnerBaziData);
+        const partnerContainer = createBaziContainer(STATE.partnerBaziData, 'partner');
         baziGrid.appendChild(partnerContainer);
     }
+}
+
+// ============ 【创建八字容器】 ============
+function createBaziContainer(baziData, type = 'user') {
+    const isPartner = type === 'partner';
+    const title = isPartner ? '伴侣八字排盘' : '八字排盘';
+    const color = isPartner ? '#FF69B4' : '#8b4513';
+    const bgColor = isPartner ? '#fff5f5' : '#f9f5f0';
+    const borderColor = isPartner ? '#ffc1cc' : '#e8d4b9';
+    
+    const container = document.createElement('div');
+    container.className = isPartner ? 'partner-bazi-container' : 'bazi-container';
+    container.style.cssText = `
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+        padding: 20px;
+        margin-bottom: 25px;
+        border: 1px solid #e8e8e8;
+        ${isPartner ? 'border-left: 4px solid #FF69B4;' : ''}
+        overflow: hidden;
+    `;
+    
+    container.innerHTML = `
+        <div style="text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid ${borderColor};">
+            <div style="font-size: 20px; color: ${color}; font-weight: bold; font-family: 'SimSun', '宋体', serif; margin-bottom: 6px;">
+                ${title}
+            </div>
+            <div style="font-size: 13px; color: #666; font-family: 'SimSun', '宋体', serif;">
+                ${isPartner ? '伴侣命理 • 配对分析' : '命理根基 • 生辰八字'}
+            </div>
+        </div>
+        
+        <!-- 八字排盘网格 -->
+        <div class="bazi-grid-horizontal" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
+            ${createBaziItem(baziData.yearColumn, baziData.yearElement, '年柱', isPartner)}
+            ${createBaziItem(baziData.monthColumn, baziData.monthElement, '月柱', isPartner)}
+            ${createBaziItem(baziData.dayColumn, baziData.dayElement, '日柱', isPartner)}
+            ${createBaziItem(baziData.hourColumn, baziData.hourElement, '时柱', isPartner)}
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px dashed #e0e0e0;">
+            <div style="font-size: 12px; color: #999; font-family: 'SimSun', '宋体', serif;">
+                ※ 排盘基于真太阳时计算
+            </div>
+        </div>
+    `;
+    
+    return container;
+}
+
+// ============ 【创建八字项目】 ============
+function createBaziItem(column, element, label, isPartner = false) {
+    const color = isPartner ? '#FF69B4' : '#8b4513';
+    const bgColor = isPartner ? '#fff5f5' : '#f9f9f9';
+    
+    return `
+        <div class="bazi-item" style="flex: 1; min-width: 120px; max-width: 150px; background: ${bgColor}; border-radius: 8px; padding: 15px 10px; text-align: center; border: 1px solid ${isPartner ? '#ffc1cc' : '#d9d9d9'};">
+            <div class="bazi-label" style="font-size: 14px; color: #666; margin-bottom: 12px; font-weight: 500; font-family: 'SimSun', '宋体', serif;">
+                ${label}
+            </div>
+            <div class="bazi-value" style="font-size: 24px; font-weight: bold; font-family: 'SimSun', '宋体', serif; margin-bottom: 8px; height: 36px; line-height: 36px; color: #333;">
+                ${column || ''}
+            </div>
+            <div class="bazi-element" style="font-size: 14px; font-weight: 500; color: #666; padding: 4px 10px; background: white; border-radius: 15px; display: inline-block; border: 1px solid ${isPartner ? '#ffc1cc' : '#d9d9d9'};">
+                ${element || ''}
+            </div>
+        </div>
+    `;
 }
 
 // ============ 【大运排盘显示函数 - 横向显示】 ============
@@ -1530,6 +1542,7 @@ export {
     resetFormErrors
     // 删除这里的 displayDayunPan 重复导出
 };
+
 
 
 
