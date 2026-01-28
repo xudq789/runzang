@@ -554,7 +554,7 @@ export {
     hideLoadingModal,
     showAnalysisResult,
     hideAnalysisResult,
-    validateForm,
+    //validateForm,
     //collectUserData
 };
 
@@ -1255,6 +1255,7 @@ export function displayDayunPan() {
     // 不执行任何操作，因为大运已经在八字排盘中显示
     return;
 }
+
 
 
 
