@@ -334,3 +334,4 @@ export function extractDayunData(text, type = 'user') {
     console.log(`提取到${type}大运数据:`, result);
     return result;
 }
+
