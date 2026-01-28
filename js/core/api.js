@@ -1,5 +1,15 @@
 // API通信模块
-import { DOM } from './utils.js';
+// 确保 DOM 从正确的路径导入
+try {
+    import { DOM } from './utils.js';
+} catch (error) {
+    // 如果导入失败，创建一个简单的DOM工具
+    const DOM = {
+        id: (id) => document.getElementById(id),
+        get: (selector) => document.querySelector(selector),
+        getAll: (selector) => document.querySelectorAll(selector)
+    };
+}
 
 // DeepSeek API调用
 export async function callDeepSeekAPI(prompt) {
@@ -177,5 +187,6 @@ function parseSingleBazi(baziText) {
     
     return baziData;
 }
+
 
 
