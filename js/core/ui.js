@@ -5,7 +5,7 @@ import { DOM, formatDate, hideElement, showElement, generateOrderId, calculateBa
 import { SERVICES, STATE, PAYMENT_CONFIG } from './config.js';
 
 // UI元素集合
-export const UI = {
+const UI = {
     // 表单元素
     name: () => DOM.id('name'),
     gender: () => DOM.id('gender'),
@@ -1234,3 +1234,4 @@ export {
     resetFormErrors,
     displayDayunPan
 };
+
