@@ -3,8 +3,7 @@
 
 import { DOM, formatDate, hideElement, showElement, generateOrderId, calculateBazi } from './utils.js';
 import { SERVICES, STATE, PAYMENT_CONFIG } from './config.js';
-import { parseBaziData } from './api.js';
-import { extractDayunData } from './api.js';
+import { parseBaziData, extractDayunData } from './api.js';
 
 // UI元素集合
 const UI = {
@@ -435,7 +434,7 @@ function extractDayunData(text) {
     return result;
 }
 
-// ui.js 中更新createDayunCalendar函数
+// 大运排盘表格格式 - 从分析结果中提取真实数据
 function createDayunCalendar() {
     const isHehun = STATE.currentService === '八字合婚';
     const hasPartnerData = STATE.partnerData && STATE.partnerBaziData;
@@ -1716,6 +1715,7 @@ export {
     resetFormErrors,
     displayDayunPan
 };
+
 
 
 
