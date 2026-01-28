@@ -347,21 +347,116 @@ function createBaziCalendar(baziData) {
     `;
 }
 
-// 大运排盘表格格式
+// 大运排盘表格格式 - 从分析结果中提取真实数据
 function createDayunCalendar() {
-    // 从分析结果中提取大运信息
-    if (!STATE.fullAnalysisResult) {
-        return '<div style="text-align:center;padding:20px;color:#666;font-family:\'SimSun\',\'宋体\',serif;">大运数据加载中...</div>';
-    }
-    
-    // 示例数据
+    // 尝试从分析结果中提取大运信息
     let ages = ['8', '18', '28', '38', '48', '58', '68', '78'];
     let stems = ['壬', '辛', '庚', '己', '戊', '丁', '丙', '乙'];
     let branches = ['子', '亥', '戌', '酉', '申', '未', '午', '巳'];
     
-    // 如果有真实的大运数据，替换上面的示例数据
-    if (STATE.fullAnalysisResult.includes('大运排盘')) {
-        // 这里可以添加解析大运数据的逻辑
+    // 如果有真实的大运数据，解析真实数据
+    if (STATE.fullAnalysisResult && STATE.fullAnalysisResult.includes('大运排盘')) {
+        console.log('开始解析大运数据...');
+        
+        try {
+            // 方法1：尝试从标准格式解析
+            const dayunMatch = STATE.fullAnalysisResult.match(/大运排盘[\s\S]*?(岁\s*[:：]?\s*[\d\s]+)[\s\S]*?(大\s*[:：]?\s*[\u4e00-\u9fa5\s]+)[\s\S]*?(运\s*[:：]?\s*[\u4e00-\u9fa5\s]+)/i);
+            
+            if (dayunMatch) {
+                console.log('找到大运数据匹配:', dayunMatch);
+                
+                // 解析年龄
+                const ageLine = dayunMatch[1];
+                const ageMatches = ageLine.match(/\d+/g);
+                if (ageMatches && ageMatches.length >= 4) {
+                    ages = ageMatches.slice(0, 8); // 最多取8个
+                    console.log('解析到年龄:', ages);
+                }
+                
+                // 解析天干
+                const stemLine = dayunMatch[2];
+                const stemMatches = stemLine.match(/[甲乙丙丁戊己庚辛壬癸]/g);
+                if (stemMatches && stemMatches.length >= 4) {
+                    stems = stemMatches.slice(0, 8);
+                    console.log('解析到天干:', stems);
+                }
+                
+                // 解析地支
+                const branchLine = dayunMatch[3];
+                const branchMatches = branchLine.match(/[子丑寅卯辰巳午未申酉戌亥]/g);
+                if (branchMatches && branchMatches.length >= 4) {
+                    branches = branchMatches.slice(0, 8);
+                    console.log('解析到地支:', branches);
+                }
+            } else {
+                // 方法2：尝试从其他格式解析
+                console.log('尝试其他格式解析...');
+                
+                // 查找包含大运信息的段落
+                const dayunStart = STATE.fullAnalysisResult.indexOf('大运排盘');
+                if (dayunStart !== -1) {
+                    let dayunEnd = STATE.fullAnalysisResult.indexOf('\n\n', dayunStart);
+                    if (dayunEnd === -1) dayunEnd = dayunStart + 500;
+                    
+                    const dayunText = STATE.fullAnalysisResult.substring(dayunStart, dayunEnd);
+                    console.log('大运文本:', dayunText.substring(0, 200));
+                    
+                    // 尝试提取数字序列
+                    const agePattern = /(\d+)\s*[-~]\s*(\d+)/g;
+                    const ageRanges = [];
+                    let match;
+                    while ((match = agePattern.exec(dayunText)) !== null) {
+                        const start = parseInt(match[1]);
+                        const end = parseInt(match[2]);
+                        ageRanges.push(`${start}-${end}`);
+                    }
+                    
+                    if (ageRanges.length > 0) {
+                        // 简化显示，只显示开始年龄
+                        ages = ageRanges.map(range => range.split('-')[0]).slice(0, 8);
+                        console.log('解析到年龄范围:', ages);
+                    }
+                    
+                    // 尝试提取天干地支组合
+                    const ganzhiPattern = /([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥])/g;
+                    const ganzhiMatches = dayunText.match(ganzhiPattern);
+                    if (ganzhiMatches && ganzhiMatches.length >= 4) {
+                        stems = ganzhiMatches.map(gz => gz.charAt(0)).slice(0, 8);
+                        branches = ganzhiMatches.map(gz => gz.charAt(1)).slice(0, 8);
+                        console.log('解析到干支:', ganzhiMatches.slice(0, 8));
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('解析大运数据出错:', error);
+            // 使用默认数据
+        }
+    } else {
+        console.log('未找到大运排盘数据，使用示例数据');
+    }
+    
+    // 确保数据长度一致
+    const maxLength = Math.min(ages.length, stems.length, branches.length, 8);
+    ages = ages.slice(0, maxLength);
+    stems = stems.slice(0, maxLength);
+    branches = branches.slice(0, maxLength);
+    
+    console.log('最终大运数据:', { ages, stems, branches });
+    
+    // 如果没有数据，显示提示
+    if (maxLength === 0) {
+        return `
+            <div class="dayun-calendar">
+                <div class="calendar-header">
+                    <div class="calendar-title">📈 大运排盘</div>
+                    <div class="calendar-subtitle">命运流转 • 十年一运</div>
+                </div>
+                <div style="text-align: center; padding: 40px; color: #666; font-family: 'SimSun', '宋体', serif;">
+                    <div style="margin-bottom: 15px; font-size: 18px;">大运数据解析中...</div>
+                    <div style="font-size: 14px; color: #999;">正在从分析结果中提取大运信息</div>
+                </div>
+            </div>
+        `;
     }
     
     return `
@@ -392,6 +487,7 @@ function createDayunCalendar() {
             </div>
             <div class="calendar-footer">
                 <div class="calendar-note">※ 大运推算遵循"男命阳顺阴逆，女命阳逆阴顺"原则</div>
+                ${maxLength < 4 ? '<div class="calendar-note" style="color: #999; margin-top: 5px;">注：部分大运数据未能完整解析</div>' : ''}
             </div>
         </div>
     `;
@@ -469,11 +565,14 @@ function displayBaziPan() {
     container.className = 'bazi-dayun-container';
     container.style.cssText = `
         background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-        padding: 25px;
-        margin-bottom: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        padding: 30px;
+        margin-bottom: 40px;
         border: 1px solid #e8e8e8;
+        max-width: 900px;
+        margin-left: auto;
+        margin-right: auto;
     `;
     
     // 添加标题
@@ -482,37 +581,130 @@ function displayBaziPan() {
         text-align: center;
         margin-bottom: 30px;
         padding-bottom: 20px;
-        border-bottom: 2px solid #e8e8e8;
+        border-bottom: 3px solid #f0e6d6;
     `;
     titleDiv.innerHTML = `
-        <div style="font-size: 24px; color: #8b4513; font-weight: bold; font-family: 'SimSun', '宋体', serif; margin-bottom: 8px;">
-            八字大运排盘
+        <div style="font-size: 26px; color: #8b4513; font-weight: bold; font-family: 'SimSun', '宋体', serif; margin-bottom: 10px;">
+            📜 命理排盘分析
         </div>
-        <div style="font-size: 14px; color: #666; font-family: 'SimSun', '宋体', serif;">
-            命理根基 • 运势轨迹
+        <div style="font-size: 15px; color: #666; font-family: 'SimSun', '宋体', serif;">
+            八字根基 • 大运流年
         </div>
     `;
     container.appendChild(titleDiv);
     
-    // 创建并列容器
-    const parallelContainer = document.createElement('div');
-    parallelContainer.className = 'parallel-container';
+    // 八字排盘部分 - 在上方
+    const baziSection = document.createElement('div');
+    baziSection.className = 'bazi-section';
+    baziSection.style.cssText = `
+        margin-bottom: 30px;
+        padding-bottom: 25px;
+        border-bottom: 2px dashed #e8e8e8;
+    `;
+    baziSection.innerHTML = createBaziCalendar(STATE.baziData);
+    container.appendChild(baziSection);
     
-    // 添加八字排盘列
-    const baziColumn = document.createElement('div');
-    baziColumn.className = 'bazi-column';
-    baziColumn.innerHTML = createBaziCalendar(STATE.baziData);
+    // 大运排盘部分 - 在下方
+    const dayunSection = document.createElement('div');
+    dayunSection.className = 'dayun-section';
+    dayunSection.innerHTML = createDayunCalendar();
+    container.appendChild(dayunSection);
     
-    // 添加大运排盘列
-    const dayunColumn = document.createElement('div');
-    dayunColumn.className = 'dayun-column';
-    dayunColumn.innerHTML = createDayunCalendar();
-    
-    parallelContainer.appendChild(baziColumn);
-    parallelContainer.appendChild(dayunColumn);
-    
-    container.appendChild(parallelContainer);
     baziGrid.appendChild(container);
+    
+    // 添加响应式样式
+    const style = document.createElement('style');
+    style.textContent = `
+        /* 电脑端边距优化 */
+        @media (min-width: 769px) {
+            .bazi-dayun-container {
+                padding: 35px 40px !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+                max-width: 900px !important;
+            }
+            
+            .calendar-grid {
+                gap: 20px !important;
+            }
+            
+            .calendar-item {
+                padding: 25px !important;
+            }
+            
+            .calendar-value {
+                font-size: 32px !important;
+                height: 45px !important;
+                line-height: 45px !important;
+            }
+        }
+        
+        /* H5端边距优化 */
+        @media (max-width: 768px) {
+            .bazi-dayun-container {
+                padding: 20px 15px !important;
+                margin: 0 -10px 30px -10px !important;
+                width: calc(100% + 20px) !important;
+                border-radius: 8px !important;
+            }
+            
+            .calendar-grid {
+                gap: 10px !important;
+            }
+            
+            .calendar-item {
+                padding: 18px 12px !important;
+            }
+            
+            .calendar-value {
+                font-size: 26px !important;
+                height: 36px !important;
+                line-height: 36px !important;
+            }
+            
+            .dayun-table th,
+            .dayun-table td {
+                padding: 10px 8px !important;
+                min-width: 50px !important;
+                font-size: 14px !important;
+            }
+        }
+        
+        /* 小屏幕H5优化 */
+        @media (max-width: 480px) {
+            .bazi-dayun-container {
+                padding: 15px 10px !important;
+                margin: 0 -8px 25px -8px !important;
+                width: calc(100% + 16px) !important;
+                border-radius: 6px !important;
+            }
+            
+            .calendar-grid {
+                grid-template-columns: 1fr !important;
+                gap: 8px !important;
+            }
+            
+            .calendar-item {
+                padding: 16px 10px !important;
+            }
+            
+            .calendar-value {
+                font-size: 24px !important;
+            }
+            
+            .dayun-table {
+                font-size: 13px !important;
+            }
+            
+            .dayun-table th,
+            .dayun-table td {
+                padding: 8px 6px !important;
+                min-width: 45px !important;
+                font-size: 13px !important;
+            }
+        }
+    `;
+    document.head.appendChild(style);
 }
 
 // 处理并显示分析结果
@@ -1234,4 +1426,5 @@ export {
     resetFormErrors,
     displayDayunPan
 };
+
 
