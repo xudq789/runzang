@@ -1,9 +1,9 @@
-// UI控制模块
+// ui.js - UI控制模块
 'use strict';
 
 import { DOM, formatDate, hideElement, showElement, generateOrderId, calculateBazi } from './utils.js';
 import { SERVICES, STATE, PAYMENT_CONFIG } from './config.js';
-import { parseBaziData, extractDayunData } from './api.js';
+import { parseBaziData, extractDayunData } from './api.js';  // 使用正确的函数名
 
 // UI元素集合
 const UI = {
@@ -62,7 +62,220 @@ const UI = {
     paymentOrderId: () => DOM.id('payment-order-id')
 };
 
-// ============ 【公共函数定义（不直接导出）】 ============
+// ============ 【内部辅助函数】 ============
+
+// 获取十神颜色
+function getShishenColor(shishen) {
+    const colors = {
+        '正官': '#4169E1',
+        '七杀': '#DC143C',
+        '正印': '#32CD32',
+        '偏印': '#20B2AA',
+        '正财': '#FFD700',
+        '偏财': '#FFA500',
+        '食神': '#9370DB',
+        '伤官': '#FF69B4',
+        '比肩': '#808080',
+        '劫财': '#A9A9A9'
+    };
+    return colors[shishen] || '#333';
+}
+
+// 八字排盘日历格式 - 支持伴侣显示
+function createBaziCalendar(baziData, isPartner = false) {
+    if (!baziData || !baziData.yearColumn) {
+        return `
+            <div style="text-align:center;padding:20px;color:#666;font-family:'SimSun','宋体',serif;background:#f9f9f9;border-radius:8px;border:1px dashed #ddd;">
+                <div style="margin-bottom:10px;">${isPartner ? '伴侣' : '用户'}八字数据加载中...</div>
+                <div style="font-size:13px;color:#999;">正在从分析结果中提取八字信息</div>
+            </div>
+        `;
+    }
+    
+    const color = isPartner ? '#d2691e' : '#8b4513';
+    
+    return `
+        <div class="bazi-calendar" style="border-color: ${color}20;">
+            <div class="calendar-header">
+                <div class="calendar-title" style="color: ${color};">📅 ${isPartner ? '伴侣' : '用户'}八字排盘</div>
+                <div class="calendar-subtitle">生辰八字 • 命理基础</div>
+            </div>
+            <div class="calendar-grid">
+                <div class="calendar-item year-item" style="border-color: ${color}40;">
+                    <div class="calendar-label">年柱</div>
+                    <div class="calendar-value" style="color: ${color};">${baziData.yearColumn || ''}</div>
+                    <div class="calendar-element">${baziData.yearElement || ''}</div>
+                </div>
+                <div class="calendar-item month-item" style="border-color: ${color}40;">
+                    <div class="calendar-label">月柱</div>
+                    <div class="calendar-value" style="color: ${color};">${baziData.monthColumn || ''}</div>
+                    <div class="calendar-element">${baziData.monthElement || ''}</div>
+                </div>
+                <div class="calendar-item day-item" style="border-color: ${color}40;">
+                    <div class="calendar-label">日柱</div>
+                    <div class="calendar-value" style="color: ${color};">${baziData.dayColumn || ''}</div>
+                    <div class="calendar-element">${baziData.dayElement || ''}</div>
+                </div>
+                <div class="calendar-item hour-item" style="border-color: ${color}40;">
+                    <div class="calendar-label">时柱</div>
+                    <div class="calendar-value" style="color: ${color};">${baziData.hourColumn || ''}</div>
+                    <div class="calendar-element">${baziData.hourElement || ''}</div>
+                </div>
+            </div>
+            <div class="calendar-footer">
+                <div class="calendar-note">※ 排盘基于真太阳时计算</div>
+            </div>
+        </div>
+    `;
+}
+
+// 创建大运排盘表格
+function createDayunTable(userDayunData, partnerDayunData = null) {
+    const userAges = userDayunData.ages || [];
+    const userGanzhi = userDayunData.ganzhi || [];
+    const partnerAges = partnerDayunData?.ages || [];
+    const partnerGanzhi = partnerDayunData?.ganzhi || [];
+    
+    const isHehun = STATE.currentService === '八字合婚';
+    const hasPartnerData = partnerAges.length > 0;
+    
+    if (isHehun && hasPartnerData) {
+        // 合婚服务的双人大运对比表格
+        return `
+            <div class="dayun-table-container">
+                <table class="dayun-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" style="background: linear-gradient(135deg, #f9f5f0, #f0e6d6);">项目</th>
+                            ${userAges.map((age, index) => `
+                                <th colspan="1" style="background: linear-gradient(135deg, #e8f4fd, #d4e9fa);">
+                                    <div style="display: flex; flex-direction: column; align-items: center;">
+                                        <span style="font-size: 16px; font-weight: bold;">${age}</span>
+                                        <span style="font-size: 12px; color: #666;">岁</span>
+                                    </div>
+                                </th>
+                            `).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="background: linear-gradient(135deg, #f9f5f0, #f0e6d6); font-weight: bold; color: #8b4513;">
+                                ${STATE.userData?.name || '用户'}大运
+                            </td>
+                            ${userGanzhi.map(ganzhi => `
+                                <td class="vertical-ganzhi" style="font-family: 'SimSun', '宋体', serif; font-size: 20px; writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); height: 80px; padding: 10px 5px;">
+                                    ${ganzhi}
+                                </td>
+                            `).join('')}
+                        </tr>
+                        <tr>
+                            <td style="background: linear-gradient(135deg, #f0e6d6, #e8d4b9); font-weight: bold; color: #d2691e;">
+                                ${STATE.partnerData?.partnerName || '伴侣'}大运
+                            </td>
+                            ${partnerGanzhi.map(ganzhi => `
+                                <td class="vertical-ganzhi" style="font-family: 'SimSun', '宋体', serif; font-size: 20px; writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); height: 80px; padding: 10px 5px; background: linear-gradient(135deg, #f0e6d6, #e8d4b9);">
+                                    ${ganzhi}
+                                </td>
+                            `).join('')}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        `;
+    } else {
+        // 单人服务的表格
+        return `
+            <div class="dayun-table-container">
+                <table class="dayun-table">
+                    <thead>
+                        <tr>
+                            <th>岁</th>
+                            ${userAges.map(age => `
+                                <th>
+                                    <div style="display: flex; flex-direction: column; align-items: center;">
+                                        <span style="font-size: 16px; font-weight: bold;">${age}</span>
+                                        <span style="font-size: 12px; color: #666;">岁</span>
+                                    </div>
+                                </th>
+                            `).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="background: linear-gradient(135deg, #f9f5f0, #f0e6d6); font-weight: bold; color: #8b4513;">
+                                大运
+                            </td>
+                            ${userGanzhi.map(ganzhi => `
+                                <td class="vertical-ganzhi" style="font-family: 'SimSun', '宋体', serif; font-size: 20px; writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); height: 80px; padding: 10px 5px;">
+                                    ${ganzhi}
+                                </td>
+                            `).join('')}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+}
+
+// 格式化标题
+function formatTitle(title) {
+    if (title.includes('喜用') || title.includes('喜神') || title.includes('用神')) {
+        return `<span style="color: #32CD32;">${title}</span>`;
+    } else if (title.includes('忌神') || title.includes('忌')) {
+        return `<span style="color: #FF4500;">${title}</span>`;
+    } else if (title.includes('性格')) {
+        return `<span style="color: #1E90FF;">${title}</span>`;
+    } else if (title.includes('职业') || title.includes('行业')) {
+        return `<span style="color: #8b4513;">${title}</span>`;
+    } else if (title.includes('富贵') || title.includes('财富')) {
+        return `<span style="color: #FFD700;">${title}</span>`;
+    } else if (title.includes('婚姻') || title.includes('感情')) {
+        return `<span style="color: #FF69B4;">${title}</span>`;
+    } else if (title.includes('事业') || title.includes('财运')) {
+        return `<span style="color: #FFA500;">${title}</span>`;
+    } else if (title.includes('健康')) {
+        return `<span style="color: #32CD32;">${title}</span>`;
+    } else {
+        return `<span style="color: #8b4513;">${title}</span>`;
+    }
+}
+
+// 格式化报告内容
+function formatReportContent(text) {
+    // 只保留十神颜色处理
+    text = text.replace(/喜神/g, '<span class="xiji-element xiji-xi">喜神</span>')
+               .replace(/用神/g, '<span class="xiji-element xiji-yong">用神</span>')
+               .replace(/忌神/g, '<span class="xiji-element xiji-ji">忌神</span>')
+               .replace(/喜用/g, '<span class="xiji-element xiji-xiyong">喜用</span>');
+    
+    // 处理十神颜色
+    const shishenKeywords = ['正官', '七杀', '正印', '偏印', '正财', '偏财', '食神', '伤官', '比肩', '劫财'];
+    shishenKeywords.forEach(keyword => {
+        const color = getShishenColor(keyword);
+        text = text.replace(new RegExp(keyword, 'g'), `<span style="color: ${color};">${keyword}</span>`);
+    });
+    
+    // 处理段落
+    const paragraphs = text.split('\n').filter(p => p.trim());
+    return paragraphs.map(para => `
+        <div class="report-paragraph">${para}</div>
+    `).join('');
+}
+
+// 创建分析段落
+function createAnalysisSection(title, content) {
+    const sectionTitle = title.replace(/【|】/g, '');
+    
+    return `
+        <div class="report-section">
+            <div class="report-title">${formatTitle(sectionTitle)}</div>
+            <div class="report-content">${formatReportContent(content)}</div>
+        </div>
+    `;
+}
+
+// ============ 【公共函数定义】 ============
 
 // 初始化表单选项
 function initFormOptions() {
@@ -146,7 +359,7 @@ function updateServiceDisplay(serviceName) {
     // 更新表单标题
     DOM.id('form-title').textContent = serviceName + '信息填写';
     
-    // ✅ 修复：确保更新全局状态
+    // 更新全局状态
     STATE.currentService = serviceName;
     console.log('服务更新为:', serviceName);
     
@@ -193,7 +406,7 @@ function updateServiceDisplay(serviceName) {
         }
     }
     
-    // ✅ 新增：立即更新解锁信息
+    // 立即更新解锁信息
     updateUnlockInfo();
 }
 
@@ -248,7 +461,7 @@ function displayPredictorInfo() {
     
     predictorInfoGrid.innerHTML = '';
     
-    // ✅ 确保总是使用当前的STATE.currentService
+    // 确保总是使用当前的STATE.currentService
     const currentServiceName = STATE.currentService || '测算验证';
     
     // 添加预测者信息
@@ -290,448 +503,6 @@ function displayPredictorInfo() {
     });
 }
 
-// ============ 【内部辅助函数（不导出）】 ============
-
-// 获取十神颜色
-function getShishenColor(shishen) {
-    const colors = {
-        '正官': '#4169E1',
-        '七杀': '#DC143C',
-        '正印': '#32CD32',
-        '偏印': '#20B2AA',
-        '正财': '#FFD700',
-        '偏财': '#FFA500',
-        '食神': '#9370DB',
-        '伤官': '#FF69B4',
-        '比肩': '#808080',
-        '劫财': '#A9A9A9'
-    };
-    return colors[shishen] || '#333';
-}
-
-// 八字排盘日历格式 - 支持伴侣显示
-function createBaziCalendar(baziData, isPartner = false) {
-    if (!baziData) {
-        return `
-            <div style="text-align:center;padding:20px;color:#666;font-family:'SimSun','宋体',serif;background:#f9f9f9;border-radius:8px;border:1px dashed #ddd;">
-                <div style="margin-bottom:10px;">${isPartner ? '伴侣' : '用户'}八字数据加载中...</div>
-                <div style="font-size:13px;color:#999;">正在从分析结果中提取八字信息</div>
-            </div>
-        `;
-    }
-    
-    const color = isPartner ? '#d2691e' : '#8b4513';
-    
-    return `
-        <div class="bazi-calendar" style="border-color: ${color}20;">
-            <div class="calendar-header">
-                <div class="calendar-title" style="color: ${color};">📅 ${isPartner ? '伴侣' : '用户'}八字排盘</div>
-                <div class="calendar-subtitle">生辰八字 • 命理基础</div>
-            </div>
-            <div class="calendar-grid">
-                <div class="calendar-item year-item" style="border-color: ${color}40;">
-                    <div class="calendar-label">年柱</div>
-                    <div class="calendar-value" style="color: ${color};">${baziData.yearColumn}</div>
-                    <div class="calendar-element">${baziData.yearElement}</div>
-                </div>
-                <div class="calendar-item month-item" style="border-color: ${color}40;">
-                    <div class="calendar-label">月柱</div>
-                    <div class="calendar-value" style="color: ${color};">${baziData.monthColumn}</div>
-                    <div class="calendar-element">${baziData.monthElement}</div>
-                </div>
-                <div class="calendar-item day-item" style="border-color: ${color}40;">
-                    <div class="calendar-label">日柱</div>
-                    <div class="calendar-value" style="color: ${color};">${baziData.dayColumn}</div>
-                    <div class="calendar-element">${baziData.dayElement}</div>
-                </div>
-                <div class="calendar-item hour-item" style="border-color: ${color}40;">
-                    <div class="calendar-label">时柱</div>
-                    <div class="calendar-value" style="color: ${color};">${baziData.hourColumn}</div>
-                    <div class="calendar-element">${baziData.hourElement}</div>
-                </div>
-            </div>
-            <div class="calendar-footer">
-                <div class="calendar-note">※ 排盘基于真太阳时计算</div>
-            </div>
-        </div>
-    `;
-}
-
-// 从文本中提取数字序列
-function extractNumbersFromText(text) {
-    const numbers = [];
-    const regex = /\b\d+\b/g;
-    let match;
-    while ((match = regex.exec(text)) !== null) {
-        numbers.push(parseInt(match[0]));
-    }
-    return numbers;
-}
-
-// 从文本中提取天干地支
-function extractGanzhiFromText(text) {
-    const ganzhi = [];
-    const regex = /[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/g;
-    let match;
-    while ((match = regex.exec(text)) !== null) {
-        ganzhi.push(match[0]);
-    }
-    return ganzhi;
-}
-
-// 提取大运数据（增强版）
-function extractDayunData(text) {
-    const result = {
-        ages: [],
-        stems: [],
-        branches: []
-    };
-    
-    if (!text) return result;
-    
-    console.log('开始提取大运数据，文本长度:', text.length);
-    
-    // 方法1：尝试从标准表格格式解析
-    // 格式示例：岁 8 18 28 38 48 58 68 78
-    const ageLineMatch = text.match(/岁\s*[:：]?\s*((?:\d+\s+){3,}\d+)/);
-    if (ageLineMatch) {
-        const ageLine = ageLineMatch[1];
-        result.ages = ageLine.trim().split(/\s+/).slice(0, 8);
-        console.log('方法1解析到年龄:', result.ages);
-    }
-    
-    // 方法2：尝试从天干地支行解析
-    const ganzhiMatches = extractGanzhiFromText(text);
-    if (ganzhiMatches.length >= 4) {
-        result.stems = ganzhiMatches.map(gz => gz.charAt(0)).slice(0, 8);
-        result.branches = ganzhiMatches.map(gz => gz.charAt(1)).slice(0, 8);
-        console.log('方法2解析到干支:', ganzhiMatches.slice(0, 8));
-    }
-    
-    // 方法3：如果没有明确的年龄，尝试从文本中提取所有数字
-    if (result.ages.length === 0) {
-        const allNumbers = extractNumbersFromText(text);
-        // 过滤出可能是年龄的数字（通常在5-80之间）
-        const ageCandidates = allNumbers.filter(num => num >= 5 && num <= 80);
-        if (ageCandidates.length >= 4) {
-            // 去重并排序
-            result.ages = [...new Set(ageCandidates)].sort((a, b) => a - b).slice(0, 8);
-            console.log('方法3解析到年龄:', result.ages);
-        }
-    }
-    
-    // 如果还没有数据，使用默认示例
-    if (result.ages.length === 0) {
-        result.ages = ['8', '18', '28', '38', '48', '58', '68', '78'];
-    }
-    if (result.stems.length === 0) {
-        result.stems = ['壬', '辛', '庚', '己', '戊', '丁', '丙', '乙'];
-    }
-    if (result.branches.length === 0) {
-        result.branches = ['子', '亥', '戌', '酉', '申', '未', '午', '巳'];
-    }
-    
-    return result;
-}
-
-// 大运排盘表格格式 - 从分析结果中提取真实数据
-function createDayunCalendar() {
-    const isHehun = STATE.currentService === '八字合婚';
-    const hasPartnerData = STATE.partnerData && STATE.partnerBaziData;
-    
-    // 使用导入的extractDayunData函数
-    let userDayunData = extractDayunData(STATE.fullAnalysisResult, 'user');
-    let partnerDayunData = isHehun ? extractDayunData(STATE.fullAnalysisResult, 'partner') : { ages: [], ganzhi: [] };
-    
-    console.log('用户大运数据:', userDayunData);
-    console.log('伴侣大运数据:', partnerDayunData);
-    
-    // 确保数据长度一致
-    const maxLength = Math.min(userDayunData.ages.length, userDayunData.ganzhi.length, 8);
-    const userAges = userDayunData.ages.slice(0, maxLength);
-    const userGanzhi = userDayunData.ganzhi.slice(0, maxLength);
-    
-    // 如果是八字合婚，显示双人大运对比
-    if (isHehun && hasPartnerData && partnerDayunData.ages.length > 0) {
-        const partnerMaxLength = Math.min(partnerDayunData.ages.length, partnerDayunData.ganzhi.length, 8);
-        const partnerAges = partnerDayunData.ages.slice(0, partnerMaxLength);
-        const partnerGanzhi = partnerDayunData.ganzhi.slice(0, partnerMaxLength);
-        
-        return `
-            <div class="dayun-calendar">
-                <div class="calendar-header">
-                    <div class="calendar-title">📊 双方大运排盘对比</div>
-                    <div class="calendar-subtitle">命运同步 • 十年一运</div>
-                </div>
-                
-                <!-- 双人大运横向对比表格 -->
-                <div class="dayun-table-container">
-                    <table class="dayun-table dayun-table-horizontal">
-                        <thead>
-                            <tr>
-                                <th rowspan="2" style="background: linear-gradient(135deg, #f9f5f0, #f0e6d6);">项目</th>
-                                <th colspan="${Math.max(userAges.length, partnerAges.length)}" style="background: linear-gradient(135deg, #e8f4fd, #d4e9fa);">大运阶段</th>
-                            </tr>
-                            <tr>
-                                ${userAges.map((age, index) => `
-                                    <th class="age-header" style="background: linear-gradient(135deg, #f0f8ff, #e6f2ff);">
-                                        <div class="age-header-inner">
-                                            <span class="age-number">${age}</span>
-                                            <span class="age-label">岁</span>
-                                        </div>
-                                    </th>
-                                `).join('')}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- 用户大运行 -->
-                            <tr class="user-dayun-row">
-                                <td class="person-name" style="background: linear-gradient(135deg, #f9f5f0, #f0e6d6); color: #8b4513; font-weight: bold;">
-                                    ${STATE.userData?.name || '用户'}大运
-                                </td>
-                                ${userGanzhi.map(ganzhi => `
-                                    <td class="ganzhi-cell vertical-text" style="font-family: 'SimSun', '宋体', serif;">
-                                        ${ganzhi}
-                                    </td>
-                                `).join('')}
-                            </tr>
-                            
-                            <!-- 伴侣大运行（如果是八字合婚） -->
-                            ${isHehun && hasPartnerData && partnerAges.length > 0 ? `
-                                <tr class="partner-dayun-row">
-                                    <td class="person-name" style="background: linear-gradient(135deg, #f0e6d6, #e8d4b9); color: #d2691e; font-weight: bold;">
-                                        ${STATE.partnerData?.partnerName || '伴侣'}大运
-                                    </td>
-                                    ${partnerGanzhi.map(ganzhi => `
-                                        <td class="ganzhi-cell vertical-text" style="font-family: 'SimSun', '宋体', serif;">
-                                            ${ganzhi}
-                                        </td>
-                                    `).join('')}
-                                </tr>
-                            ` : ''}
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="calendar-footer">
-                    <div class="calendar-note">※ 大运推算遵循"男命阳顺阴逆，女命阳逆阴顺"原则</div>
-                    <div class="calendar-note" style="color: #666; margin-top: 8px;">
-                        提示：横向对比双方大运走势，分析婚姻运势同步情况
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
-    // 单人大运表格（横向布局，字体竖排）
-    return `
-        <div class="dayun-calendar">
-            <div class="calendar-header">
-                <div class="calendar-title">📈 大运排盘</div>
-                <div class="calendar-subtitle">命运流转 • 十年一运</div>
-            </div>
-            <div class="dayun-table-container">
-                <table class="dayun-table dayun-table-horizontal">
-                    <thead>
-                        <tr>
-                            <th>岁</th>
-                            ${userAges.map(age => `
-                                <th class="age-header">
-                                    <div class="age-header-inner">
-                                        <span class="age-number">${age}</span>
-                                        <span class="age-label">岁</span>
-                                    </div>
-                                </th>
-                            `).join('')}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="ganzhi-label" style="background: linear-gradient(135deg, #f9f5f0, #f0e6d6); font-weight: bold; color: #8b4513;">
-                                大运
-                            </td>
-                            ${userGanzhi.map(ganzhi => `
-                                <td class="ganzhi-cell vertical-text" style="font-family: 'SimSun', '宋体', serif;">
-                                    ${ganzhi}
-                                </td>
-                            `).join('')}
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="calendar-footer">
-                <div class="calendar-note">※ 大运推算遵循"男命阳顺阴逆，女命阳逆阴顺"原则</div>
-                ${maxLength < 4 ? '<div class="calendar-note" style="color: #999; margin-top: 5px;">注：部分大运数据未能完整解析</div>' : ''}
-            </div>
-        </div>
-    `;
-}
-
-// 新增：改进的大运数据提取函数（支持干支合并）
-function extractDayunDataV2(text, type = 'user') {
-    const result = {
-        ages: [],
-        ganzhi: [] // 合并的干支
-    };
-    
-    if (!text) return result;
-    
-    console.log(`提取${type}大运数据...`);
-    
-    // 根据类型选择搜索关键词
-    let searchText = text;
-    if (type === 'partner') {
-        const partnerMatch = text.match(/【伴侣大运排盘】([\s\S]*?)(?=【|$)/);
-        if (partnerMatch) {
-            searchText = partnerMatch[1];
-        }
-    }
-    
-    // 尝试多种模式匹配
-    // 模式1：完整的大运格式
-    const pattern1 = /岁[：:]\s*([\d\s]+)[\n\r]+大运[：:]\s*([\S\s]+?)(?=[\n\r]+|$)/;
-    const match1 = searchText.match(pattern1);
-    
-    if (match1) {
-        console.log('使用模式1提取');
-        // 提取岁数
-        const ages = match1[1].trim().split(/\s+/);
-        result.ages = ages.slice(0, 8);
-        
-        // 提取大运干支（可能有多行）
-        const ganzhiText = match1[2].replace(/\n/g, ' ').trim();
-        // 提取干支对
-        const ganzhiMatches = ganzhiText.match(/[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/g);
-        if (ganzhiMatches) {
-            result.ganzhi = ganzhiMatches.slice(0, 8);
-        }
-    }
-    
-    // 模式2：表格格式
-    if (result.ages.length === 0 || result.ganzhi.length === 0) {
-        const pattern2 = /岁数[：:]\s*([\d\s]+)[\n\r]+大运[：:]\s*([\S\s]+?)(?=[\n\r]+|$)/;
-        const match2 = searchText.match(pattern2);
-        
-        if (match2) {
-            console.log('使用模式2提取');
-            const ages = match2[1].trim().split(/\s+/);
-            result.ages = ages.slice(0, 8);
-            
-            const ganzhiText = match2[2].replace(/\n/g, ' ').trim();
-            const ganzhiMatches = ganzhiText.match(/[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/g);
-            if (ganzhiMatches) {
-                result.ganzhi = ganzhiMatches.slice(0, 8);
-            }
-        }
-    }
-    
-    // 模式3：寻找大运段落
-    if (result.ages.length === 0 || result.ganzhi.length === 0) {
-        const lines = searchText.split('\n');
-        let inDayunSection = false;
-        let ageLine = '';
-        let ganzhiLine = '';
-        
-        for (const line of lines) {
-            const trimmed = line.trim();
-            if (trimmed.startsWith('岁') || trimmed.startsWith('岁数')) {
-                ageLine = trimmed;
-                inDayunSection = true;
-            } else if (inDayunSection && (trimmed.includes('大运') || trimmed.includes('大干'))) {
-                ganzhiLine = trimmed;
-            }
-        }
-        
-        if (ageLine) {
-            const ageMatch = ageLine.match(/(\d+)/g);
-            if (ageMatch) {
-                result.ages = ageMatch.slice(0, 8);
-            }
-        }
-        
-        if (ganzhiLine) {
-            const ganzhiMatches = ganzhiLine.match(/[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/g);
-            if (ganzhiMatches) {
-                result.ganzhi = ganzhiMatches.slice(0, 8);
-            }
-        }
-    }
-    
-    // 确保年龄和干支数量一致
-    const minLength = Math.min(result.ages.length, result.ganzhi.length, 8);
-    if (minLength > 0) {
-        result.ages = result.ages.slice(0, minLength);
-        result.ganzhi = result.ganzhi.slice(0, minLength);
-    } else {
-        // 使用默认示例数据
-        result.ages = ['8', '18', '28', '38', '48', '58', '68', '78'];
-        result.ganzhi = ['壬子', '辛亥', '庚戌', '己酉', '戊申', '丁未', '丙午', '乙巳'];
-    }
-    
-    console.log(`提取到${type}大运数据:`, result);
-    return result;
-}
-
-// 格式化标题
-function formatTitle(title) {
-    // 为不同类型的标题添加不同颜色
-    if (title.includes('喜用') || title.includes('喜神') || title.includes('用神')) {
-        return `<span style="color: #32CD32;">${title}</span>`;
-    } else if (title.includes('忌神') || title.includes('忌')) {
-        return `<span style="color: #FF4500;">${title}</span>`;
-    } else if (title.includes('性格')) {
-        return `<span style="color: #1E90FF;">${title}</span>`;
-    } else if (title.includes('职业') || title.includes('行业')) {
-        return `<span style="color: #8b4513;">${title}</span>`;
-    } else if (title.includes('富贵') || title.includes('财富')) {
-        return `<span style="color: #FFD700;">${title}</span>`;
-    } else if (title.includes('婚姻') || title.includes('感情')) {
-        return `<span style="color: #FF69B4;">${title}</span>`;
-    } else if (title.includes('事业') || title.includes('财运')) {
-        return `<span style="color: #FFA500;">${title}</span>`;
-    } else if (title.includes('健康')) {
-        return `<span style="color: #32CD32;">${title}</span>`;
-    } else {
-        return `<span style="color: #8b4513;">${title}</span>`;
-    }
-}
-
-// 格式化报告内容
-function formatReportContent(text) {
-    // 只保留十神颜色处理
-    text = text.replace(/喜神/g, '<span class="xiji-element xiji-xi">喜神</span>')
-               .replace(/用神/g, '<span class="xiji-element xiji-yong">用神</span>')
-               .replace(/忌神/g, '<span class="xiji-element xiji-ji">忌神</span>')
-               .replace(/喜用/g, '<span class="xiji-element xiji-xiyong">喜用</span>');
-    
-    // 处理十神颜色
-    const shishenKeywords = ['正官', '七杀', '正印', '偏印', '正财', '偏财', '食神', '伤官', '比肩', '劫财'];
-    shishenKeywords.forEach(keyword => {
-        const color = getShishenColor(keyword);
-        text = text.replace(new RegExp(keyword, 'g'), `<span style="color: ${color};">${keyword}</span>`);
-    });
-    
-    // 处理段落
-    const paragraphs = text.split('\n').filter(p => p.trim());
-    return paragraphs.map(para => `
-        <div class="report-paragraph">${para}</div>
-    `).join('');
-}
-
-// 创建分析段落
-function createAnalysisSection(title, content) {
-    const sectionTitle = title.replace(/【|】/g, '');
-    
-    return `
-        <div class="report-section">
-            <div class="report-title">${formatTitle(sectionTitle)}</div>
-            <div class="report-content">${formatReportContent(content)}</div>
-        </div>
-    `;
-}
-
-// ============ 【更多公共函数】 ============
-
 // 显示八字排盘结果 - 支持单人/双人显示
 function displayBaziPan() {
     const baziGrid = UI.baziGrid();
@@ -764,7 +535,7 @@ function displayBaziPan() {
     `;
     
     const isHehun = STATE.currentService === '八字合婚';
-    const hasPartnerData = STATE.partnerData && STATE.partnerBaziData;
+    const hasPartnerData = STATE.partnerData && STATE.partnerBaziData && STATE.partnerBaziData.yearColumn;
     
     titleDiv.innerHTML = `
         <div style="font-size: 26px; color: #8b4513; font-weight: bold; font-family: 'SimSun', '宋体', serif; margin-bottom: 10px;">
@@ -780,7 +551,7 @@ function displayBaziPan() {
     const userBaziSection = document.createElement('div');
     userBaziSection.className = 'bazi-section';
     userBaziSection.style.cssText = `
-        margin-bottom: 30px;
+        margin-bottom: ${isHehun ? '20px' : '30px'};
         padding-bottom: ${isHehun ? '15px' : '25px'};
         border-bottom: ${isHehun ? '1px solid #e8e8e8' : '2px dashed #e8e8e8'};
     `;
@@ -845,128 +616,37 @@ function displayBaziPan() {
         border-left: 4px solid #3a7bd5;
         font-family: 'SimSun', '宋体', serif;
     `;
-    dayunTitle.textContent = isHehun && hasPartnerData ? '双方大运排盘对比' : '大运排盘';
-    dayunSection.appendChild(dayunTitle);
     
-    dayunSection.innerHTML += createDayunCalendar();
-    container.appendChild(dayunSection);
+    // 提取大运数据
+    const userDayunData = extractDayunData(STATE.fullAnalysisResult, 'user');
+    let partnerDayunData = null;
     
-    baziGrid.appendChild(container);
-    
-    // 添加响应式样式
-    const styleId = 'bazi-dayun-responsive-styles';
-    if (document.getElementById(styleId)) {
-        return;
+    if (isHehun && hasPartnerData) {
+        partnerDayunData = extractDayunData(STATE.fullAnalysisResult, 'partner');
+        dayunTitle.textContent = '双方大运排盘对比';
+    } else {
+        dayunTitle.textContent = '大运排盘';
     }
     
-    const style = document.createElement('style');
-    style.id = styleId;
-    style.textContent = `
-        /* 电脑端边距优化 */
-        @media (min-width: 769px) {
-            .bazi-dayun-container {
-                padding: 35px 40px !important;
-                margin-left: auto !important;
-                margin-right: auto !important;
-                max-width: 900px !important;
-            }
-            
-            .calendar-grid {
-                gap: 20px !important;
-            }
-            
-            .calendar-item {
-                padding: 25px !important;
-            }
-            
-            .calendar-value {
-                font-size: 32px !important;
-                height: 45px !important;
-                line-height: 45px !important;
-            }
-            
-            .dayun-table {
-                font-size: 16px !important;
-            }
-        }
-        
-        /* H5端边距优化 */
-        @media (max-width: 768px) {
-            .bazi-dayun-container {
-                padding: 20px 15px !important;
-                margin: 0 -10px 30px -10px !important;
-                width: calc(100% + 20px) !important;
-                border-radius: 8px !important;
-            }
-            
-            .calendar-grid {
-                gap: 10px !important;
-            }
-            
-            .calendar-item {
-                padding: 18px 12px !important;
-            }
-            
-            .calendar-value {
-                font-size: 26px !important;
-                height: 36px !important;
-                line-height: 36px !important;
-            }
-            
-            .dayun-table th,
-            .dayun-table td {
-                padding: 10px 8px !important;
-                min-width: 50px !important;
-                font-size: 14px !important;
-            }
-        }
-        
-        /* 小屏幕H5优化 */
-        @media (max-width: 480px) {
-            .bazi-dayun-container {
-                padding: 15px 10px !important;
-                margin: 0 -8px 25px -8px !important;
-                width: calc(100% + 16px) !important;
-                border-radius: 6px !important;
-            }
-            
-            .calendar-grid {
-                grid-template-columns: 1fr !important;
-                gap: 8px !important;
-            }
-            
-            .calendar-item {
-                padding: 16px 10px !important;
-            }
-            
-            .calendar-value {
-                font-size: 24px !important;
-            }
-            
-            .dayun-table {
-                font-size: 13px !important;
-                min-width: 350px !important;
-            }
-            
-            .dayun-table th,
-            .dayun-table td {
-                padding: 8px 6px !important;
-                min-width: 45px !important;
-                font-size: 13px !important;
-            }
-        }
-        
-        /* 合婚双人排盘样式 */
-        .bazi-section + .bazi-section {
-            margin-top: 20px;
-        }
-        
-        /* 大运对比表格样式 */
-        .dayun-table-container + .dayun-table-container {
-            margin-top: 25px;
-        }
+    dayunSection.appendChild(dayunTitle);
+    
+    // 创建大运表格
+    const dayunTableHTML = createDayunTable(userDayunData, partnerDayunData);
+    dayunSection.innerHTML += `
+        <div class="dayun-calendar">
+            <div class="calendar-header">
+                <div class="calendar-title">📈 ${isHehun && hasPartnerData ? '双方大运排盘对比' : '大运排盘'}</div>
+                <div class="calendar-subtitle">命运流转 • 十年一运</div>
+            </div>
+            ${dayunTableHTML}
+            <div class="calendar-footer">
+                <div class="calendar-note">※ 大运推算遵循"男命阳顺阴逆，女命阳逆阴顺"原则</div>
+            </div>
+        </div>
     `;
-    document.head.appendChild(style);
+    
+    container.appendChild(dayunSection);
+    baziGrid.appendChild(container);
 }
 
 // 处理并显示分析结果 - 宋体格式
@@ -985,29 +665,10 @@ function processAndDisplayAnalysis(result) {
     // 提取八字数据
     const parsedBaziData = parseBaziData(result);
     STATE.baziData = parsedBaziData.userBazi;
+    STATE.partnerBaziData = parsedBaziData.partnerBazi;
     
-    // 修复合婚伴侣数据处理
-if (STATE.currentService === '八字合婚' && STATE.partnerData) {
-    // 如果解析结果中有伴侣八字，使用它
-    if (parsedBaziData.partnerBazi && 
-        parsedBaziData.partnerBazi.yearColumn) {
-        STATE.partnerBaziData = parsedBaziData.partnerBazi;
-    } else {
-        // 否则显示占位符
-        STATE.partnerBaziData = {
-            yearColumn: STATE.partnerData.partnerName ? '待解析' : '',
-            monthColumn: '',
-            dayColumn: '',
-            hourColumn: '',
-            yearElement: '',
-            monthElement: '',
-            dayElement: '',
-            hourElement: ''
-        };
-    }
-    
+    console.log('用户八字数据:', STATE.baziData);
     console.log('伴侣八字数据:', STATE.partnerBaziData);
-}
     
     // 定义免费部分
     const freeSections = [
@@ -1016,8 +677,10 @@ if (STATE.currentService === '八字合婚' && STATE.partnerData) {
         '【适宜行业职业推荐】'
     ];
     
-    // 根据当前服务动态调整免费内容
-    const serviceConfig = SERVICES[STATE.currentService];
+    // 如果是八字合婚，调整免费内容
+    if (STATE.currentService === '八字合婚') {
+        freeSections.push('【双方八字契合度分析】');
+    }
     
     // 按【分割内容
     const sections = result.split('【');
@@ -1031,7 +694,7 @@ if (STATE.currentService === '八字合婚' && STATE.partnerData) {
         const sectionContent = section.replace(sectionTitle, '').trim();
         
         // 跳过八字排盘和大运排盘（已单独显示）
-        if (sectionTitle === '【八字排盘】' || sectionTitle === '【大运排盘】') {
+        if (sectionTitle.includes('八字排盘') || sectionTitle.includes('大运排盘')) {
             continue;
         }
         
@@ -1082,13 +745,12 @@ function showFullAnalysisContent() {
     }
 }
 
-// ============ 【支付弹窗相关函数】 ============
+// ============ 【其他UI函数】 ============
 
-// 显示支付弹窗 - 支持支付宝和微信支付
+// 显示支付弹窗
 async function showPaymentModal() {
     console.log('调用支付接口...');
 
-    // 检查完整分析是否已完成
     if (!STATE.fullAnalysisResult) {
         const confirmed = confirm('完整分析报告还在生成中，可能需要额外1-2分钟。\n\n建议您先阅读免费部分内容，支付后将立即解锁完整报告。\n\n是否继续支付？');
         
@@ -1101,35 +763,25 @@ async function showPaymentModal() {
     if (!serviceConfig) return;
     
     try {
-        // 1. 先显示支付弹窗
         const paymentModal = UI.paymentModal();
         if (paymentModal) {
             showElement(paymentModal);
             document.body.style.overflow = 'hidden';
             
-            // 先显示基本信息
             UI.paymentServiceType().textContent = STATE.currentService;
             UI.paymentAmount().textContent = '¥' + serviceConfig.price;
             UI.paymentOrderId().textContent = '生成中...';
         }
         
-        // 2. 显示支付方式选择
         const selectedMethod = await showPaymentMethodSelection();
         if (!selectedMethod) {
             closePaymentModal();
             return;
         }
         
-        // 3. 调用后端支付接口
         const frontendOrderId = 'RUNZ-FRONT-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
 
         console.log('🔗 调用支付API: https://runzang.top/api/payment/create');
-        console.log('请求数据:', {
-            serviceType: STATE.currentService,
-            amount: parseFloat(serviceConfig.price).toFixed(2),
-            frontendOrderId: frontendOrderId,
-            paymentMethod: selectedMethod
-        });
 
         const response = await fetch('https://runzang.top/api/payment/create', {
             method: 'POST',
@@ -1158,12 +810,10 @@ async function showPaymentModal() {
         
         console.log('支付响应:', result.data);
         
-        // 4. 更新支付弹窗显示真实信息
         UI.paymentServiceType().textContent = subject || STATE.currentService;
         UI.paymentAmount().textContent = '¥' + amount;
         UI.paymentOrderId().textContent = outTradeNo;
         
-        // 5. 根据支付方式显示不同支付界面
         displayPaymentInterface(result.data, selectedMethod);
         
     } catch (error) {
@@ -1173,14 +823,11 @@ async function showPaymentModal() {
     }
 }
 
-// 支付方式选择弹窗
 function showPaymentMethodSelection() {
     return new Promise((resolve) => {
-        // 直接根据设备类型决定支付方式
         const userAgent = navigator.userAgent.toLowerCase();
         const isMobile = /mobile|iphone|android/i.test(userAgent);
         
-        // 规则：电脑端用微信native，手机端用支付宝H5
         const selectedMethod = isMobile ? 'alipay' : 'wechatpay';
         
         console.log('设备检测:', {
@@ -1189,7 +836,6 @@ function showPaymentMethodSelection() {
             selectedMethod: selectedMethod
         });
         
-        // 显示支付方式提示
         const paymentMethods = document.querySelector('.payment-methods');
         if (paymentMethods) {
             const paymentHint = isMobile ? 
@@ -1210,65 +856,24 @@ function showPaymentMethodSelection() {
                 </p>
                 </div>
             `;
-            
-            // 添加样式
-            const style = document.createElement('style');
-            style.textContent = `
-                .payment-auto-selection {
-                padding: 20px;
-                text-align: center;
-                }
-                .device-detect-result {
-                display: inline-flex;
-                align-items: center;
-                background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-                padding: 20px 30px;
-                border-radius: 15px;
-                margin: 10px 0;
-                border: 2px solid ${isMobile ? '#1677FF' : '#07C160'};
-                }
-                .device-icon {
-                font-size: 40px;
-                margin-right: 20px;
-                }
-                .device-info {
-                text-align: left;
-                }
-                .device-type {
-                font-size: 16px;
-                font-weight: bold;
-                color: #333;
-                margin-bottom: 5px;
-                }
-                .payment-method {
-                font-size: 18px;
-                font-weight: bold;
-                color: ${isMobile ? '#1677FF' : '#07C160'};
-                }
-            `;
-            document.head.appendChild(style);
         }
         
-        // 直接返回检测结果
         setTimeout(() => resolve(selectedMethod), 300);
     });
 }
 
-// 显示支付界面
 function displayPaymentInterface(paymentData, method) {
     const paymentMethods = document.querySelector('.payment-methods');
     if (!paymentMethods) return;
     
     paymentMethods.innerHTML = '';
     
-    // 更新支付弹窗的标题
     const paymentTitle = document.querySelector('.order-info p:last-child strong');
     if (paymentTitle) {
         const methodName = method === 'alipay' ? '支付宝H5支付' : '微信扫码支付';
         paymentTitle.textContent = methodName;
     }
     
-    // 更新支付状态文本
     const statusText = document.getElementById('payment-status-text');
     if (statusText) {
         statusText.textContent = method === 'alipay' ? 
@@ -1277,7 +882,6 @@ function displayPaymentInterface(paymentData, method) {
     }
     
     if (method === 'alipay') {
-        // 支付宝支付 - 跳转按钮
         const payBtn = document.createElement('button');
         payBtn.id = 'alipay-redirect-btn';
         payBtn.className = 'dynamic-pulse-btn';
@@ -1303,18 +907,14 @@ function displayPaymentInterface(paymentData, method) {
         `;
         
         payBtn.onclick = () => {
-            // 保存订单信息
             STATE.currentOrderId = paymentData.outTradeNo;
             saveAnalysisData();
-            
-            // 直接跳转
             window.location.href = paymentData.paymentUrl;
         };
         
         paymentMethods.appendChild(payBtn);
         
     } else if (method === 'wechatpay') {
-        // 微信支付 - 显示二维码
         if (paymentData.qrCodeUrl || paymentData.codeUrl) {
             const qrContainer = document.createElement('div');
             qrContainer.className = 'wechat-qr-container';
@@ -1346,7 +946,6 @@ function displayPaymentInterface(paymentData, method) {
             
             paymentMethods.appendChild(qrContainer);
         } else if (paymentData.paymentUrl) {
-            // 如果有支付链接，显示跳转按钮（备用）
             const payBtn = document.createElement('button');
             payBtn.id = 'wechat-redirect-btn';
             payBtn.className = 'dynamic-pulse-btn';
@@ -1382,7 +981,6 @@ function displayPaymentInterface(paymentData, method) {
     }
 }
 
-// 保存分析数据
 function saveAnalysisData() {
     if (STATE.fullAnalysisResult) {
         localStorage.setItem('last_analysis_result', STATE.fullAnalysisResult);
@@ -1402,14 +1000,11 @@ function closePaymentModal() {
     }
 }
 
-// ============ 【解锁界面相关函数】 ============
-
 // 更新解锁界面状态
 function updateUnlockInterface() {
     const lockedOverlay = DOM.id('locked-overlay');
     if (!lockedOverlay) return;
     
-    // 更新标题
     const unlockHeader = lockedOverlay.querySelector('.unlock-header');
     if (unlockHeader) {
         const lockIcon = unlockHeader.querySelector('.lock-icon');
@@ -1421,7 +1016,6 @@ function updateUnlockInterface() {
         if (headerDesc) headerDesc.textContent = '您可以查看全部命理分析内容';
     }
     
-    // 更新项目列表为已解锁状态
     const unlockItems = lockedOverlay.querySelectorAll('.unlock-items li');
     unlockItems.forEach(item => {
         item.classList.add('unlocked-item');
@@ -1429,7 +1023,6 @@ function updateUnlockInterface() {
         item.innerHTML = '<span>✅ ' + text + '</span>';
     });
     
-    // 更新解锁按钮
     const unlockBtnContainer = lockedOverlay.querySelector('.unlock-btn-container');
     if (unlockBtnContainer) {
         const unlockBtn = unlockBtnContainer.querySelector('.unlock-btn');
@@ -1474,7 +1067,6 @@ function unlockDownloadButton() {
         downloadBtnText.textContent = '下载报告';
         STATE.isDownloadLocked = false;
         
-        // 添加视觉反馈
         downloadBtn.style.background = 'linear-gradient(135deg, var(--primary-color), #3a7bd5)';
         downloadBtn.style.boxShadow = '0 4px 15px rgba(58, 123, 213, 0.4)';
         
@@ -1491,7 +1083,6 @@ function resetUnlockInterface() {
     const lockedOverlay = DOM.id('locked-overlay');
     if (!lockedOverlay) return;
     
-    // 重置标题
     const unlockHeader = lockedOverlay.querySelector('.unlock-header');
     if (unlockHeader) {
         const lockIcon = unlockHeader.querySelector('.lock-icon');
@@ -1503,7 +1094,6 @@ function resetUnlockInterface() {
         if (headerDesc) headerDesc.textContent = '解锁完整分析报告，查看全部命理分析内容';
     }
     
-    // 重置项目列表
     const unlockItemsList = UI.unlockItemsList();
     if (unlockItemsList) {
         unlockItemsList.innerHTML = '';
@@ -1517,7 +1107,6 @@ function resetUnlockInterface() {
         }
     }
     
-    // 重置解锁按钮
     const unlockBtnContainer = lockedOverlay.querySelector('.unlock-btn-container');
     if (unlockBtnContainer) {
         const unlockBtn = unlockBtnContainer.querySelector('.unlock-btn');
@@ -1536,21 +1125,16 @@ function resetUnlockInterface() {
     }
 }
 
-// ============ 【其他UI函数】 ============
-
 // 按钮拉伸动画
 function animateButtonStretch() {
     const button = UI.analyzeBtn();
     if (!button) return;
     
-    // 添加拉伸动画类
     button.classList.add('stretching');
     
-    // 动画结束后移除类并恢复初始状态
     setTimeout(() => {
         button.classList.remove('stretching');
         
-        // 5秒后恢复原始宽度
         setTimeout(() => {
             button.style.width = '';
             button.style.maxWidth = '';
@@ -1582,10 +1166,8 @@ function showAnalysisResult() {
     if (analysisResultSection) {
         showElement(analysisResultSection);
         
-        // 设置分析时间
         UI.analysisTime().textContent = formatDate();
         
-        // 滚动到结果区域
         analysisResultSection.scrollIntoView({ behavior: 'smooth' });
     }
 }
@@ -1610,10 +1192,8 @@ function validateForm() {
     console.log('验证表单...');
     let isValid = true;
     
-    // 重置错误信息
     resetFormErrors();
     
-    // 验证函数
     const validateField = (fieldId, errorId) => {
         const field = DOM.id(fieldId);
         const error = DOM.id(errorId);
@@ -1628,7 +1208,6 @@ function validateForm() {
         return true;
     };
     
-    // 验证必填字段
     if (!validateField('name', 'name-error')) isValid = false;
     if (!validateField('gender', 'gender-error')) isValid = false;
     if (!validateField('birth-year', 'birth-year-error')) isValid = false;
@@ -1638,7 +1217,6 @@ function validateForm() {
     if (!validateField('birth-minute', 'birth-minute-error')) isValid = false;
     if (!validateField('birth-city', 'birth-city-error')) isValid = false;
     
-    // 如果是八字合婚，验证伴侣信息
     if (STATE.currentService === '八字合婚') {
         if (!validateField('partner-name', 'partner-name-error')) isValid = false;
         if (!validateField('partner-gender', 'partner-gender-error')) isValid = false;
@@ -1666,7 +1244,6 @@ function collectUserData() {
         birthCity: UI.birthCity().value
     };
     
-    // 如果是八字合婚，收集伴侣数据
     if (STATE.currentService === '八字合婚') {
         STATE.partnerData = {
             partnerName: UI.partnerName().value,
@@ -1715,15 +1292,3 @@ export {
     resetFormErrors,
     displayDayunPan
 };
-
-
-
-
-
-
-
-
-
-
-
-
