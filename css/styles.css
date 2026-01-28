@@ -1028,3 +1028,253 @@ input:focus, select:focus {
     transform: translateY(-50%);
     font-size: 16px;
 }
+
+/* ============ 【移动端优化：八字排盘和大运排盘】 ============ */
+@media (max-width: 768px) {
+    /* 八字排盘日历优化 */
+    .calendar-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+    
+    .calendar-item {
+        padding: 18px 12px !important;
+        min-height: 120px !important;
+    }
+    
+    .calendar-value {
+        font-size: 22px !important;
+        height: 32px !important;
+        line-height: 32px !important;
+    }
+    
+    .calendar-label {
+        font-size: 14px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .calendar-element {
+        font-size: 14px !important;
+        padding: 4px 10px !important;
+    }
+    
+    /* 大运表格优化 */
+    .dayun-table-container {
+        overflow-x: auto;
+        margin: 15px -10px !important;
+        padding: 5px !important;
+    }
+    
+    .dayun-table {
+        font-size: 14px !important;
+        min-width: 500px !important;
+    }
+    
+    .dayun-table th {
+        font-size: 14px !important;
+        padding: 10px 6px !important;
+        white-space: nowrap;
+    }
+    
+    .dayun-table td {
+        font-size: 14px !important;
+        padding: 10px 6px !important;
+        min-width: 50px !important;
+    }
+    
+    /* 八字合婚特殊样式 */
+    .partner-bazi-container,
+    .partner-dayun-container {
+        margin: 20px -10px !important;
+        padding: 20px 15px !important;
+        border-left: 4px solid #FF69B4 !important;
+        border-right: 4px solid #FF69B4 !important;
+    }
+    
+    /* 起运信息优化 */
+    .qiyun-section {
+        padding: 15px !important;
+        margin: 15px -5px !important;
+    }
+    
+    .qiyun-item {
+        font-size: 14px !important;
+        padding: 8px 0 !important;
+        border-bottom: 1px dashed #d1e9ff !important;
+    }
+    
+    .qiyun-item:last-child {
+        border-bottom: none !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+    
+    .calendar-item {
+        padding: 15px 10px !important;
+    }
+    
+    .calendar-value {
+        font-size: 20px !important;
+    }
+    
+    .calendar-element {
+        font-size: 13px !important;
+    }
+    
+    .dayun-table {
+        font-size: 13px !important;
+        min-width: 400px !important;
+    }
+    
+    .dayun-table th,
+    .dayun-table td {
+        font-size: 13px !important;
+        padding: 8px 4px !important;
+    }
+    
+    /* 小屏幕隐藏部分信息 */
+    .calendar-subtitle {
+        font-size: 12px !important;
+    }
+    
+    /* 八字合婚标题调整 */
+    .partner-bazi-container .calendar-title,
+    .partner-dayun-container .calendar-title {
+        font-size: 18px !important;
+    }
+}
+
+/* ============ 【新增：大运表格样式】 ============ */
+.dayun-table-container {
+    overflow-x: auto;
+    margin: 20px 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    background: #f9f9f9;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.dayun-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'SimSun', '宋体', serif;
+    font-size: 16px;
+    text-align: center;
+    min-width: 600px;
+}
+
+.dayun-table th {
+    background: linear-gradient(135deg, #f0f8ff, #e6f2ff);
+    color: #3a7bd5;
+    font-weight: bold;
+    font-size: 16px;
+    padding: 15px 12px;
+    border: 1px solid #d1e9ff;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.dayun-table td {
+    padding: 12px 10px;
+    border: 1px solid #e0e0e0;
+    min-width: 80px;
+    background: white;
+    transition: all 0.2s;
+}
+
+.dayun-table tbody tr:hover td {
+    background-color: #f0f8ff;
+    transform: scale(1.01);
+}
+
+.dayun-table td:first-child {
+    background: linear-gradient(135deg, #f9f5f0, #f0e6d6);
+    font-weight: bold;
+    color: #8b4513;
+    border-color: #e8d4b9;
+    position: sticky;
+    left: 0;
+    z-index: 5;
+}
+
+/* 奇偶行颜色 */
+.dayun-table tbody tr:nth-child(odd) td {
+    background-color: #fcfcfc;
+}
+
+.dayun-table tbody tr:nth-child(even) td {
+    background-color: white;
+}
+
+/* 八字合婚特殊样式 */
+.partner-bazi-container .calendar-item {
+    border: 2px solid #FF69B4;
+    background: linear-gradient(135deg, #fff5f5, #ffe6e6);
+}
+
+.partner-bazi-container .calendar-title {
+    color: #FF69B4;
+}
+
+.partner-dayun-container .dayun-table th {
+    background: linear-gradient(135deg, #fff5f5, #ffe6e6);
+    color: #FF69B4;
+    border-color: #ffc1cc;
+}
+
+.partner-dayun-container .dayun-table td:first-child {
+    background: linear-gradient(135deg, #fff5f5, #ffe6e6);
+    color: #FF69B4;
+    border-color: #ffc1cc;
+}
+
+/* 响应式表格容器 */
+.table-responsive {
+    position: relative;
+    overflow: hidden;
+}
+
+.table-responsive::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 20px;
+    background: linear-gradient(to right, transparent, rgba(0,0,0,0.05));
+    pointer-events: none;
+}
+
+/* 起运信息样式 */
+.qiyun-section {
+    margin-bottom: 25px;
+    padding: 20px;
+    background: linear-gradient(135deg, #f0f8ff, #e6f2ff);
+    border-radius: 8px;
+    border: 1px solid #d1e9ff;
+}
+
+.qiyun-item {
+    font-size: 16px;
+    color: #333;
+    padding: 10px 0;
+    border-bottom: 1px dashed #d1e9ff;
+    font-family: 'SimSun', '宋体', serif;
+}
+
+.qiyun-item:last-child {
+    border-bottom: none;
+}
+
+.qiyun-item strong {
+    color: #3a7bd5;
+    margin-right: 10px;
+    font-weight: bold;
+}
