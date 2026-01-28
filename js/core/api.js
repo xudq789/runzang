@@ -104,9 +104,9 @@ export function parseBaziData(analysisResult) {
     };
     
     // 如果是八字合婚，需要解析两个八字
-    if (analysisResult.includes('【用户八字排盘】') && analysisResult.includes('【伴侣八字排盘】')) {
+    if (analysisResult.includes('【八字排盘】') && analysisResult.includes('【伴侣八字排盘】')) {
         // 解析用户八字
-        const userBaziText = analysisResult.match(/【用户八字排盘】([\s\S]*?)【/);
+        const userBaziText = analysisResult.match(/【八字排盘】([\s\S]*?)【/);
         if (userBaziText && userBaziText[1]) {
             result.userBazi = parseSingleBazi(userBaziText[1]);
         }
@@ -118,14 +118,20 @@ export function parseBaziData(analysisResult) {
         }
     } else {
         // 其他服务：只解析用户的八字
-        result.userBazi = parseSingleBazi(analysisResult);
+        const baziTextMatch = analysisResult.match(/【八字排盘】([\s\S]*?)【/);
+        if (baziTextMatch && baziTextMatch[1]) {
+            result.userBazi = parseSingleBazi(baziTextMatch[1]);
+        } else {
+            // 备用方案：从整个文本中提取
+            result.userBazi = parseSingleBazi(analysisResult);
+        }
     }
     
     console.log('解析到的八字数据:', result);
     return result;
 }
 
-// 解析单个八字（辅助函数）
+// 解析单个八字（辅助函数）- 增强版
 function parseSingleBazi(baziText) {
     const baziData = {
         yearColumn: '',
@@ -142,6 +148,8 @@ function parseSingleBazi(baziText) {
     
     lines.forEach(line => {
         const trimmedLine = line.trim();
+        
+        // 支持多种分隔符：：和:
         if (trimmedLine.includes('年柱')) {
             const match = trimmedLine.match(/年柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
             if (match) {
@@ -171,3 +179,4 @@ function parseSingleBazi(baziText) {
     
     return baziData;
 }
+
