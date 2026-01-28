@@ -676,7 +676,7 @@ function preloadImages() {
     });
 }
 
-// ============ 【核心修改：传统分析函数】 ============
+// ============ 【核心修改：传统分析函数 - 优化版】 ============
 async function startAnalysis() {
     console.log('开始命理分析...');
     
@@ -699,7 +699,6 @@ async function startAnalysis() {
     STATE.fullAnalysisResult = '';
     STATE.baziData = null;
     STATE.partnerBaziData = null;
-    STATE.partnerDayunData = null;
     
     STATE.isPaymentUnlocked = false;
     STATE.isDownloadLocked = true;
@@ -720,10 +719,10 @@ async function startAnalysis() {
         const baziGrid = UI.baziGrid();
         if (baziGrid) {
             baziGrid.innerHTML = `
-                <div class="loading-bazi">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div class="spinner" style="width: 20px; height: 20px;"></div>
-                        <span>正在排盘，请稍候...</span>
+                <div class="loading-bazi" style="text-align: center; padding: 40px;">
+                    <div style="display: inline-flex; align-items: center; gap: 15px; background: #f9f9f9; padding: 20px 30px; border-radius: 10px;">
+                        <div class="spinner" style="width: 24px; height: 24px; border-width: 3px;"></div>
+                        <span style="font-size: 16px; color: #666;">正在排盘，请稍候...</span>
                     </div>
                 </div>
             `;
@@ -755,37 +754,57 @@ async function startAnalysis() {
         
         // 保存完整结果
         STATE.fullAnalysisResult = analysisResult;
+        console.log('✅ AI分析结果已保存，长度:', analysisResult.length);
         
-        // 提取八字数据 - 修正：解析双方数据
+        // 提取八字数据
         const parsedBaziData = parseBaziData(analysisResult);
         STATE.baziData = parsedBaziData.userBazi;
         
         // 如果是八字合婚，保存伴侣八字数据
         if (STATE.currentService === '八字合婚') {
             STATE.partnerBaziData = parsedBaziData.partnerBazi;
-            
-            // 解析伴侣大运数据
-            if (analysisResult.includes('【伴侣大运排盘】')) {
-                const partnerDayunMatch = analysisResult.match(/【伴侣大运排盘】([\s\S]*?)【/);
-                if (partnerDayunMatch && partnerDayunMatch[1]) {
-                    STATE.partnerDayunData = partnerDayunMatch[1];
-                }
-            }
+            console.log('✅ 伴侣八字数据已保存');
         }
-        
-        // 显示结果 - 先显示八字排盘
-        displayBaziPan();
-        
-        // 显示大运排盘
-        setTimeout(() => {
-            displayDayunPan();
-        }, 100);
-        
-        // 处理并显示分析内容
-        processAndDisplayAnalysis(analysisResult);
         
         // 隐藏加载弹窗
         hideLoadingModal();
+        
+        // 显示结果 - 先显示八字排盘
+        displayBaziPan();
+        console.log('✅ 八字排盘显示完成');
+        
+        // 显示大运排盘（稍后显示，确保DOM已更新）
+        setTimeout(() => {
+            try {
+                displayDayunPan();
+                console.log('✅ 大运排盘显示完成');
+            } catch (error) {
+                console.error('显示大运排盘失败:', error);
+                // 降级处理：显示原始文本
+                const baziGrid = UI.baziGrid();
+                if (baziGrid) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'dayun-error';
+                    errorDiv.style.cssText = `
+                        background: #fff5f5;
+                        border: 1px solid #ffcdd2;
+                        border-radius: 8px;
+                        padding: 20px;
+                        margin-top: 20px;
+                        color: #c62828;
+                    `;
+                    errorDiv.innerHTML = `
+                        <div style="font-weight: bold; margin-bottom: 10px;">⚠️ 大运排盘显示异常</div>
+                        <div style="color: #666; font-size: 14px;">${error.message}</div>
+                    `;
+                    baziGrid.appendChild(errorDiv);
+                }
+            }
+        }, 300);
+        
+        // 处理并显示分析内容
+        processAndDisplayAnalysis(analysisResult);
+        console.log('✅ 分析内容处理完成');
         
         console.log('传统API分析完成，总字数:', analysisResult.length);
         
@@ -793,8 +812,27 @@ async function startAnalysis() {
         const analysisResultSection = UI.analysisResultSection();
         if (analysisResultSection) {
             setTimeout(() => {
-                analysisResultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 300);
+                analysisResultSection.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start',
+                    inline: 'nearest'
+                });
+            }, 500);
+        }
+        
+        // 保存到本地存储（用于支付后恢复）
+        try {
+            localStorage.setItem('last_analysis_result', analysisResult);
+            localStorage.setItem('last_analysis_service', STATE.currentService);
+            localStorage.setItem('last_user_data', JSON.stringify(STATE.userData || {}));
+            
+            if (STATE.partnerData) {
+                localStorage.setItem('last_partner_data', JSON.stringify(STATE.partnerData));
+            }
+            
+            console.log('✅ 分析数据已保存到本地存储');
+        } catch (storageError) {
+            console.warn('保存到本地存储失败:', storageError);
         }
         
         // 检查支付状态
@@ -805,7 +843,7 @@ async function startAnalysis() {
                 console.log('当前服务已支付，自动解锁');
                 setTimeout(() => {
                     PaymentManager.updateUIAfterPayment();
-                }, 500);
+                }, 1000);
             }
         }
         
@@ -813,13 +851,26 @@ async function startAnalysis() {
         console.error('分析失败:', error);
         hideLoadingModal();
         
-        // 在八字区域显示错误信息
+        // 在八字区域显示详细的错误信息
         const baziGrid = UI.baziGrid();
         if (baziGrid) {
             baziGrid.innerHTML = `
-                <div style="text-align: center; padding: 40px; color: #dc3545; font-size: 16px;">
-                    <div style="margin-bottom: 10px;">❌ 分析失败</div>
-                    <div style="color: #666; font-size: 14px;">${error.message}</div>
+                <div style="text-align: center; padding: 40px; background: #fff5f5; border-radius: 8px; border: 1px solid #ffcdd2;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">❌</div>
+                    <div style="font-size: 18px; color: #c62828; margin-bottom: 15px; font-weight: bold;">分析失败</div>
+                    <div style="color: #666; font-size: 16px; margin-bottom: 20px;">${error.message || '未知错误'}</div>
+                    <div style="color: #999; font-size: 14px; background: #f9f9f9; padding: 15px; border-radius: 6px; text-align: left;">
+                        <div style="margin-bottom: 8px;"><strong>可能原因：</strong></div>
+                        <ul style="margin: 0; padding-left: 20px;">
+                            <li>网络连接不稳定</li>
+                            <li>API服务暂时不可用</li>
+                            <li>输入信息格式有误</li>
+                            <li>服务器繁忙，请稍后重试</li>
+                        </ul>
+                    </div>
+                    <button onclick="startAnalysis()" style="margin-top: 25px; padding: 10px 25px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer;">
+                        重新尝试
+                    </button>
                 </div>
             `;
         }
@@ -828,12 +879,16 @@ async function startAnalysis() {
         if (error.message.includes('401')) {
             errorMessage = 'API密钥错误，请联系管理员。';
         } else if (error.message.includes('429')) {
-            errorMessage = '请求过于频繁，请稍后再试。';
-        } else if (error.message.includes('网络')) {
-            errorMessage = '网络连接失败，请检查您的网络设置。';
+            errorMessage = '请求过于频繁，请稍等1分钟后重试。';
+        } else if (error.message.includes('网络') || error.message.includes('Network')) {
+            errorMessage = '网络连接失败，请检查网络后重试。';
+        } else if (error.message.includes('超时') || error.message.includes('timeout')) {
+            errorMessage = '请求超时，网络较慢，请稍后重试。';
         }
         
-        alert(errorMessage + '\n\n错误详情：' + error.message);
+        // 更友好的错误提示
+        const errorDetail = error.message ? error.message.substring(0, 100) : '未知错误';
+        alert(`⚠️ ${errorMessage}\n\n错误代码: ${errorDetail}\n\n建议：\n1. 检查网络连接\n2. 稍后重试\n3. 如持续失败，请联系客服`);
     }
 }
 
@@ -975,6 +1030,7 @@ if (typeof STATE !== 'undefined') {
 
 // ✅ 也导出UI对象（如果需要在其他地方使用）
 window.UI = UI;
+
 
 
 
