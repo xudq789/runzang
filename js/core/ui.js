@@ -1612,6 +1612,51 @@ function startSimpleProgressAnimation(steps) {
     };
 }
 
+// 强制完成进度条（当分析结果提前返回时调用）
+function forceCompleteProgressBar() {
+    // 清理进度动画
+    if (window.simpleProgress) {
+        window.simpleProgress.clear();
+        delete window.simpleProgress;
+    }
+    
+    // 立即更新UI为完成状态
+    const currentTitle = document.getElementById('current-step-title');
+    const progressBar = document.getElementById('step-progress-bar');
+    const nextTitle = document.getElementById('next-step-title');
+    
+    if (currentTitle) {
+        currentTitle.textContent = '✓ 分析完成';
+        currentTitle.style.color = '#4CAF50';
+    }
+    
+    if (progressBar) {
+        progressBar.style.background = '#4CAF50';
+        progressBar.style.width = '100%';
+    }
+    
+    if (nextTitle) {
+        nextTitle.textContent = '正在显示报告...';
+        nextTitle.style.color = '#4CAF50';
+    }
+    
+    // 更新所有指示器为完成状态
+    const totalIndicators = document.querySelectorAll('.step-indicator').length;
+    for (let i = 0; i < totalIndicators; i++) {
+        const indicator = document.getElementById(`step-indicator-${i}`);
+        if (indicator) {
+            indicator.style.background = '#4CAF50';
+            indicator.style.boxShadow = 'none';
+            indicator.style.transform = 'scale(1)';
+        }
+    }
+    
+    // 等待500毫秒后自动关闭（给用户看到完成状态）
+    setTimeout(() => {
+        hideLoadingModal();
+    }, 500);
+}
+
 // 更新进度条
 function updateProgressBar(percentage) {
     const progressFill = document.getElementById('progress-fill');
@@ -1636,11 +1681,18 @@ function hideLoadingModal() {
             delete window.simpleProgress;
         }
         
-        // 稍等片刻再隐藏
+        // 设置一个标记，防止重复调用
+        if (window.loadingModalHiding) return;
+        window.loadingModalHiding = true;
+        
+        // 立即隐藏（不需要等待，因为forceCompleteProgressBar已经给了延迟）
+        hideElement(loadingModal);
+        document.body.style.overflow = 'auto';
+        
+        // 清除标记
         setTimeout(() => {
-            hideElement(loadingModal);
-            document.body.style.overflow = 'auto';
-        }, 300);
+            delete window.loadingModalHiding;
+        }, 100);
     }
 }
 
@@ -1776,6 +1828,7 @@ export {
     collectUserData,
     resetFormErrors
 };
+
 
 
 
