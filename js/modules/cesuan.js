@@ -27,7 +27,7 @@ export class CesuanModule {
 出生时间：${userData.birthYear}年${userData.birthMonth}月${userData.birthDay}日${userData.birthHour}时${userData.birthMinute}分
 出生城市：${userData.birthCity}
 
-请先进行八字排盘，大运排盘先确认出生当日离前后节气的日数，男命阳顺阴逆，女命阳逆阴顺，三日一年推算起运岁数，然后用以下格式输出结果：
+请先进行八字排盘，大运排盘（大运顺逆规则：阳男阴女顺行、阴男阳女逆行。起运岁数计算规则：顺行者，从出生日数至下一个节气，三日为一岁；逆行者，从出生日数至上一个节气，三日为一岁），然后用以下格式输出结果：
 
 【八字排盘】
 年柱：[年柱干支] ([纳音])
@@ -74,6 +74,7 @@ export class CesuanModule {
         return calculateBazi(userData);
     }
 }
+
 
 
 
