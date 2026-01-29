@@ -511,20 +511,39 @@ function displayDayunPan() {
     // 移除原有的大运容器
     document.querySelectorAll('.dayun-container, .partner-dayun-container').forEach(el => el.remove());
     
-    // 解析用户大运
-    const userDayunData = parseDayunData(STATE.fullAnalysisResult, false);
-    if (userDayunData) {
-        const userContainer = createDayunContainer(userDayunData, 'user');
-        baziGrid.appendChild(userContainer);
-    }
-    
-    // 如果是八字合婚，解析伴侣大运
-    if (STATE.currentService === '八字合婚') {
-        const partnerDayunData = parseDayunData(STATE.fullAnalysisResult, true);
-        if (partnerDayunData) {
-            const partnerContainer = createDayunContainer(partnerDayunData, 'partner');
-            baziGrid.appendChild(partnerContainer);
+    try {
+        // 解析用户大运
+        const userDayunData = parseDayunData(STATE.fullAnalysisResult, false);
+        if (userDayunData) {
+            const userContainer = createDayunContainer(userDayunData, 'user');
+            baziGrid.appendChild(userContainer);
+            console.log('✅ 用户大运显示完成');
+        } else {
+            console.warn('用户大运数据解析失败');
         }
+        
+        // 如果是八字合婚，解析伴侣大运
+        if (STATE.currentService === '八字合婚') {
+            const partnerDayunData = parseDayunData(STATE.fullAnalysisResult, true);
+            if (partnerDayunData) {
+                const partnerContainer = createDayunContainer(partnerDayunData, 'partner');
+                baziGrid.appendChild(partnerContainer);
+                console.log('✅ 伴侣大运显示完成');
+            } else {
+                console.warn('伴侣大运数据解析失败');
+            }
+        }
+    } catch (error) {
+        console.error('显示大运排盘失败:', error);
+        // 显示错误信息
+        const errorDiv = document.createElement('div');
+        errorDiv.innerHTML = `
+            <div style="text-align: center; padding: 20px; background: #fff5f5; border-radius: 8px; margin: 20px 0;">
+                <div style="color: #c62828; margin-bottom: 10px;">❌ 大运排盘显示失败</div>
+                <div style="color: #666; font-size: 14px;">错误: ${error.message}</div>
+            </div>
+        `;
+        baziGrid.appendChild(errorDiv);
     }
 }
 
@@ -1492,6 +1511,7 @@ export {
     resetFormErrors
     // 删除这里的 displayDayunPan 重复导出
 };
+
 
 
 
