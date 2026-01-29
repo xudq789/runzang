@@ -748,6 +748,9 @@ async function startAnalysis() {
         // 调用传统API（一次性获取完整结果）
         const analysisResult = await callDeepSeekAPI(prompt);
         
+        // ✅ 关键修复：成功返回后立即关闭加载弹窗
+        hideLoadingModal();
+        
         // 保存完整结果
         STATE.fullAnalysisResult = analysisResult;
         
@@ -989,5 +992,6 @@ if (typeof STATE !== 'undefined') {
 
 // ✅ 也导出UI对象（如果需要在其他地方使用）
 window.UI = UI;
+
 
 
