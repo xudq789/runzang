@@ -255,11 +255,7 @@ const PaymentManager = {
                     console.error('解析用户数据失败:', e);
                 }
             }
-            
-            // 这里调用了 parseBaziData
-            //const parsedBaziData = parseBaziData(savedResult);
-            //STATE.baziData = parsedBaziData.userBazi;
-            
+                                 
             updateServiceDisplay(savedService);
             displayPredictorInfo();
             displayBaziPan();
@@ -993,4 +989,5 @@ if (typeof STATE !== 'undefined') {
 
 // ✅ 也导出UI对象（如果需要在其他地方使用）
 window.UI = UI;
+
 
