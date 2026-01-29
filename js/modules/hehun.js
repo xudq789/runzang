@@ -37,7 +37,7 @@ export class HehunModule {
 出生时间：${partnerData.partnerBirthYear}年${partnerData.partnerBirthMonth}月${partnerData.partnerBirthDay}日${partnerData.partnerBirthHour}时${partnerData.partnerBirthMinute}分
 出生城市：${partnerData.partnerBirthCity}
 
-请先进行八字排盘，大运排盘应准确排出起运岁数并检查有无明显逻辑错误（先确认出生当日离前后节气的日数，男命阳顺阴逆，女命阳逆阴顺，三日一年推算起运岁数），然后用以下格式输出结果：
+请先进行八字排盘，大运排盘先确认出生当日离前后节气的日数，男命阳顺阴逆，女命阳逆阴顺，三日一年推算起运岁数，然后用以下格式输出结果：
 
 【八字排盘】
 年柱：[年柱干支] ([纳音])
@@ -94,6 +94,7 @@ export class HehunModule {
         return calculateBazi(userData);
     }
 }
+
 
 
 
