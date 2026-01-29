@@ -7,54 +7,54 @@ import { SERVICES, STATE, PAYMENT_CONFIG } from './config.js';
 // 进度条分析步骤配置
 const PROGRESS_STEPS = {
     '测算验证': [
-        { title: '真太阳时排盘', desc: '计算出生地真太阳时', time: 10 },
-        { title: '八字排盘', desc: '排定年柱、月柱、日柱、时柱', time: 10 },
-        { title: '大运排盘', desc: '推算起运岁数与十年大运', time: 10 },
-        { title: '八字喜用分析', desc: '分析八字喜用神与忌神', time: 10 },
-        { title: '性格特点解读', desc: '深入分析个性与特质', time: 10 },
-        { title: '职业发展评估', desc: '分析适宜行业与职业', time: 10 },
-        { title: '过往运势验证', desc: '验证过往大运与流年', time: 10 },
-        { title: '综合命理报告', desc: '生成完整分析报告', time: 15 }
+        { title: '真太阳时排盘', time: 10 },
+        { title: '八字排盘', time: 10 },
+        { title: '大运排盘', time: 10 },
+        { title: '八字喜用分析', time: 10 },
+        { title: '性格特点解读', time: 10 },
+        { title: '职业发展评估', time: 10 },
+        { title: '过往运势验证', time: 10 },
+        { title: '综合命理报告', time: 10 }
     ],
     '流年运程': [
-        { title: '真太阳时排盘', desc: '计算出生地真太阳时', time: 10 },
-        { title: '八字排盘', desc: '排定年柱、月柱、日柱、时柱', time: 10 },
-        { title: '大运排盘', desc: '推算起运岁数与十年大运', time: 10 },
-        { title: '八字喜用分析', desc: '分析八字喜用神与忌神', time: 10 },
-        { title: '性格特点解读', desc: '深入分析个性与特质', time: 10 },
-        { title: '职业发展评估', desc: '分析适宜行业与职业', time: 10 },
-        { title: '流年运势分析', desc: '分析当年及未来5年运势', time: 10 },
-        { title: '事业发展预测', desc: '预测事业财运走向', time: 10 },
-        { title: '感情趋势解读', desc: '分析婚姻感情趋势', time: 10 },
-        { title: '年度发展建议', desc: '提供年度发展指导', time: 15 }
+        { title: '真太阳时排盘', time: 10 },
+        { title: '八字排盘', time: 10 },
+        { title: '大运排盘', time: 10 },
+        { title: '八字喜用分析', time: 10 },
+        { title: '性格特点解读', time: 10 },
+        { title: '职业发展评估', time: 10 },
+        { title: '流年运势分析', time: 10 },
+        { title: '事业发展预测', time: 10 },
+        { title: '感情趋势解读', time: 10 },
+        { title: '年度发展建议', time: 10 }
     ],
     '人生详批': [
-        { title: '真太阳时排盘', desc: '计算出生地真太阳时', time: 10 },
-        { title: '八字排盘', desc: '排定年柱、月柱、日柱、时柱', time: 10 },
-        { title: '大运排盘', desc: '推算起运岁数与十年大运', time: 10 },
-        { title: '八字喜用分析', desc: '分析八字喜用神与忌神', time: 10 },
-        { title: '性格特点解读', desc: '深入分析个性与特质', time: 10 },
-        { title: '职业发展评估', desc: '分析适宜行业与职业', time: 10 },
-        { title: '富贵层次评估', desc: '评估人生富贵层次', time: 10 },
-        { title: '大运吉凶分析', desc: '分析每步大运吉凶', time: 10 },
-        { title: '人生高低点分析', desc: '分析人生运势高低点', time: 10 },
-        { title: '未来流年分析', desc: '分析未来关键流年', time: 10 },
-        { title: '风水建议', desc: '提供风水调整建议', time: 10 },
-        { title: '综合人生报告', desc: '生成全面人生报告', time: 15 }
+        { title: '真太阳时排盘', time: 10 },
+        { title: '八字排盘', time: 10 },
+        { title: '大运排盘', time: 10 },
+        { title: '八字喜用分析', time: 10 },
+        { title: '性格特点解读', time: 10 },
+        { title: '职业发展评估', time: 10 },
+        { title: '富贵层次评估', time: 10 },
+        { title: '大运吉凶分析', time: 10 },
+        { title: '人生高低点分析', time: 10 },
+        { title: '未来流年分析', time: 10 },
+        { title: '风水建议', time: 10 },
+        { title: '综合人生报告', time: 10 }
     ],
     '八字合婚': [
-        { title: '真太阳时排盘', desc: '计算双方出生地真太阳时', time: 10 },
-        { title: '用户八字排盘', desc: '排定用户八字', time: 10 },
-        { title: '伴侣八字排盘', desc: '排定伴侣八字', time: 10 },
-        { title: '用户大运排盘', desc: '推算用户大运', time: 10 },
-        { title: '伴侣大运排盘', desc: '推算伴侣大运', time: 10 },
-        { title: '八字喜用分析', desc: '分析双方八字喜用', time: 10 },
-        { title: '性格特点解读', desc: '分析双方性格特点', time: 10 },
-        { title: '八字契合度分析', desc: '分析双方八字契合度', time: 10 },
-        { title: '感情趋势分析', desc: '分析感情发展趋势', time: 10 },
-        { title: '婚姻稳定性分析', desc: '分析婚姻稳定性', time: 10 },
-        { title: '性格匹配度分析', desc: '分析性格匹配度', time: 10 },
-        { title: '综合合婚报告', desc: '生成合婚分析报告', time: 15 }
+        { title: '真太阳时排盘', time: 10 },
+        { title: '用户八字排盘', time: 10 },
+        { title: '伴侣八字排盘', time: 10 },
+        { title: '用户大运排盘', time: 10 },
+        { title: '伴侣大运排盘', time: 10 },
+        { title: '八字喜用分析', time: 10 },
+        { title: '性格特点解读', time: 10 },
+        { title: '八字契合度分析', time: 10 },
+        { title: '感情趋势分析', time: 10 },
+        { title: '婚姻稳定性分析', time: 10 },
+        { title: '性格匹配度分析', time: 10 },
+        { title: '综合合婚报告', time: 10 }
     ]
 };
 
@@ -1409,91 +1409,51 @@ function animateButtonStretch() {
     }, 800);
 }
 
-// 显示加载弹窗（带独立项目进度条）
+// 显示加载弹窗（简洁版进度条）
 function showLoadingModal() {
     const loadingModal = UI.loadingModal();
     if (loadingModal) {
         // 获取当前服务的分析步骤
         const steps = PROGRESS_STEPS[STATE.currentService] || PROGRESS_STEPS['测算验证'];
         
-        // 计算总步骤数
-        const totalSteps = steps.length;
-        
         loadingModal.innerHTML = `
-            <div class="modal-content" style="text-align: center; padding: 40px 25px; max-width: 650px;">
+            <div class="modal-content" style="text-align: center; padding: 40px 30px; max-width: 500px;">
                 <div class="loading-header">
-                    <div class="spinner" style="display: inline-block; margin-bottom: 20px;"></div>
-                    <h3 style="color: var(--primary-color); margin-bottom: 10px; font-size: 22px;">润藏八字正在为您进行深度命理分析</h3>
-                    <p style="color: #7d6e63; margin-bottom: 25px; font-size: 16px;">深度分析需要时间，请耐心等待，不要关闭页面</p>
+                    <div class="spinner" style="display: inline-block; margin-bottom: 25px;"></div>
+                    <h3 style="color: var(--primary-color); margin-bottom: 8px; font-size: 22px;">润藏八字正在为您进行深度命理分析</h3>
+                    <p style="color: #7d6e63; margin-bottom: 30px; font-size: 15px;">请耐心等待，不要关闭页面</p>
                 </div>
                 
-                <!-- 整体进度 -->
-                <div style="background: linear-gradient(135deg, #f9f5f0, #f0e6d6); padding: 20px; border-radius: 12px; margin-bottom: 25px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <div style="text-align: left;">
-                            <div style="font-size: 16px; font-weight: bold; color: var(--primary-color);">当前分析项目</div>
-                            <div id="current-step-title" style="font-size: 18px; font-weight: bold; color: var(--secondary-color); margin-top: 5px;">${steps[0].title}</div>
-                            <div id="current-step-desc" style="font-size: 14px; color: #666; margin-top: 3px;">${steps[0].desc}</div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div id="step-progress-text" style="font-size: 16px; color: var(--primary-color);">项目进度：<span id="step-percentage">0%</span></div>
-                            <div id="step-timer" style="font-size: 14px; color: #7d6e63; margin-top: 5px;">用时：<span id="step-time">0</span>秒 / 约${steps[0].time}秒</div>
-                        </div>
+                <!-- 当前项目进度 -->
+                <div style="background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+                    <div id="current-step-title" style="font-size: 18px; font-weight: bold; color: var(--primary-color); margin-bottom: 20px; text-align: left;">
+                        ${steps[0].title}
                     </div>
                     
                     <!-- 当前项目进度条 -->
-                    <div style="width: 100%; height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden; margin-bottom: 10px;">
-                        <div id="step-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--secondary-color), #ffcc00); border-radius: 5px; transition: width 0.3s ease;"></div>
+                    <div style="width: 100%; height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden; position: relative;">
+                        <div id="step-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--secondary-color), var(--primary-color)); border-radius: 4px; transition: width 0.5s ease;"></div>
                     </div>
                     
-                    <!-- 步骤指示器 -->
-                    <div style="display: flex; justify-content: center; gap: 8px; margin-top: 15px;">
+                    <!-- 进度指示器 -->
+                    <div style="display: flex; justify-content: flex-start; gap: 8px; margin-top: 20px; flex-wrap: wrap;">
                         ${steps.map((_, index) => `
-                            <div id="step-indicator-${index}" class="step-indicator" style="width: 12px; height: 12px; border-radius: 50%; background: #ddd; transition: all 0.3s ease;"></div>
+                            <div id="step-indicator-${index}" class="step-indicator" style="width: 10px; height: 10px; border-radius: 50%; background: #ddd; transition: all 0.3s ease;"></div>
                         `).join('')}
                     </div>
                 </div>
                 
-                <!-- 所有步骤列表 -->
-                <div class="steps-list" id="steps-list" style="max-height: 300px; overflow-y: auto; padding-right: 10px;">
-                    ${steps.map((step, index) => `
-                        <div class="step-item" id="step-item-${index}" style="display: flex; align-items: center; padding: 12px 15px; margin: 6px 0; background: #f9f9f9; border-radius: 8px; border-left: 4px solid #ddd; transition: all 0.3s ease;">
-                            <div class="step-number" style="width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 16px; background: white; border: 2px solid #ddd; color: #666;">${index + 1}</div>
-                            <div class="step-content" style="flex: 1; text-align: left;">
-                                <div class="step-title" style="font-weight: 600; color: #666; margin-bottom: 2px; font-size: 15px;">${step.title}</div>
-                                <div class="step-desc" style="font-size: 12px; color: #999;">${step.desc}</div>
-                            </div>
-                            <div class="step-status" style="margin-left: 10px; font-size: 12px; color: #999;">
-                                <span id="step-status-${index}">等待中</span>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-                
-                <!-- 统计信息 -->
-                <div style="display: flex; justify-content: space-between; margin-top: 25px; padding: 15px; background: #f0f8ff; border-radius: 8px;">
-                    <div style="text-align: center;">
-                        <div style="font-size: 14px; color: #666;">当前步骤</div>
-                        <div id="current-step-num" style="font-size: 24px; font-weight: bold; color: var(--secondary-color);">1</div>
-                        <div style="font-size: 12px; color: #999;">/ ${totalSteps}</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 14px; color: #666;">已用时</div>
-                        <div id="total-elapsed-time" style="font-size: 24px; font-weight: bold; color: var(--primary-color);">0秒</div>
-                        <div style="font-size: 12px; color: #999;">分析中</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 14px; color: #666;">预计总时间</div>
-                        <div id="total-estimated-time" style="font-size: 24px; font-weight: bold; color: #4CAF50;">${Math.ceil(steps.reduce((sum, step) => sum + step.time, 0) / 60)}分钟</div>
-                        <div style="font-size: 12px; color: #999;">约${steps.reduce((sum, step) => sum + step.time, 0)}秒</div>
-                    </div>
+                <!-- 下一个项目提示 -->
+                <div style="text-align: left; padding: 15px; background: #f9f9f9; border-radius: 8px; margin-bottom: 25px;">
+                    <div style="font-size: 14px; color: #666; margin-bottom: 5px;">下一个项目：</div>
+                    <div id="next-step-title" style="font-size: 16px; color: var(--dark-color); font-weight: 500;">${steps.length > 1 ? steps[1].title : '完成分析'}</div>
                 </div>
                 
                 <!-- 温馨提示 -->
-                <div style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #fff8e1, #fff3cd); border-radius: 10px; border-left: 4px solid #ffcc00;">
-                    <p style="margin: 0; font-size: 14px; color: #8b4513; text-align: left;">
-                        <strong>💡 温馨提示：</strong> AI正在根据您的生辰八字进行深度计算，每个分析项目都经过精心推演，请耐心等待精彩结果。
-                    </p>
+                <div style="text-align: left; padding-top: 20px; border-top: 1px solid #eee;">
+                    <div style="font-size: 13px; color: #999; line-height: 1.6;">
+                        正在为您进行专业命理分析，每个项目约需10秒...
+                    </div>
                 </div>
             </div>
         `;
@@ -1502,99 +1462,50 @@ function showLoadingModal() {
         document.body.style.overflow = 'hidden';
         
         // 开始进度动画
-        startStepProgressAnimation(steps);
+        startSimpleProgressAnimation(steps);
     }
 }
 
-// 开始步骤进度动画
-function startStepProgressAnimation(steps) {
+// 开始简洁版进度动画
+function startSimpleProgressAnimation(steps) {
     let currentStep = 0;
     const totalSteps = steps.length;
-    const startTime = Date.now();
-    let stepStartTime = startTime;
     let stepInterval;
     
     // 更新步骤指示器
     function updateStepIndicator(stepIndex, status) {
         const indicator = document.getElementById(`step-indicator-${stepIndex}`);
-        if (indicator) {
-            if (status === 'active') {
-                indicator.style.background = 'var(--secondary-color)';
-                indicator.style.boxShadow = '0 0 0 3px rgba(212, 175, 55, 0.3)';
-                indicator.style.transform = 'scale(1.2)';
-            } else if (status === 'completed') {
-                indicator.style.background = '#4CAF50';
-            } else {
-                indicator.style.background = '#ddd';
-                indicator.style.boxShadow = 'none';
-                indicator.style.transform = 'scale(1)';
-            }
-        }
+        if (!indicator) return;
         
-        // 更新步骤列表项
-        const stepItem = document.getElementById(`step-item-${stepIndex}`);
-        const stepStatus = document.getElementById(`step-status-${stepIndex}`);
-        if (stepItem && stepStatus) {
-            if (status === 'active') {
-                stepItem.style.background = 'linear-gradient(135deg, #f0f8ff, #e6f2ff)';
-                stepItem.style.borderLeftColor = 'var(--secondary-color)';
-                stepItem.style.transform = 'translateX(5px)';
-                stepStatus.textContent = '进行中';
-                stepStatus.style.color = 'var(--secondary-color)';
-            } else if (status === 'completed') {
-                stepItem.style.background = 'linear-gradient(135deg, #f0fff0, #e6ffe6)';
-                stepItem.style.borderLeftColor = '#4CAF50';
-                stepItem.style.transform = 'none';
-                stepStatus.textContent = '已完成';
-                stepStatus.style.color = '#4CAF50';
-            } else {
-                stepItem.style.background = '#f9f9f9';
-                stepItem.style.borderLeftColor = '#ddd';
-                stepItem.style.transform = 'none';
-                stepStatus.textContent = '等待中';
-                stepStatus.style.color = '#999';
-            }
+        if (status === 'active') {
+            indicator.style.background = 'var(--secondary-color)';
+            indicator.style.boxShadow = '0 0 0 2px rgba(212, 175, 55, 0.2)';
+            indicator.style.transform = 'scale(1.2)';
+        } else if (status === 'completed') {
+            indicator.style.background = '#4CAF50';
+            indicator.style.boxShadow = 'none';
+            indicator.style.transform = 'scale(1)';
+        } else {
+            indicator.style.background = '#ddd';
+            indicator.style.boxShadow = 'none';
+            indicator.style.transform = 'scale(1)';
         }
     }
     
-    // 更新当前项目信息
-    function updateCurrentStepInfo() {
-        if (currentStep >= totalSteps) return;
+    // 更新下一个项目提示
+    function updateNextStepHint() {
+        const nextStepTitle = document.getElementById('next-step-title');
+        if (!nextStepTitle) return;
         
-        const step = steps[currentStep];
-        document.getElementById('current-step-title').textContent = step.title;
-        document.getElementById('current-step-desc').textContent = step.desc;
-        document.getElementById('current-step-num').textContent = currentStep + 1;
-        document.getElementById('step-timer').innerHTML = `用时：<span id="step-time">0</span>秒 / 约${step.time}秒`;
-        
-        // 更新步骤指示器
-        updateStepIndicator(currentStep, 'active');
-    }
-    
-    // 更新总用时
-    function updateTotalElapsedTime() {
-        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
-        const elapsedMinutes = Math.floor(elapsedSeconds / 60);
-        const elapsedSecs = elapsedSeconds % 60;
-        
-        const totalElapsedEl = document.getElementById('total-elapsed-time');
-        if (totalElapsedEl) {
-            if (elapsedMinutes > 0) {
-                totalElapsedEl.textContent = `${elapsedMinutes}分${elapsedSecs}秒`;
-            } else {
-                totalElapsedEl.textContent = `${elapsedSeconds}秒`;
-            }
-        }
-        
-        // 更新当前步骤用时
-        const stepElapsedSeconds = Math.floor((Date.now() - stepStartTime) / 1000);
-        const stepTimeEl = document.getElementById('step-time');
-        if (stepTimeEl) {
-            stepTimeEl.textContent = stepElapsedSeconds;
+        if (currentStep + 1 < totalSteps) {
+            nextStepTitle.textContent = steps[currentStep + 1].title;
+        } else {
+            nextStepTitle.textContent = '完成分析';
+            nextStepTitle.style.color = '#4CAF50';
         }
     }
     
-    // 开始当前步骤的进度条
+    // 开始当前步骤
     function startCurrentStep() {
         if (currentStep >= totalSteps) {
             // 所有步骤完成
@@ -1602,46 +1513,56 @@ function startStepProgressAnimation(steps) {
             return;
         }
         
-        const step = steps[currentStep];
-        stepStartTime = Date.now();
-        updateCurrentStepInfo();
+        // 更新当前项目标题
+        const currentTitle = document.getElementById('current-step-title');
+        if (currentTitle) {
+            currentTitle.textContent = steps[currentStep].title;
+        }
         
-        // 重置步骤进度条
-        document.getElementById('step-progress-bar').style.width = '0%';
-        document.getElementById('step-percentage').textContent = '0%';
+        // 更新步骤指示器
+        updateStepIndicator(currentStep, 'active');
         
-        // 开始步骤计时器
-        let stepProgress = 0;
-        const stepDuration = step.time * 1000; // 转换为毫秒
-        const updateInterval = 100; // 每100毫秒更新一次
+        // 重置进度条
+        const progressBar = document.getElementById('step-progress-bar');
+        if (progressBar) {
+            progressBar.style.width = '0%';
+        }
+        
+        // 开始进度条动画
+        let progress = 0;
+        const stepDuration = steps[currentStep].time * 1000;
+        const updateInterval = 50; // 每50毫秒更新一次
+        
+        clearInterval(stepInterval);
         
         stepInterval = setInterval(() => {
             const elapsed = Date.now() - stepStartTime;
-            stepProgress = Math.min(100, (elapsed / stepDuration) * 100);
+            progress = Math.min(100, (elapsed / stepDuration) * 100);
             
             // 更新进度条
-            document.getElementById('step-progress-bar').style.width = stepProgress + '%';
-            document.getElementById('step-percentage').textContent = Math.floor(stepProgress) + '%';
-            
-            // 更新总用时
-            updateTotalElapsedTime();
+            if (progressBar) {
+                progressBar.style.width = progress + '%';
+            }
             
             // 如果步骤完成
-            if (stepProgress >= 100) {
+            if (progress >= 100) {
                 clearInterval(stepInterval);
                 
                 // 标记当前步骤为完成
                 updateStepIndicator(currentStep, 'completed');
                 
-                // 等待500毫秒后开始下一步
+                // 等待300毫秒后开始下一步
                 setTimeout(() => {
                     currentStep++;
+                    updateNextStepHint();
+                    
                     if (currentStep < totalSteps) {
+                        stepStartTime = Date.now();
                         startCurrentStep();
                     } else {
                         completeAllSteps();
                     }
-                }, 500);
+                }, 300);
             }
         }, updateInterval);
     }
@@ -1651,55 +1572,43 @@ function startStepProgressAnimation(steps) {
         clearInterval(stepInterval);
         
         // 更新UI为完成状态
-        document.getElementById('current-step-title').textContent = '分析完成！';
-        document.getElementById('current-step-desc').textContent = '命理报告已生成';
-        document.getElementById('step-progress-text').innerHTML = '<span style="color: #4CAF50;">✓ 分析完成</span>';
-        document.getElementById('step-timer').innerHTML = '<span style="color: #4CAF50;">✓ 所有项目已完成</span>';
-        document.getElementById('step-progress-bar').style.background = '#4CAF50';
-        document.getElementById('step-progress-bar').style.width = '100%';
+        const currentTitle = document.getElementById('current-step-title');
+        const progressBar = document.getElementById('step-progress-bar');
+        const nextTitle = document.getElementById('next-step-title');
         
-        // 更新所有步骤为完成状态
+        if (currentTitle) {
+            currentTitle.textContent = '✓ 分析完成';
+            currentTitle.style.color = '#4CAF50';
+        }
+        
+        if (progressBar) {
+            progressBar.style.background = '#4CAF50';
+            progressBar.style.width = '100%';
+        }
+        
+        if (nextTitle) {
+            nextTitle.textContent = '正在生成报告...';
+            nextTitle.style.color = '#4CAF50';
+        }
+        
+        // 更新所有指示器为完成状态
         for (let i = 0; i < totalSteps; i++) {
             updateStepIndicator(i, 'completed');
         }
-        
-        // 更新总用时为最终状态
-        const totalElapsedEl = document.getElementById('total-elapsed-time');
-        if (totalElapsedEl) {
-            const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
-            const elapsedMinutes = Math.floor(elapsedSeconds / 60);
-            const elapsedSecs = elapsedSeconds % 60;
-            
-            if (elapsedMinutes > 0) {
-                totalElapsedEl.textContent = `${elapsedMinutes}分${elapsedSecs}秒`;
-            } else {
-                totalElapsedEl.textContent = `${elapsedSeconds}秒`;
-            }
-            totalElapsedEl.style.color = '#4CAF50';
-        }
-        
-        // 标记所有步骤为已完成
-        for (let i = 0; i < totalSteps; i++) {
-            const stepStatus = document.getElementById(`step-status-${i}`);
-            if (stepStatus) {
-                stepStatus.textContent = '已完成';
-                stepStatus.style.color = '#4CAF50';
-            }
-        }
     }
     
-    // 每500毫秒更新一次总用时
-    setInterval(updateTotalElapsedTime, 500);
+    // 开始计时
+    let stepStartTime = Date.now();
+    
+    // 更新下一个项目提示
+    updateNextStepHint();
     
     // 开始第一个步骤
     startCurrentStep();
     
     // 保存到全局，以便清理
-    window.currentStepProgress = {
-        clear: () => {
-            clearInterval(stepInterval);
-            clearInterval(window.stepUpdateInterval);
-        }
+    window.simpleProgress = {
+        clear: () => clearInterval(stepInterval)
     };
 }
 
@@ -1722,16 +1631,16 @@ function hideLoadingModal() {
     const loadingModal = UI.loadingModal();
     if (loadingModal) {
         // 清理进度动画
-        if (window.currentStepProgress) {
-            window.currentStepProgress.clear();
-            delete window.currentStepProgress;
+        if (window.simpleProgress) {
+            window.simpleProgress.clear();
+            delete window.simpleProgress;
         }
         
-        // 稍等片刻再隐藏，让用户看到完成状态
+        // 稍等片刻再隐藏
         setTimeout(() => {
             hideElement(loadingModal);
             document.body.style.overflow = 'auto';
-        }, 500);
+        }, 300);
     }
 }
 
@@ -1867,5 +1776,6 @@ export {
     collectUserData,
     resetFormErrors
 };
+
 
 
