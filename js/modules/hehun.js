@@ -37,7 +37,7 @@ export class HehunModule {
 出生时间：${partnerData.partnerBirthYear}年${partnerData.partnerBirthMonth}月${partnerData.partnerBirthDay}日${partnerData.partnerBirthHour}时${partnerData.partnerBirthMinute}分
 出生城市：${partnerData.partnerBirthCity}
 
-请先进行八字排盘、大运排盘。大运顺逆规则：阳男阴女顺行、阴男阳女逆行。起运岁数要确保精准，计算规则：1、如果大运顺行，先确认下一个节气日时间到年月日时分，然后计算相差天数 = (下一个节气日时间 - 出生时间)，最后计算起运岁数 = 相差天数 ÷ 3天/岁；2、如果大运逆行，先确认上一个节气日时间到年月日时分，然后计算相差天数 = (出生时间 - 上一个节气时间)，最后计算起运岁数 = 相差天数 ÷ 3天/岁)。然后用以下格式输出结果：
+请先进行八字排盘，再进行大运排盘{大运顺逆规则：阳男阴女顺行、阴男阳女逆行。起运岁数去零取整数，要确保精准，计算规则：1、如果大运顺行，先确认下一个节令日时间到年月日时分，然后计算相差天数 = (下一个节气日时间 - 出生时间)，再计算起运岁数 = 相差天数 ÷ 3天/岁；2、如果大运逆行，先确认上一个节令日时间到年月日时分，然后计算相差天数 = (出生时间 - 上一个节气时间)，最后计算起运岁数 = 相差天数 ÷ 3天/岁)。然后用以下格式输出结果：
 
 【八字排盘】
 年柱：[年柱干支] ([纳音])
@@ -94,6 +94,7 @@ export class HehunModule {
         return calculateBazi(userData);
     }
 }
+
 
 
 
