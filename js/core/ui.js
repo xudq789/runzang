@@ -1452,7 +1452,7 @@ function showLoadingModal() {
                 <!-- 温馨提示 -->
                 <div style="text-align: left; padding-top: 20px; border-top: 1px solid #eee;">
                     <div style="font-size: 13px; color: #999; line-height: 1.6;">
-                        正在为您进行专业命理分析，每个项目约需10秒...
+                        润藏八字正在为您进行深度命理分析，预计1-2分钟...
                     </div>
                 </div>
             </div>
@@ -1776,6 +1776,7 @@ export {
     collectUserData,
     resetFormErrors
 };
+
 
 
 
