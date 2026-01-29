@@ -119,9 +119,9 @@ const UI = {
 
 // 初始化表单选项
 function initFormOptions() {
-    // 年份选项 (1900-2024)
+    // 年份选项 (1900-2100)
     const years = [];
-    for (let i = 1900; i <= 2024; i++) years.push(i);
+    for (let i = 1900; i <= 2100; i++) years.push(i);
     
     // 月份选项
     const months = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -1828,6 +1828,7 @@ export {
     collectUserData,
     resetFormErrors
 };
+
 
 
 
