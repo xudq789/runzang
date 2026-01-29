@@ -347,56 +347,6 @@ function createBaziCalendar(baziData) {
     `;
 }
 
-// 大运排盘表格格式
-function createDayunCalendar() {
-    // 从分析结果中提取大运信息
-    if (!STATE.fullAnalysisResult) {
-        return '<div style="text-align:center;padding:20px;color:#666;font-family:\'SimSun\',\'宋体\',serif;">大运数据加载中...</div>';
-    }
-    
-    // 示例数据
-    let ages = ['8', '18', '28', '38', '48', '58', '68', '78'];
-    let stems = ['壬', '辛', '庚', '己', '戊', '丁', '丙', '乙'];
-    let branches = ['子', '亥', '戌', '酉', '申', '未', '午', '巳'];
-    
-    // 如果有真实的大运数据，替换上面的示例数据
-    if (STATE.fullAnalysisResult.includes('大运排盘')) {
-        // 这里可以添加解析大运数据的逻辑
-    }
-    
-    return `
-        <div class="dayun-calendar">
-            <div class="calendar-header">
-                <div class="calendar-title">📈 大运排盘</div>
-                <div class="calendar-subtitle">命运流转 • 十年一运</div>
-            </div>
-            <div class="dayun-table-container">
-                <table class="dayun-table">
-                    <thead>
-                        <tr>
-                            <th>岁</th>
-                            ${ages.map(age => `<th>${age}</th>`).join('')}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>大</td>
-                            ${stems.map(stem => `<td>${stem}</td>`).join('')}
-                        </tr>
-                        <tr>
-                            <td>运</td>
-                            ${branches.map(branch => `<td>${branch}</td>`).join('')}
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="calendar-footer">
-                <div class="calendar-note">※ 大运推算遵循"男命阳顺阴逆，女命阳逆阴顺"原则</div>
-            </div>
-        </div>
-    `;
-}
-
 // 格式化标题
 function formatTitle(title) {
     // 为不同类型的标题添加不同颜色
@@ -1542,6 +1492,7 @@ export {
     resetFormErrors
     // 删除这里的 displayDayunPan 重复导出
 };
+
 
 
 
