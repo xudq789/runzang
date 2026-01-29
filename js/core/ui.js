@@ -4,6 +4,60 @@
 import { DOM, formatDate, hideElement, showElement, generateOrderId, calculateBazi } from './utils.js';
 import { SERVICES, STATE, PAYMENT_CONFIG } from './config.js';
 
+// 进度条分析步骤配置
+const PROGRESS_STEPS = {
+    '测算验证': [
+        { title: '真太阳时排盘', desc: '计算出生地真太阳时' },
+        { title: '八字排盘', desc: '排定年柱、月柱、日柱、时柱' },
+        { title: '大运排盘', desc: '推算起运岁数与十年大运' },
+        { title: '八字喜用分析', desc: '分析八字喜用神与忌神' },
+        { title: '性格特点解读', desc: '深入分析个性与特质' },
+        { title: '职业发展评估', desc: '分析适宜行业与职业' },
+        { title: '过往运势验证', desc: '验证过往大运与流年' },
+        { title: '综合命理报告', desc: '生成完整分析报告' }
+    ],
+    '流年运程': [
+        { title: '真太阳时排盘', desc: '计算出生地真太阳时' },
+        { title: '八字排盘', desc: '排定年柱、月柱、日柱、时柱' },
+        { title: '大运排盘', desc: '推算起运岁数与十年大运' },
+        { title: '八字喜用分析', desc: '分析八字喜用神与忌神' },
+        { title: '性格特点解读', desc: '深入分析个性与特质' },
+        { title: '职业发展评估', desc: '分析适宜行业与职业' },
+        { title: '流年运势分析', desc: '分析当年及未来5年运势' },
+        { title: '事业发展预测', desc: '预测事业财运走向' },
+        { title: '感情趋势解读', desc: '分析婚姻感情趋势' },
+        { title: '年度发展建议', desc: '提供年度发展指导' }
+    ],
+    '人生详批': [
+        { title: '真太阳时排盘', desc: '计算出生地真太阳时' },
+        { title: '八字排盘', desc: '排定年柱、月柱、日柱、时柱' },
+        { title: '大运排盘', desc: '推算起运岁数与十年大运' },
+        { title: '八字喜用分析', desc: '分析八字喜用神与忌神' },
+        { title: '性格特点解读', desc: '深入分析个性与特质' },
+        { title: '职业发展评估', desc: '分析适宜行业与职业' },
+        { title: '富贵层次评估', desc: '评估人生富贵层次' },
+        { title: '大运吉凶分析', desc: '分析每步大运吉凶' },
+        { title: '人生高低点分析', desc: '分析人生运势高低点' },
+        { title: '未来流年分析', desc: '分析未来关键流年' },
+        { title: '风水建议', desc: '提供风水调整建议' },
+        { title: '综合人生报告', desc: '生成全面人生报告' }
+    ],
+    '八字合婚': [
+        { title: '真太阳时排盘', desc: '计算双方出生地真太阳时' },
+        { title: '用户八字排盘', desc: '排定用户八字' },
+        { title: '伴侣八字排盘', desc: '排定伴侣八字' },
+        { title: '用户大运排盘', desc: '推算用户大运' },
+        { title: '伴侣大运排盘', desc: '推算伴侣大运' },
+        { title: '八字喜用分析', desc: '分析双方八字喜用' },
+        { title: '性格特点解读', desc: '分析双方性格特点' },
+        { title: '八字契合度分析', desc: '分析双方八字契合度' },
+        { title: '感情趋势分析', desc: '分析感情发展趋势' },
+        { title: '婚姻稳定性分析', desc: '分析婚姻稳定性' },
+        { title: '性格匹配度分析', desc: '分析性格匹配度' },
+        { title: '综合合婚报告', desc: '生成合婚分析报告' }
+    ]
+};
+
 // UI元素集合
 const UI = {
     // 表单元素
@@ -1355,21 +1409,284 @@ function animateButtonStretch() {
     }, 800);
 }
 
-// 显示加载弹窗
+// 显示加载弹窗（带进度条）
 function showLoadingModal() {
     const loadingModal = UI.loadingModal();
     if (loadingModal) {
+        // 创建进度条内容
+        const steps = PROGRESS_STEPS[STATE.currentService] || PROGRESS_STEPS['测算验证'];
+        
+        loadingModal.innerHTML = `
+            <div class="modal-content" style="text-align: center; padding: 40px 25px; max-width: 600px;">
+                <div class="loading-header">
+                    <div class="spinner" style="display: inline-block; margin-bottom: 20px;"></div>
+                    <h3 style="color: var(--primary-color); margin-bottom: 10px; font-size: 22px;">润藏八字正在为您进行深度命理分析</h3>
+                    <p style="color: #7d6e63; margin-bottom: 25px; font-size: 16px;">深度分析需要时间，请耐心等待，不要关闭页面</p>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-header">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span style="font-weight: bold; color: var(--primary-color); font-size: 16px;">分析进度</span>
+                            <span id="progress-percentage" style="font-weight: bold; color: var(--secondary-color); font-size: 18px;">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-items" id="progress-items" style="max-height: 300px; overflow-y: auto; margin-top: 20px; padding-right: 10px;">
+                        ${steps.map((step, index) => `
+                            <div class="progress-item" id="progress-item-${index}" style="display: flex; align-items: center; padding: 15px 20px; margin: 8px 0; background: #f9f9f9; border-radius: 8px; border-left: 4px solid #ddd; transition: all 0.3s ease;">
+                                <div class="progress-item-icon" style="width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 18px; background: white; border: 2px solid #ddd; color: #666;">${index + 1}</div>
+                                <div class="progress-item-content" style="flex: 1; text-align: left;">
+                                    <div class="progress-item-title" style="font-weight: 600; color: #333; margin-bottom: 4px; font-size: 16px;">${step.title}</div>
+                                    <div class="progress-item-status" style="font-size: 13px; color: #666;">${step.desc}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="loading-tips" style="margin-top: 30px; padding: 15px; background: linear-gradient(135deg, #f9f5f0, #f0e6d6); border-radius: 10px; border-left: 4px solid var(--secondary-color);">
+                    <p style="margin: 5px 0; font-size: 14px; color: #8b4513;"><strong>💡 温馨提示：</strong></p>
+                    <p style="margin: 5px 0; font-size: 13px; color: #666; line-height: 1.5;">
+                        命理分析需要时间，AI正在根据您的生辰八字进行深度计算<br>
+                        每个分析项目约需10-15秒，请耐心等待精彩结果
+                    </p>
+                </div>
+                
+                <div class="loading-time" style="margin-top: 20px; font-size: 14px; color: #999;">
+                    <span id="elapsed-time">已用时：0秒</span>
+                    <span style="margin: 0 10px;">•</span>
+                    <span id="estimated-time">预计剩余：约2分钟</span>
+                </div>
+            </div>
+        `;
+        
         showElement(loadingModal);
         document.body.style.overflow = 'hidden';
+        
+        // 添加进度条样式
+        const style = document.createElement('style');
+        style.textContent = `
+            .progress-bar {
+                width: 100%;
+                height: 12px;
+                background: #f0f0f0;
+                border-radius: 6px;
+                overflow: hidden;
+                position: relative;
+            }
+            
+            .progress-fill {
+                width: 0%;
+                height: 100%;
+                background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+                border-radius: 6px;
+                transition: width 0.5s ease;
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .progress-fill::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(90deg, 
+                    transparent 0%, 
+                    rgba(255,255,255,0.4) 50%, 
+                    transparent 100%);
+                animation: shimmer 1.5s infinite;
+            }
+            
+            @keyframes shimmer {
+                0% { transform: translateX(-100%); }
+                100% { transform: translateX(100%); }
+            }
+            
+            .progress-item.active {
+                background: linear-gradient(135deg, #f0f8ff, #e6f2ff);
+                border-left-color: var(--secondary-color);
+                transform: translateX(5px);
+                box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            }
+            
+            .progress-item.active .progress-item-icon {
+                border-color: var(--secondary-color);
+                background: var(--secondary-color);
+                color: white;
+                animation: pulse 2s infinite;
+            }
+            
+            .progress-item.active .progress-item-title {
+                color: var(--primary-color);
+            }
+            
+            .progress-item.active .progress-item-status {
+                color: var(--secondary-color);
+            }
+            
+            .progress-item.completed {
+                background: linear-gradient(135deg, #f0fff0, #e6ffe6);
+                border-left-color: #4CAF50;
+            }
+            
+            .progress-item.completed .progress-item-icon {
+                border-color: #4CAF50;
+                background: #4CAF50;
+                color: white;
+            }
+            
+            .progress-item.completed .progress-item-title {
+                color: #2e7d32;
+            }
+            
+            .progress-item.completed .progress-item-status {
+                color: #4CAF50;
+            }
+            
+            @keyframes pulse {
+                0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+                70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
+                100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // 开始进度动画
+        startProgressAnimation();
     }
 }
 
-// 隐藏加载弹窗
+// 开始进度动画
+function startProgressAnimation() {
+    const totalItems = document.querySelectorAll('.progress-item').length;
+    let currentIndex = 0;
+    const startTime = Date.now();
+    
+    // 更新已用时间
+    const updateElapsedTime = () => {
+        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+        const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+        const elapsedSecs = elapsedSeconds % 60;
+        
+        const elapsedTimeEl = document.getElementById('elapsed-time');
+        if (elapsedTimeEl) {
+            if (elapsedMinutes > 0) {
+                elapsedTimeEl.textContent = `已用时：${elapsedMinutes}分${elapsedSecs}秒`;
+            } else {
+                elapsedTimeEl.textContent = `已用时：${elapsedSeconds}秒`;
+            }
+        }
+        
+        // 更新预计剩余时间
+        const estimatedTimeEl = document.getElementById('estimated-time');
+        if (estimatedTimeEl && totalItems > 0) {
+            const completedItems = document.querySelectorAll('.progress-item.completed').length;
+            const remainingItems = totalItems - completedItems;
+            const estimatedRemaining = remainingItems * 10; // 每个项目预计10秒
+            const remainingMinutes = Math.floor(estimatedRemaining / 60);
+            
+            if (remainingMinutes > 0) {
+                estimatedTimeEl.textContent = `预计剩余：约${remainingMinutes}分钟`;
+            } else {
+                estimatedTimeEl.textContent = `预计剩余：约${estimatedRemaining}秒`;
+            }
+        }
+    };
+    
+    // 每500毫秒更新一次时间
+    const timeInterval = setInterval(updateElapsedTime, 500);
+    window.progressTimeInterval = timeInterval;
+    
+    // 进度更新函数
+    const updateProgress = () => {
+        if (currentIndex >= totalItems) {
+            // 所有项目完成，进度到99%
+            updateProgressBar(99);
+            return;
+        }
+        
+        // 标记当前项目为激活状态
+        const currentItem = document.getElementById(`progress-item-${currentIndex}`);
+        if (currentItem) {
+            // 移除前一个项目的激活状态
+            if (currentIndex > 0) {
+                const prevItem = document.getElementById(`progress-item-${currentIndex - 1}`);
+                if (prevItem) {
+                    prevItem.classList.remove('active');
+                    prevItem.classList.add('completed');
+                }
+            }
+            
+            currentItem.classList.add('active');
+            
+            // 计算进度百分比
+            const progress = Math.min(100, Math.floor(((currentIndex + 1) / totalItems) * 100));
+            updateProgressBar(progress);
+        }
+        
+        currentIndex++;
+        
+        if (currentIndex <= totalItems) {
+            // 每个项目10秒，但最后一个项目稍微长一点
+            const delay = currentIndex === totalItems ? 15000 : 10000;
+            setTimeout(updateProgress, delay);
+        }
+    };
+    
+    // 开始进度更新
+    setTimeout(updateProgress, 1000);
+}
+
+// 更新进度条
+function updateProgressBar(percentage) {
+    const progressFill = document.getElementById('progress-fill');
+    const progressPercentage = document.getElementById('progress-percentage');
+    
+    if (progressFill) {
+        progressFill.style.width = percentage + '%';
+    }
+    
+    if (progressPercentage) {
+        progressPercentage.textContent = percentage + '%';
+    }
+}
+
+// 隐藏加载弹窗（清理进度动画）
 function hideLoadingModal() {
     const loadingModal = UI.loadingModal();
     if (loadingModal) {
-        hideElement(loadingModal);
-        document.body.style.overflow = 'auto';
+        // 清理时间间隔
+        if (window.progressTimeInterval) {
+            clearInterval(window.progressTimeInterval);
+            delete window.progressTimeInterval;
+        }
+        
+        // 确保进度条显示100%
+        updateProgressBar(100);
+        
+        // 标记所有项目为已完成
+        document.querySelectorAll('.progress-item').forEach(item => {
+            item.classList.remove('active');
+            item.classList.add('completed');
+        });
+        
+        // 更新时间为最终状态
+        const elapsedTimeEl = document.getElementById('elapsed-time');
+        const estimatedTimeEl = document.getElementById('estimated-time');
+        if (elapsedTimeEl) elapsedTimeEl.textContent = '分析完成！';
+        if (estimatedTimeEl) estimatedTimeEl.textContent = '报告已生成';
+        
+        // 稍等片刻再隐藏，让用户看到完成状态
+        setTimeout(() => {
+            hideElement(loadingModal);
+            document.body.style.overflow = 'auto';
+        }, 1000);
     }
 }
 
@@ -1505,3 +1822,4 @@ export {
     collectUserData,
     resetFormErrors
 };
+
