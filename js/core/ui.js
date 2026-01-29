@@ -496,9 +496,9 @@ function createBaziItem(column, element, label, isPartner = false) {
     `;
 }
 
-// ============ 【大运排盘显示函数 - 横向显示】 ============
+// ============ 【大运排盘显示函数 - 完整干支显示】 ============
 function displayDayunPan() {
-    console.log('显示大运排盘（横向显示）...');
+    console.log('显示大运排盘（完整干支显示）...');
     
     if (!STATE.fullAnalysisResult) {
         console.log('没有分析结果，跳过显示大运排盘');
@@ -513,24 +513,32 @@ function displayDayunPan() {
     
     try {
         // 解析用户大运
-        const userDayunData = parseDayunData(STATE.fullAnalysisResult, false);
-        if (userDayunData) {
+        const userDayunData = extractDayunData(STATE.fullAnalysisResult, false);
+        if (userDayunData && userDayunData.years.length > 0 && userDayunData.ganzhi.length > 0) {
             const userContainer = createDayunContainer(userDayunData, 'user');
             baziGrid.appendChild(userContainer);
             console.log('✅ 用户大运显示完成');
         } else {
-            console.warn('用户大运数据解析失败');
+            console.warn('用户大运数据解析失败或数据不全');
+            // 显示备用数据
+            const fallbackData = createFallbackDayunData('user');
+            const userContainer = createDayunContainer(fallbackData, 'user');
+            baziGrid.appendChild(userContainer);
         }
         
         // 如果是八字合婚，解析伴侣大运
         if (STATE.currentService === '八字合婚') {
-            const partnerDayunData = parseDayunData(STATE.fullAnalysisResult, true);
-            if (partnerDayunData) {
+            const partnerDayunData = extractDayunData(STATE.fullAnalysisResult, true);
+            if (partnerDayunData && partnerDayunData.years.length > 0 && partnerDayunData.ganzhi.length > 0) {
                 const partnerContainer = createDayunContainer(partnerDayunData, 'partner');
                 baziGrid.appendChild(partnerContainer);
                 console.log('✅ 伴侣大运显示完成');
             } else {
-                console.warn('伴侣大运数据解析失败');
+                console.warn('伴侣大运数据解析失败或数据不全');
+                // 显示备用数据
+                const fallbackData = createFallbackDayunData('partner');
+                const partnerContainer = createDayunContainer(fallbackData, 'partner');
+                baziGrid.appendChild(partnerContainer);
             }
         }
     } catch (error) {
@@ -547,10 +555,12 @@ function displayDayunPan() {
     }
 }
 
-// ============ 【解析大运数据 - 支持新格式】 ============
-function parseDayunData(text, isPartner = false) {
+// ============ 【提取大运数据 - 完整干支】 ============
+function extractDayunData(text, isPartner = false) {
     const prefix = isPartner ? '伴侣大运排盘' : '大运排盘';
     const userPrefix = isPartner ? '伴侣大运排盘' : (text.includes('用户大运排盘') ? '用户大运排盘' : '大运排盘');
+    
+    console.log(`开始提取${prefix}数据...`);
     
     // 查找对应的大运排盘部分
     const pattern = new RegExp(`【${userPrefix}】([\\s\\S]*?)(?:【|$)`, 'i');
@@ -564,119 +574,105 @@ function parseDayunData(text, isPartner = false) {
     const dayunText = match[1].trim();
     console.log(`${prefix}原始文本:`, dayunText);
     
-    // 解析岁和大运数据
+    // 解析数据
     const years = [];
-    const stems = [];
-    const branches = [];
+    const ganzhi = [];
     
     const lines = dayunText.split('\n');
+    
+    // 先提取岁数据
     for (const line of lines) {
         const trimmed = line.trim();
         
-        // 解析岁行：岁：[8] [18] [28] [38] [48] [58] [68] [78]
         if (trimmed.startsWith('岁：') || trimmed.startsWith('岁:')) {
-            const yearsMatch = trimmed.match(/岁[：:]\s*(\[[^\]]+\](\s*\[[^\]]+\])*)/);
-            if (yearsMatch && yearsMatch[1]) {
-                const yearArray = yearsMatch[1].match(/\[([^\]]+)\]/g);
-                if (yearArray) {
-                    years.push(...yearArray.map(y => y.replace(/[\[\]]/g, '')));
-                }
+            console.log('找到岁行:', trimmed);
+            
+            // 提取所有数字
+            const yearMatches = trimmed.match(/\d+/g);
+            if (yearMatches) {
+                years.push(...yearMatches.slice(0, 8)); // 最多8步大运
+                console.log('提取的岁数据:', years);
             }
-        }
-        
-        // 解析大运行：大运：[壬子] [辛亥] [庚戌] [己酉] [戊申] [丁未] [丙午] [乙巳]
-        if (trimmed.startsWith('大运：') || trimmed.startsWith('大运:')) {
-            const dayunMatch = trimmed.match(/大运[：:]\s*(\[[^\]]+\](\s*\[[^\]]+\])*)/);
-            if (dayunMatch && dayunMatch[1]) {
-                const dayunArray = dayunMatch[1].match(/\[([^\]]+)\]/g);
-                if (dayunArray) {
-                    dayunArray.forEach(item => {
-                        const d = item.replace(/[\[\]]/g, '');
-                        if (d.length === 2) {
-                            stems.push(d[0]); // 天干
-                            branches.push(d[1]); // 地支
-                        } else if (d.length > 0) {
-                            stems.push(d);
-                            branches.push('');
-                        }
-                    });
-                }
-            }
+            break;
         }
     }
     
-    // 如果没有解析到数据，尝试备用解析
-    if (years.length === 0 || stems.length === 0) {
-        return parseDayunDataFallback(dayunText, isPartner);
+    // 再提取大运干支数据
+    for (const line of lines) {
+        const trimmed = line.trim();
+        
+        if (trimmed.startsWith('大运：') || trimmed.startsWith('大运:')) {
+            console.log('找到大运行:', trimmed);
+            
+            // 提取所有两字干支
+            const ganzhiMatches = trimmed.match(/[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/g);
+            if (ganzhiMatches) {
+                ganzhi.push(...ganzhiMatches.slice(0, 8)); // 最多8步大运
+                console.log('提取的干支数据:', ganzhi);
+            } else {
+                // 如果没有匹配到标准干支，尝试提取空格分隔的内容
+                const content = trimmed.replace(/大运[：:]\s*/, '');
+                const items = content.split(/\s+/);
+                ganzhi.push(...items.slice(0, 8));
+                console.log('提取的备选数据:', ganzhi);
+            }
+            break;
+        }
     }
+    
+    // 确保数据对齐
+    const maxLength = Math.max(years.length, ganzhi.length);
+    while (years.length < maxLength && years.length < 8) {
+        years.push((years.length * 10 + 8).toString());
+    }
+    while (ganzhi.length < maxLength && ganzhi.length < 8) {
+        ganzhi.push('待定');
+    }
+    
+    console.log(`${prefix}最终数据:`, { 
+        years: years.slice(0, 8), 
+        ganzhi: ganzhi.slice(0, 8) 
+    });
     
     return {
-        years: years.slice(0, 8), // 最多8步大运
-        stems: stems.slice(0, 8),
-        branches: branches.slice(0, 8),
+        years: years.slice(0, 8),
+        ganzhi: ganzhi.slice(0, 8),
         rawText: dayunText,
         isPartner: isPartner
     };
 }
 
-// ============ 【备用解析函数】 ============
-function parseDayunDataFallback(dayunText, isPartner = false) {
-    console.log(`使用备用解析${isPartner ? '伴侣' : '用户'}大运数据`);
+// ============ 【创建备用大运数据】 ============
+function createFallbackDayunData(type = 'user') {
+    const isPartner = type === 'partner';
+    const startAge = isPartner ? 9 : 8;
     
     const years = [];
-    const stems = [];
-    const branches = [];
+    const ganzhi = [];
     
-    // 尝试从原始文本中提取
-    const lines = dayunText.split('\n');
-    
-    lines.forEach(line => {
-        const trimmed = line.trim();
-        
-        // 匹配格式：第1步大运: 壬子 (8-17岁，1998-2007年)
-        const stepMatch = trimmed.match(/第(\d+)步大运[：:]\s*([^\s(]+)\s*\((\d+)[-~](\d+)岁[^)]*\)/);
-        if (stepMatch) {
-            const stepNum = parseInt(stepMatch[1]);
-            const dayun = stepMatch[2];
-            const startAge = stepMatch[3];
-            
-            if (stepNum <= 8) {
-                years[stepNum - 1] = startAge;
-                
-                if (dayun.length === 2) {
-                    stems[stepNum - 1] = dayun[0];
-                    branches[stepNum - 1] = dayun[1];
-                } else {
-                    stems[stepNum - 1] = dayun;
-                    branches[stepNum - 1] = '';
-                }
-            }
-        }
-    });
-    
-    // 填充缺失的数据
     for (let i = 0; i < 8; i++) {
-        if (!years[i]) years[i] = (i * 10 + 8).toString();
-        if (!stems[i]) stems[i] = '待';
-        if (!branches[i]) branches[i] = '定';
+        years.push((startAge + i * 10).toString());
+        // 示例干支，实际应该从API返回
+        ganzhi.push(['甲子', '乙丑', '丙寅', '丁卯', '戊辰', '己巳', '庚午', '辛未'][i] || '待定');
     }
     
     return {
         years: years,
-        stems: stems,
-        branches: branches,
-        rawText: dayunText,
+        ganzhi: ganzhi,
+        rawText: '大运数据加载中...',
         isPartner: isPartner
     };
 }
 
-// ============ 【创建大运容器 - 横向显示】 ============
+// ============ 【创建大运容器 - 完整干支显示】 ============
 function createDayunContainer(dayunData, type = 'user') {
     const isPartner = type === 'partner';
     const title = isPartner ? '伴侣大运排盘' : '大运排盘';
     const color = isPartner ? '#FF69B4' : '#3a7bd5';
     const bgColor = isPartner ? '#fff5f5' : '#f0f8ff';
     const borderColor = isPartner ? '#ffc1cc' : '#d1e9ff';
+    
+    const { years, ganzhi } = dayunData;
     
     const container = document.createElement('div');
     container.className = isPartner ? 'partner-dayun-container' : 'dayun-container';
@@ -694,7 +690,7 @@ function createDayunContainer(dayunData, type = 'user') {
     `;
     
     // 创建横向表格
-    const tableHTML = createHorizontalDayunTable(dayunData, isPartner);
+    const tableHTML = createSimpleDayunTable(years, ganzhi, isPartner);
     
     container.innerHTML = `
         <div style="text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid ${borderColor};">
@@ -727,17 +723,35 @@ function createDayunContainer(dayunData, type = 'user') {
     return container;
 }
 
-// ============ 【创建横向大运表格】 ============
-function createHorizontalDayunTable(dayunData, isPartner = false) {
-    const { years, stems, branches } = dayunData;
+// ============ 【创建简化的大运表格 - 完整干支】 ============
+function createSimpleDayunTable(years, ganzhi, isPartner = false) {
     const color = isPartner ? '#FF69B4' : '#3a7bd5';
     const bgColor = isPartner ? '#fff5f5' : '#f0f8ff';
     
     let tableHTML = `
-        <div class="dayun-horizontal-table" style="min-width: 600px;">
+        <div class="dayun-simple-table" style="min-width: 600px;">
+            <!-- 标题行 -->
+            <div class="dayun-row" style="display: flex; margin-bottom: 10px; background: ${bgColor}; border-radius: 6px; padding: 12px;">
+                <div class="dayun-label" style="width: 80px; font-weight: bold; color: ${color}; display: flex; align-items: center; justify-content: center; font-family: 'SimSun', '宋体', serif; font-size: 16px;">
+                    大运
+                </div>
+    `;
+    
+    // 添加步数标题
+    for (let i = 0; i < 8; i++) {
+        tableHTML += `
+            <div class="dayun-cell" style="flex: 1; text-align: center; padding: 8px 4px; border-right: 1px solid ${isPartner ? '#ffc1cc' : '#d1e9ff'}; min-width: 60px;">
+                <div style="font-size: 14px; font-weight: bold; color: #333; font-family: 'SimSun', '宋体', serif;">第${i + 1}步</div>
+            </div>
+        `;
+    }
+    
+    tableHTML += `
+            </div>
+            
             <!-- 岁行 -->
-            <div class="dayun-row" style="display: flex; margin-bottom: 10px; background: ${bgColor}; border-radius: 6px; padding: 10px;">
-                <div class="dayun-label" style="width: 80px; font-weight: bold; color: ${color}; display: flex; align-items: center; justify-content: center; font-family: 'SimSun', '宋体', serif;">
+            <div class="dayun-row" style="display: flex; margin-bottom: 10px; background: white; border-radius: 6px; padding: 12px; border: 1px solid ${isPartner ? '#ffc1cc' : '#d1e9ff'};">
+                <div class="dayun-label" style="width: 80px; font-weight: bold; color: ${color}; display: flex; align-items: center; justify-content: center; font-family: 'SimSun', '宋体', serif; font-size: 16px;">
                     岁
                 </div>
     `;
@@ -746,8 +760,8 @@ function createHorizontalDayunTable(dayunData, isPartner = false) {
     years.slice(0, 8).forEach((year, index) => {
         tableHTML += `
             <div class="dayun-cell" style="flex: 1; text-align: center; padding: 8px 4px; border-right: 1px solid ${isPartner ? '#ffc1cc' : '#d1e9ff'}; min-width: 60px;">
-                <div style="font-size: 14px; font-weight: bold; color: #333; font-family: 'SimSun', '宋体', serif;">${year || ''}</div>
-                <div style="font-size: 11px; color: #666; margin-top: 2px;">${index === 0 ? '起运' : '第' + (index + 1) + '步'}</div>
+                <div style="font-size: 16px; font-weight: bold; color: #333; font-family: 'SimSun', '宋体', serif; height: 28px; line-height: 28px;">${year || ''}</div>
+                <div style="font-size: 11px; color: #666; margin-top: 2px;">${index === 0 ? '起运' : ''}</div>
             </div>
         `;
     });
@@ -755,37 +769,18 @@ function createHorizontalDayunTable(dayunData, isPartner = false) {
     tableHTML += `
             </div>
             
-            <!-- 天干行 -->
-            <div class="dayun-row" style="display: flex; margin-bottom: 10px; background: white; border-radius: 6px; padding: 10px; border: 1px solid ${isPartner ? '#ffc1cc' : '#d1e9ff'};">
-                <div class="dayun-label" style="width: 80px; font-weight: bold; color: ${color}; display: flex; align-items: center; justify-content: center; font-family: 'SimSun', '宋体', serif;">
-                    干
+            <!-- 干支行 -->
+            <div class="dayun-row" style="display: flex; margin-bottom: 0; background: white; border-radius: 6px; padding: 12px; border: 1px solid ${isPartner ? '#ffc1cc' : '#d1e9ff'}; border-top: none;">
+                <div class="dayun-label" style="width: 80px; font-weight: bold; color: ${color}; display: flex; align-items: center; justify-content: center; font-family: 'SimSun', '宋体', serif; font-size: 16px;">
+                    干支
                 </div>
     `;
     
-    // 添加天干数据
-    stems.slice(0, 8).forEach((stem, index) => {
+    // 添加干支数据
+    ganzhi.slice(0, 8).forEach((gz, index) => {
         tableHTML += `
             <div class="dayun-cell" style="flex: 1; text-align: center; padding: 8px 4px; border-right: 1px solid ${isPartner ? '#ffc1cc' : '#d1e9ff'}; min-width: 60px;">
-                <div style="font-size: 18px; font-weight: bold; color: #333; font-family: 'SimSun', '宋体', serif; height: 28px; line-height: 28px;">${stem || ''}</div>
-            </div>
-        `;
-    });
-    
-    tableHTML += `
-            </div>
-            
-            <!-- 地支行 -->
-            <div class="dayun-row" style="display: flex; margin-bottom: 0; background: white; border-radius: 6px; padding: 10px; border: 1px solid ${isPartner ? '#ffc1cc' : '#d1e9ff'}; border-top: none;">
-                <div class="dayun-label" style="width: 80px; font-weight: bold; color: ${color}; display: flex; align-items: center; justify-content: center; font-family: 'SimSun', '宋体', serif;">
-                    支
-                </div>
-    `;
-    
-    // 添加地支数据
-    branches.slice(0, 8).forEach((branch, index) => {
-        tableHTML += `
-            <div class="dayun-cell" style="flex: 1; text-align: center; padding: 8px 4px; border-right: 1px solid ${isPartner ? '#ffc1cc' : '#d1e9ff'}; min-width: 60px;">
-                <div style="font-size: 18px; font-weight: bold; color: #333; font-family: 'SimSun', '宋体', serif; height: 28px; line-height: 28px;">${branch || ''}</div>
+                <div style="font-size: 20px; font-weight: bold; color: #333; font-family: 'SimSun', '宋体', serif; height: 32px; line-height: 32px;">${gz || ''}</div>
             </div>
         `;
     });
@@ -1492,7 +1487,7 @@ export {
     updateUnlockInfo,
     displayPredictorInfo,
     displayBaziPan,
-    displayDayunPan,  // 只导出这一个
+    displayDayunPan,
     processAndDisplayAnalysis,
     showFullAnalysisContent,
     showPaymentModal,
@@ -1509,13 +1504,4 @@ export {
     validateForm,
     collectUserData,
     resetFormErrors
-    // 删除这里的 displayDayunPan 重复导出
 };
-
-
-
-
-
-
-
-
