@@ -745,17 +745,40 @@ async function startAnalysis() {
         
         console.log('开始分析，提示词长度:', prompt.length);
         
+        // 添加一个标志来跟踪分析是否完成
+        let analysisComplete = false;
+        let analysisResult = null;
+        
         // 调用传统API（一次性获取完整结果）
-        const analysisResult = await callDeepSeekAPI(prompt);
+        const apiPromise = callDeepSeekAPI(prompt);
+        
+        // 设置一个超时机制，如果API很快返回就立即显示结果
+        apiPromise.then(result => {
+            analysisComplete = true;
+            analysisResult = result;
+            
+            // ✅ 关键修复：如果进度条还在运行，立即完成它
+            if (window.simpleProgress) {
+                // 通知进度条立即完成
+                forceCompleteProgressBar();
+            }
+        }).catch(error => {
+            console.error('API调用失败:', error);
+            analysisComplete = true;
+            throw error;
+        });
+        
+        // 等待API结果
+        const result = await apiPromise;
         
         // ✅ 关键修复：成功返回后立即关闭加载弹窗
         hideLoadingModal();
         
         // 保存完整结果
-        STATE.fullAnalysisResult = analysisResult;
+        STATE.fullAnalysisResult = result;
         
         // 提取八字数据
-        const parsedBaziData = parseBaziData(analysisResult);
+        const parsedBaziData = parseBaziData(result);
         STATE.baziData = parsedBaziData.userBazi;
         
         // 如果是八字合婚，保存伴侣八字数据
@@ -772,10 +795,10 @@ async function startAnalysis() {
         }, 100);
         
         // 处理并显示分析内容
-        processAndDisplayAnalysis(analysisResult);
+        processAndDisplayAnalysis(result);
         console.log('✅ 分析内容处理完成');
         
-        console.log('传统API分析完成，总字数:', analysisResult.length);
+        console.log('传统API分析完成，总字数:', result.length);
         
         // 滚动到结果区域
         const analysisResultSection = UI.analysisResultSection();
@@ -791,7 +814,7 @@ async function startAnalysis() {
         
         // 保存到本地存储（用于支付后恢复）
         try {
-            localStorage.setItem('last_analysis_result', analysisResult);
+            localStorage.setItem('last_analysis_result', result);
             localStorage.setItem('last_analysis_service', STATE.currentService);
             localStorage.setItem('last_user_data', JSON.stringify(STATE.userData || {}));
             
@@ -828,15 +851,6 @@ async function startAnalysis() {
                     <div style="font-size: 48px; margin-bottom: 20px;">❌</div>
                     <div style="font-size: 18px; color: #c62828; margin-bottom: 15px; font-weight: bold;">分析失败</div>
                     <div style="color: #666; font-size: 16px; margin-bottom: 20px;">${error.message || '未知错误'}</div>
-                    <div style="color: #999; font-size: 14px; background: #f9f9f9; padding: 15px; border-radius: 6px; text-align: left;">
-                        <div style="margin-bottom: 8px;"><strong>可能原因：</strong></div>
-                        <ul style="margin: 0; padding-left: 20px;">
-                            <li>网络连接不稳定</li>
-                            <li>API服务暂时不可用</li>
-                            <li>输入信息格式有误</li>
-                            <li>服务器繁忙，请稍后重试</li>
-                        </ul>
-                    </div>
                     <button onclick="startAnalysis()" style="margin-top: 25px; padding: 10px 25px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer;">
                         重新尝试
                     </button>
@@ -849,15 +863,9 @@ async function startAnalysis() {
             errorMessage = 'API密钥错误，请联系管理员。';
         } else if (error.message.includes('429')) {
             errorMessage = '请求过于频繁，请稍等1分钟后重试。';
-        } else if (error.message.includes('网络') || error.message.includes('Network')) {
-            errorMessage = '网络连接失败，请检查网络后重试。';
-        } else if (error.message.includes('超时') || error.message.includes('timeout')) {
-            errorMessage = '请求超时，网络较慢，请稍后重试。';
         }
         
-        // 更友好的错误提示
-        const errorDetail = error.message ? error.message.substring(0, 100) : '未知错误';
-        alert(`⚠️ ${errorMessage}\n\n错误代码: ${errorDetail}\n\n建议：\n1. 检查网络连接\n2. 稍后重试\n3. 如持续失败，请联系客服`);
+        alert(`⚠️ ${errorMessage}`);
     }
 }
 
@@ -992,6 +1000,7 @@ if (typeof STATE !== 'undefined') {
 
 // ✅ 也导出UI对象（如果需要在其他地方使用）
 window.UI = UI;
+
 
 
 
