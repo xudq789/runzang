@@ -29,7 +29,7 @@ export class YunchengModule {
 出生时间：${userData.birthYear}年${userData.birthMonth}月${userData.birthDay}日${userData.birthHour}时${userData.birthMinute}分
 出生城市：${userData.birthCity}
 
-请先进行八字排盘，再进行大运排盘{大运顺逆规则：阳男阴女顺行、阴男阳女逆行。起运岁数去零取整数，要确保精准，计算规则：1、如果大运顺行，先确认下一个节令日时间，然后计算相差天数 = (下一个节气日时间 - 出生时间)，再计算起运岁数 = 相差天数 ÷ 3天/岁；2、如果大运逆行，先确认上一个节令日时间，然后计算相差天数 = (出生时间 - 上一个节气时间)，最后计算起运岁数 = 相差天数 ÷ 3天/岁}。然后用以下格式输出结果：
+请先进行八字排盘，再进行大运排盘，起运岁数务必精准，然后用以下格式输出结果：
 
 【八字排盘】
 年柱：[年柱干支] ([纳音])
@@ -82,6 +82,7 @@ export class YunchengModule {
         return calculateBazi(userData);
     }
 }
+
 
 
 
