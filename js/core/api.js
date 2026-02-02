@@ -1,32 +1,105 @@
-import { API_BASE_URL } from './config.js';
+// API通信模块
+// 简单的DOM工具函数
+const DOM = {
+    id: (id) => document.getElementById(id),
+    get: (selector) => document.querySelector(selector),
+    getAll: (selector) => document.querySelectorAll(selector)
+};
 
-/**
- * 根据订单号获取 AI 查询完整结果内容（用于已支付时拉取完整内容）
- * @param {string} orderId - 订单号
- * @returns {Promise<string|null>} 完整内容字符串，失败或未找到返回 null
- */
-export async function fetchAiResultContent(orderId) {
-    if (!orderId) return null;
+// DeepSeek API调用
+export async function callDeepSeekAPI(prompt) {
+    console.log('调用DeepSeek API...');
+    
     try {
-        const url = `${API_BASE_URL}/api/ai/result/${orderId}`;
-        const response = await fetch(url, {
-            method: 'GET',
-            mode: 'cors',
-            headers: { 'X-API-Key': 'runzang-payment-security-key-2025-1234567890' }
+        const response = await fetch(window.APP_CONFIG.DEEPSEEK_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${window.APP_CONFIG.DEEPSEEK_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: 'deepseek-chat',
+                messages: [
+                    {
+                        role: 'system',
+                        content: '你是一位职业的命理大师，精通梁湘润论命体系。请根据用户信息进行专业命理分析，严格按照要求的格式输出。'
+                    },
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                max_tokens: 4000,
+                temperature: 0.7,
+                stream: false
+            })
         });
-        if (!response.ok) return null;
-        const data = await response.json();
-        if (data.success && data.data && data.data.content) {
-            return data.data.content;
+        
+        console.log('API响应状态:', response.status);
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('API错误响应:', errorData);
+            throw new Error(`API请求失败: ${response.status}`);
         }
-        return null;
+        
+        const data = await response.json();
+        console.log('API响应数据接收成功');
+        
+        if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+            return data.choices[0].message.content;
+        } else {
+            throw new Error('API返回数据格式错误');
+        }
+        
     } catch (error) {
-        console.error('获取AI结果失败:', error);
-        return null;
+        console.error('DeepSeek API调用失败:', error);
+        throw error;
     }
 }
 
-// 解析八字数据从AI回复中
+// 检查API状态
+export async function checkAPIStatus() {
+    console.log('正在检查DeepSeek API状态...');
+    const statusElement = DOM.id('api-status');
+    
+    if (!statusElement) return 'unknown';
+    
+    try {
+        const response = await fetch(window.APP_CONFIG.DEEPSEEK_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${window.APP_CONFIG.DEEPSEEK_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: 'deepseek-chat',
+                messages: [{ 
+                    role: 'user', 
+                    content: '请回复"API连接正常"' 
+                }],
+                max_tokens: 10,
+                temperature: 0.1
+            })
+        });
+        
+        if (response.ok) {
+            statusElement.textContent = '✅ API连接正常';
+            statusElement.className = 'api-status online';
+            return 'online';
+        } else {
+            statusElement.textContent = '❌ API连接异常';
+            statusElement.className = 'api-status offline';
+            return 'offline';
+        }
+    } catch (error) {
+        statusElement.textContent = '❌ API连接失败';
+        statusElement.className = 'api-status offline';
+        return 'offline';
+    }
+}
+
+// 解析八字数据
 export function parseBaziData(analysisResult) {
     console.log('解析八字数据...');
     
@@ -35,25 +108,29 @@ export function parseBaziData(analysisResult) {
         partnerBazi: null
     };
     
-    // 如果是八字合婚，需要解析两个八字
-    if (analysisResult.includes('【用户八字排盘】') && analysisResult.includes('【伴侣八字排盘】')) {
+    try {
         // 解析用户八字
-        const userBaziText = analysisResult.match(/【用户八字排盘】([\s\S]*?)【/);
-        if (userBaziText && userBaziText[1]) {
-            result.userBazi = parseSingleBazi(userBaziText[1]);
+        let userBaziText = '';
+        
+        // 尝试从【八字排盘】提取
+        const userBaziMatch = analysisResult.match(/【八字排盘】([\s\S]*?)(?:【|$)/);
+        if (userBaziMatch && userBaziMatch[1]) {
+            userBaziText = userBaziMatch[1];
+            result.userBazi = parseSingleBazi(userBaziText);
         }
         
-        // 解析伴侣八字
-        const partnerBaziText = analysisResult.match(/【伴侣八字排盘】([\s\S]*?)【/);
-        if (partnerBaziText && partnerBaziText[1]) {
-            result.partnerBazi = parseSingleBazi(partnerBaziText[1]);
+        // 如果是八字合婚，解析伴侣八字
+        if (analysisResult.includes('【伴侣八字排盘】')) {
+            const partnerBaziMatch = analysisResult.match(/【伴侣八字排盘】([\s\S]*?)(?:【|$)/);
+            if (partnerBaziMatch && partnerBaziMatch[1]) {
+                result.partnerBazi = parseSingleBazi(partnerBaziMatch[1]);
+            }
         }
-    } else {
-        // 其他服务：只解析用户的八字
-        result.userBazi = parseSingleBazi(analysisResult);
+        
+    } catch (error) {
+        console.error('解析八字数据出错:', error);
     }
     
-    console.log('解析到的八字数据:', result);
     return result;
 }
 
@@ -74,6 +151,8 @@ function parseSingleBazi(baziText) {
     
     lines.forEach(line => {
         const trimmedLine = line.trim();
+        
+        // 支持多种分隔符：：和:
         if (trimmedLine.includes('年柱')) {
             const match = trimmedLine.match(/年柱[：:]\s*([^\s(]+)(?:\s*\(([^)]+)\))?/);
             if (match) {

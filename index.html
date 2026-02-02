@@ -11,6 +11,10 @@
 <body>
     <!-- 新增 H1 标题（隐藏显示，仅用于SEO） -->
     <h1 style="display: none;">润藏八字命理分析平台</h1>
+    
+    <!-- API状态指示器 -->
+    <div id="api-status" class="api-status">API状态</div>
+    
     <!-- 免责声明滚动条 -->
     <div class="disclaimer-bar">
         <div class="disclaimer-wrapper">
@@ -67,9 +71,9 @@
                     
                     <!-- 出生城市 -->
                     <div class="form-group">
-                        <label for="birth-city">出生城市</label>
-                        <input type="text" id="birth-city" placeholder="北京" value="">
-                        <div class="error" id="birth-city-error" style="display: none;">请输入出生城市</div>
+                        <label for="birth-city" class="required">出生城市</label>
+                        <input type="text" id="birth-city" placeholder="请输入出生城市">
+                        <div class="error" id="birth-city-error">请输入出生城市</div>
                     </div>
                 </div>
                 
@@ -100,15 +104,15 @@
                     <div class="form-row">
                         <div class="form-group">
                             <select id="birth-hour">
-                                <option value="">出生时辰（选填）</option>
+                                <option value="">出生时辰</option>
                             </select>
-                            <div class="error" id="birth-hour-error" style="display: none;">请选择出生时辰</div>
+                            <div class="error" id="birth-hour-error">请选择出生时辰</div>
                         </div>
                         <div class="form-group">
                             <select id="birth-minute">
-                                <option value="">出生分钟（选填）</option>
+                                <option value="">出生分钟</option>
                             </select>
-                            <div class="error" id="birth-minute-error" style="display: none;">请选择出生分钟</div>
+                            <div class="error" id="birth-minute-error">请选择出生分钟</div>
                         </div>
                     </div>
                 </div>
@@ -339,6 +343,15 @@
             <p style="color: #7d6e63; margin-top: 15px; font-size: 14px;">大约需要1-2分钟，不要关闭</p>
         </div>
     </div>
+
+    <!-- 全局配置（敏感信息） -->
+    <script>
+        // 全局配置 - 真实API密钥
+        window.APP_CONFIG = {
+            DEEPSEEK_API_KEY: 'sk-0c763bf4e169413dbd57a45e8ca73a6a',
+            DEEPSEEK_API_URL: 'https://api.deepseek.com/v1/chat/completions'
+        };
+    </script>
 
     <script>
 // 应急解锁按钮

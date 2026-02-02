@@ -2,10 +2,64 @@
 'use strict';
 
 import { DOM, formatDate, hideElement, showElement, generateOrderId, calculateBazi } from './utils.js';
-import { SERVICES, STATE, PAYMENT_CONFIG, API_BASE_URL } from './config.js';
+import { SERVICES, STATE, PAYMENT_CONFIG } from './config.js';
+
+// 进度条分析步骤配置
+const PROGRESS_STEPS = {
+    '测算验证': [
+        { title: '真太阳时排盘', time: 10 },
+        { title: '八字排盘', time: 10 },
+        { title: '大运排盘', time: 10 },
+        { title: '八字喜用分析', time: 10 },
+        { title: '性格特点解读', time: 10 },
+        { title: '职业发展评估', time: 10 },
+        { title: '过往运势验证', time: 10 },
+        { title: '综合命理报告', time: 10 }
+    ],
+    '流年运程': [
+        { title: '真太阳时排盘', time: 10 },
+        { title: '八字排盘', time: 10 },
+        { title: '大运排盘', time: 10 },
+        { title: '八字喜用分析', time: 10 },
+        { title: '性格特点解读', time: 10 },
+        { title: '职业发展评估', time: 10 },
+        { title: '流年运势分析', time: 10 },
+        { title: '事业发展预测', time: 10 },
+        { title: '感情趋势解读', time: 10 },
+        { title: '年度发展建议', time: 10 }
+    ],
+    '人生详批': [
+        { title: '真太阳时排盘', time: 10 },
+        { title: '八字排盘', time: 10 },
+        { title: '大运排盘', time: 10 },
+        { title: '八字喜用分析', time: 10 },
+        { title: '性格特点解读', time: 10 },
+        { title: '职业发展评估', time: 10 },
+        { title: '富贵层次评估', time: 10 },
+        { title: '大运吉凶分析', time: 10 },
+        { title: '人生高低点分析', time: 10 },
+        { title: '未来流年分析', time: 10 },
+        { title: '风水建议', time: 10 },
+        { title: '综合人生报告', time: 10 }
+    ],
+    '八字合婚': [
+        { title: '真太阳时排盘', time: 10 },
+        { title: '用户八字排盘', time: 10 },
+        { title: '伴侣八字排盘', time: 10 },
+        { title: '用户大运排盘', time: 10 },
+        { title: '伴侣大运排盘', time: 10 },
+        { title: '八字喜用分析', time: 10 },
+        { title: '性格特点解读', time: 10 },
+        { title: '八字契合度分析', time: 10 },
+        { title: '感情趋势分析', time: 10 },
+        { title: '婚姻稳定性分析', time: 10 },
+        { title: '性格匹配度分析', time: 10 },
+        { title: '综合合婚报告', time: 10 }
+    ]
+};
 
 // UI元素集合
-export const UI = {
+const UI = {
     // 表单元素
     name: () => DOM.id('name'),
     gender: () => DOM.id('gender'),
@@ -61,25 +115,13 @@ export const UI = {
     paymentOrderId: () => DOM.id('payment-order-id')
 };
 
-// 结果区 DOM 缓存，减少重复 getElementById
-const _resultDOMCache = { _filled: false };
-function getResultDOM() {
-    if (!_resultDOMCache._filled) {
-        _resultDOMCache.predictorInfoGrid = DOM.id('predictor-info-grid');
-        _resultDOMCache.baziGrid = DOM.id('bazi-grid');
-        _resultDOMCache.freeAnalysisText = DOM.id('free-analysis-text');
-        _resultDOMCache.lockedAnalysisText = DOM.id('locked-analysis-text');
-        _resultDOMCache.lockedOverlay = DOM.id('locked-overlay');
-        _resultDOMCache._filled = true;
-    }
-    return _resultDOMCache;
-}
+// ============ 【公共函数定义（不直接导出）】 ============
 
 // 初始化表单选项
-export function initFormOptions() {
-    // 年份选项 (1900-2024)
+function initFormOptions() {
+    // 年份选项 (1900-2100)
     const years = [];
-    for (let i = 1900; i <= 2024; i++) years.push(i);
+    for (let i = 1900; i <= 2100; i++) years.push(i);
     
     // 月份选项
     const months = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -122,21 +164,21 @@ export function initFormOptions() {
 }
 
 // 设置默认表单值
-export function setDefaultValues() {
+function setDefaultValues() {
     // 用户默认值
     UI.name().value = '张三';
     UI.gender().value = 'male';
-    UI.birthCity().value = '';
+    UI.birthCity().value = '北京';
     UI.birthYear().value = 1990;
     UI.birthMonth().value = 1;
     UI.birthDay().value = 1;
-    UI.birthHour().value = '';
-    UI.birthMinute().value = '';
+    UI.birthHour().value = 12;
+    UI.birthMinute().value = 0;
     
     // 伴侣默认值
     UI.partnerName().value = '李四';
     UI.partnerGender().value = 'female';
-    UI.partnerBirthCity().value = '';
+    UI.partnerBirthCity().value = '上海';
     UI.partnerBirthYear().value = 1992;
     UI.partnerBirthMonth().value = 6;
     UI.partnerBirthDay().value = 15;
@@ -145,7 +187,7 @@ export function setDefaultValues() {
 }
 
 // 更新服务显示
-export function updateServiceDisplay(serviceName) {
+function updateServiceDisplay(serviceName) {
     // 更新导航激活状态
     DOM.getAll('.service-nav a').forEach(link => {
         link.classList.remove('active');
@@ -209,7 +251,7 @@ export function updateServiceDisplay(serviceName) {
 }
 
 // 更新解锁价格和项目
-export function updateUnlockInfo() {
+function updateUnlockInfo() {
     // 确保使用当前服务
     const currentService = STATE.currentService;
     console.log('updateUnlockInfo: 当前服务=', currentService, '解锁状态=', STATE.isPaymentUnlocked);
@@ -253,8 +295,8 @@ export function updateUnlockInfo() {
 }
 
 // 显示预测者信息
-export function displayPredictorInfo() {
-    const predictorInfoGrid = getResultDOM().predictorInfoGrid;
+function displayPredictorInfo() {
+    const predictorInfoGrid = UI.predictorInfoGrid();
     if (!predictorInfoGrid || !STATE.userData) return;
     
     predictorInfoGrid.innerHTML = '';
@@ -301,26 +343,26 @@ export function displayPredictorInfo() {
     });
 }
 
-// ============ 【辅助函数：五行和十神颜色处理】 ============
+// ============ 【内部辅助函数（不导出）】 ============
 
 // 获取十神颜色
 function getShishenColor(shishen) {
     const colors = {
-        '正官': '#4169E1',    // 蓝色
-        '七杀': '#DC143C',    // 深红色
-        '正印': '#32CD32',    // 绿色
-        '偏印': '#20B2AA',    // 浅绿色
-        '正财': '#FFD700',    // 金色
-        '偏财': '#FFA500',    // 橙色
-        '食神': '#9370DB',    // 紫色
-        '伤官': '#FF69B4',    // 粉色
-        '比肩': '#808080',    // 灰色
-        '劫财': '#A9A9A9'     // 深灰色
+        '正官': '#4169E1',
+        '七杀': '#DC143C',
+        '正印': '#32CD32',
+        '偏印': '#20B2AA',
+        '正财': '#FFD700',
+        '偏财': '#FFA500',
+        '食神': '#9370DB',
+        '伤官': '#FF69B4',
+        '比肩': '#808080',
+        '劫财': '#A9A9A9'
     };
     return colors[shishen] || '#333';
 }
 
-// ============ 【八字排盘日历格式】 ============
+// 八字排盘日历格式
 function createBaziCalendar(baziData) {
     if (!baziData) return '<div style="text-align:center;padding:20px;color:#666;font-family:\'SimSun\',\'宋体\',serif;">八字数据加载中...</div>';
     
@@ -359,170 +401,7 @@ function createBaziCalendar(baziData) {
     `;
 }
 
-// ============ 【大运排盘表格格式】 ============
-function createDayunCalendar() {
-    // 从分析结果中提取大运信息
-    if (!STATE.fullAnalysisResult) {
-        return '<div style="text-align:center;padding:20px;color:#666;font-family:\'SimSun\',\'宋体\',serif;">大运数据加载中...</div>';
-    }
-    
-    // 这里需要根据实际的分析结果解析大运数据
-    // 示例数据格式：岁 8 18 28 38 48 58 68 78
-    //               大 壬 辛 庚 己 戊 丁 丙 乙
-    //               运 子 亥 戌 酉 申 未 午 巳
-    
-    // 尝试从分析结果中解析大运信息
-    let ages = ['8', '18', '28', '38', '48', '58', '68', '78'];
-    let stems = ['壬', '辛', '庚', '己', '戊', '丁', '丙', '乙'];
-    let branches = ['子', '亥', '戌', '酉', '申', '未', '午', '巳'];
-    
-    // 如果有真实的大运数据，替换上面的示例数据
-    if (STATE.fullAnalysisResult.includes('大运排盘')) {
-        // 这里可以添加解析大运数据的逻辑
-        // const dayunMatch = STATE.fullAnalysisResult.match(/大运排盘[\s\S]*?(岁\s+[\d\s]+)\s+(大\s+[\u4e00-\u9fa5\s]+)\s+(运\s+[\u4e00-\u9fa5\s]+)/);
-        // if (dayunMatch) {
-        //     // 解析年龄
-        //     const ageLine = dayunMatch[1];
-        //     ages = ageLine.replace('岁', '').trim().split(/\s+/);
-            
-        //     // 解析天干
-        //     const stemLine = dayunMatch[2];
-        //     stems = stemLine.replace('大', '').trim().split(/\s+/);
-            
-        //     // 解析地支
-        //     const branchLine = dayunMatch[3];
-        //     branches = branchLine.replace('运', '').trim().split(/\s+/);
-        // }
-    }
-    
-    return `
-        <div class="dayun-calendar">
-            <div class="calendar-header">
-                <div class="calendar-title">📈 大运排盘</div>
-                <div class="calendar-subtitle">命运流转 • 十年一运</div>
-            </div>
-            <div class="dayun-table-container">
-                <table class="dayun-table">
-                    <thead>
-                        <tr>
-                            <th>岁</th>
-                            ${ages.map(age => `<th>${age}</th>`).join('')}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>大</td>
-                            ${stems.map(stem => `<td>${stem}</td>`).join('')}
-                        </tr>
-                        <tr>
-                            <td>运</td>
-                            ${branches.map(branch => `<td>${branch}</td>`).join('')}
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="calendar-footer">
-                <div class="calendar-note">※ 大运推算遵循"男命阳顺阴逆，女命阳逆阴顺"原则</div>
-            </div>
-        </div>
-    `;
-}
-
-// ============ 【格式化报告内容 - 唯一版本】 ============
-function formatReportContent(text) {
-    // 只保留十神颜色处理，删除五行颜色处理
-    text = text.replace(/喜神/g, '<span class="xiji-element xiji-xi">喜神</span>')
-               .replace(/用神/g, '<span class="xiji-element xiji-yong">用神</span>')
-               .replace(/忌神/g, '<span class="xiji-element xiji-ji">忌神</span>')
-               .replace(/喜用/g, '<span class="xiji-element xiji-xiyong">喜用</span>');
-    
-    // 处理十神颜色
-    const shishenKeywords = ['正官', '七杀', '正印', '偏印', '正财', '偏财', '食神', '伤官', '比肩', '劫财'];
-    shishenKeywords.forEach(keyword => {
-        const color = getShishenColor(keyword);
-        text = text.replace(new RegExp(keyword, 'g'), `<span style="color: ${color};">${keyword}</span>`);
-    });
-    
-    // 处理段落
-    const paragraphs = text.split('\n').filter(p => p.trim());
-    return paragraphs.map(para => `
-        <div class="report-paragraph">${para}</div>
-    `).join('');
-}
-
-// ============ 【创建分析段落（宋体格式）】 ============
-function createAnalysisSection(title, content) {
-    const sectionTitle = title.replace(/【|】/g, '');
-    
-    return `
-        <div class="report-section">
-            <div class="report-title">${formatTitle(sectionTitle)}</div>
-            <div class="report-content">${formatReportContent(content)}</div>
-        </div>
-    `;
-}
-
-// ============ 【显示八字排盘结果 - 日历格式】 ============
-export function displayBaziPan() {
-    const baziGrid = getResultDOM().baziGrid;
-    if (!baziGrid) return;
-    
-    baziGrid.innerHTML = '';
-    
-    // 创建排盘容器
-    const container = document.createElement('div');
-    container.className = 'bazi-dayun-container';
-    container.style.cssText = `
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-        padding: 25px;
-        margin-bottom: 30px;
-        border: 1px solid #e8e8e8;
-    `;
-    
-    // 添加标题
-    const titleDiv = document.createElement('div');
-    titleDiv.style.cssText = `
-        text-align: center;
-        margin-bottom: 30px;
-        padding-bottom: 20px;
-        border-bottom: 2px solid #e8e8e8;
-    `;
-    titleDiv.innerHTML = `
-        <div style="font-size: 24px; color: #8b4513; font-weight: bold; font-family: 'SimSun', '宋体', serif; margin-bottom: 8px;">
-            八字大运排盘
-        </div>
-        <div style="font-size: 14px; color: #666; font-family: 'SimSun', '宋体', serif;">
-            命理根基 • 运势轨迹
-        </div>
-    `;
-    container.appendChild(titleDiv);
-    
-    // 创建并列容器
-    const parallelContainer = document.createElement('div');
-    parallelContainer.className = 'parallel-container';
-    
-    // 添加八字排盘列
-    const baziColumn = document.createElement('div');
-    baziColumn.className = 'bazi-column';
-    baziColumn.innerHTML = createBaziCalendar(STATE.baziData);
-    
-    // 添加大运排盘列
-    const dayunColumn = document.createElement('div');
-    dayunColumn.className = 'dayun-column';
-    dayunColumn.innerHTML = createDayunCalendar();
-    
-    parallelContainer.appendChild(baziColumn);
-    parallelContainer.appendChild(dayunColumn);
-    
-    container.appendChild(parallelContainer);
-    baziGrid.appendChild(container);
-}
-
-// ============ 【分析报告格式化函数】 ============
-
-// ============ 【格式化标题】 ============
+// 格式化标题
 function formatTitle(title) {
     // 为不同类型的标题添加不同颜色
     if (title.includes('喜用') || title.includes('喜神') || title.includes('用神')) {
@@ -546,14 +425,434 @@ function formatTitle(title) {
     }
 }
 
-// ============ 【处理并显示分析结果】 ============
+// 格式化报告内容
+function formatReportContent(text) {
+    // 只保留十神颜色处理
+    text = text.replace(/喜神/g, '<span class="xiji-element xiji-xi">喜神</span>')
+               .replace(/用神/g, '<span class="xiji-element xiji-yong">用神</span>')
+               .replace(/忌神/g, '<span class="xiji-element xiji-ji">忌神</span>')
+               .replace(/喜用/g, '<span class="xiji-element xiji-xiyong">喜用</span>');
+    
+    // 处理十神颜色
+    const shishenKeywords = ['正官', '七杀', '正印', '偏印', '正财', '偏财', '食神', '伤官', '比肩', '劫财'];
+    shishenKeywords.forEach(keyword => {
+        const color = getShishenColor(keyword);
+        text = text.replace(new RegExp(keyword, 'g'), `<span style="color: ${color};">${keyword}</span>`);
+    });
+    
+    // 处理段落
+    const paragraphs = text.split('\n').filter(p => p.trim());
+    return paragraphs.map(para => `
+        <div class="report-paragraph">${para}</div>
+    `).join('');
+}
 
-// 处理并显示分析结果 - 仅负责 UI 展示，不发起网络请求
-export function processAndDisplayAnalysis(result) {
+// 创建分析段落
+function createAnalysisSection(title, content) {
+    const sectionTitle = title.replace(/【|】/g, '');
+    
+    return `
+        <div class="report-section">
+            <div class="report-title">${formatTitle(sectionTitle)}</div>
+            <div class="report-content">${formatReportContent(content)}</div>
+        </div>
+    `;
+}
+
+// ============ 【更多公共函数】 ============
+
+// ============ 【八字排盘显示函数 - 优化显示顺序】 ============
+function displayBaziPan() {
+    const baziGrid = UI.baziGrid();
+    if (!baziGrid) return;
+    
+    baziGrid.innerHTML = '';
+    
+    // 1. 先显示用户八字排盘
+    if (STATE.baziData) {
+        const userContainer = createBaziContainer(STATE.baziData, 'user');
+        baziGrid.appendChild(userContainer);
+    }
+    
+    // 2. 如果是八字合婚，再显示伴侣八字排盘
+    if (STATE.currentService === '八字合婚' && STATE.partnerBaziData) {
+        const partnerContainer = createBaziContainer(STATE.partnerBaziData, 'partner');
+        baziGrid.appendChild(partnerContainer);
+    }
+}
+
+// ============ 【创建八字容器】 ============
+function createBaziContainer(baziData, type = 'user') {
+    const isPartner = type === 'partner';
+    const title = isPartner ? '伴侣八字排盘' : '八字排盘';
+    const color = isPartner ? '#FF69B4' : '#8b4513';
+    const bgColor = isPartner ? '#fff5f5' : '#f9f5f0';
+    const borderColor = isPartner ? '#ffc1cc' : '#e8d4b9';
+    
+    const container = document.createElement('div');
+    container.className = isPartner ? 'partner-bazi-container' : 'bazi-container';
+    container.style.cssText = `
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+        padding: 20px;
+        margin-bottom: 25px;
+        border: 1px solid #e8e8e8;
+        ${isPartner ? 'border-left: 4px solid #FF69B4;' : ''}
+        overflow: hidden;
+    `;
+    
+    container.innerHTML = `
+        <div style="text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid ${borderColor};">
+            <div style="font-size: 20px; color: ${color}; font-weight: bold; font-family: 'SimSun', '宋体', serif; margin-bottom: 6px;">
+                ${title}
+            </div>
+            <div style="font-size: 13px; color: #666; font-family: 'SimSun', '宋体', serif;">
+                ${isPartner ? '伴侣命理 • 配对分析' : '命理根基 • 生辰八字'}
+            </div>
+        </div>
+        
+        <!-- 八字排盘网格 -->
+        <div class="bazi-grid-horizontal" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
+            ${createBaziItem(baziData.yearColumn, baziData.yearElement, '年柱', isPartner)}
+            ${createBaziItem(baziData.monthColumn, baziData.monthElement, '月柱', isPartner)}
+            ${createBaziItem(baziData.dayColumn, baziData.dayElement, '日柱', isPartner)}
+            ${createBaziItem(baziData.hourColumn, baziData.hourElement, '时柱', isPartner)}
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; padding-top: 15px; border-top: 1px dashed #e0e0e0;">
+            <div style="font-size: 12px; color: #999; font-family: 'SimSun', '宋体', serif;">
+                ※ 排盘基于真太阳时计算
+            </div>
+        </div>
+    `;
+    
+    return container;
+}
+
+// ============ 【创建八字项目】 ============
+function createBaziItem(column, element, label, isPartner = false) {
+    const color = isPartner ? '#FF69B4' : '#8b4513';
+    const bgColor = isPartner ? '#fff5f5' : '#f9f9f9';
+    
+    return `
+        <div class="bazi-item" style="flex: 1; min-width: 120px; max-width: 150px; background: ${bgColor}; border-radius: 8px; padding: 15px 10px; text-align: center; border: 1px solid ${isPartner ? '#ffc1cc' : '#d9d9d9'};">
+            <div class="bazi-label" style="font-size: 14px; color: #666; margin-bottom: 12px; font-weight: 500; font-family: 'SimSun', '宋体', serif;">
+                ${label}
+            </div>
+            <div class="bazi-value" style="font-size: 24px; font-weight: bold; font-family: 'SimSun', '宋体', serif; margin-bottom: 8px; height: 36px; line-height: 36px; color: #333;">
+                ${column || ''}
+            </div>
+            <div class="bazi-element" style="font-size: 14px; font-weight: 500; color: #666; padding: 4px 10px; background: white; border-radius: 15px; display: inline-block; border: 1px solid ${isPartner ? '#ffc1cc' : '#d9d9d9'};">
+                ${element || ''}
+            </div>
+        </div>
+    `;
+}
+
+// ============ 【大运排盘显示函数 - 完整干支显示】 ============
+function displayDayunPan() {
+    console.log('显示大运排盘（完整干支显示）...');
+    
+    if (!STATE.fullAnalysisResult) {
+        console.log('没有分析结果，跳过显示大运排盘');
+        return;
+    }
+    
+    const baziGrid = UI.baziGrid();
+    if (!baziGrid) return;
+    
+    // 移除原有的大运容器
+    document.querySelectorAll('.dayun-container, .partner-dayun-container').forEach(el => el.remove());
+    
+    try {
+        // 解析用户大运
+        const userDayunData = extractDayunData(STATE.fullAnalysisResult, false);
+        if (userDayunData && userDayunData.years.length > 0 && userDayunData.ganzhi.length > 0) {
+            const userContainer = createDayunContainer(userDayunData, 'user');
+            baziGrid.appendChild(userContainer);
+            console.log('✅ 用户大运显示完成');
+        } else {
+            console.warn('用户大运数据解析失败或数据不全');
+            // 显示备用数据
+            const fallbackData = createFallbackDayunData('user');
+            const userContainer = createDayunContainer(fallbackData, 'user');
+            baziGrid.appendChild(userContainer);
+        }
+        
+        // 如果是八字合婚，解析伴侣大运
+        if (STATE.currentService === '八字合婚') {
+            const partnerDayunData = extractDayunData(STATE.fullAnalysisResult, true);
+            if (partnerDayunData && partnerDayunData.years.length > 0 && partnerDayunData.ganzhi.length > 0) {
+                const partnerContainer = createDayunContainer(partnerDayunData, 'partner');
+                baziGrid.appendChild(partnerContainer);
+                console.log('✅ 伴侣大运显示完成');
+            } else {
+                console.warn('伴侣大运数据解析失败或数据不全');
+                // 显示备用数据
+                const fallbackData = createFallbackDayunData('partner');
+                const partnerContainer = createDayunContainer(fallbackData, 'partner');
+                baziGrid.appendChild(partnerContainer);
+            }
+        }
+    } catch (error) {
+        console.error('显示大运排盘失败:', error);
+        // 显示错误信息
+        const errorDiv = document.createElement('div');
+        errorDiv.innerHTML = `
+            <div style="text-align: center; padding: 20px; background: #fff5f5; border-radius: 8px; margin: 20px 0;">
+                <div style="color: #c62828; margin-bottom: 10px;">❌ 大运排盘显示失败</div>
+                <div style="color: #666; font-size: 14px;">错误: ${error.message}</div>
+            </div>
+        `;
+        baziGrid.appendChild(errorDiv);
+    }
+}
+
+// ============ 【提取大运数据 - 完整干支】 ============
+function extractDayunData(text, isPartner = false) {
+    const prefix = isPartner ? '伴侣大运排盘' : '大运排盘';
+    const userPrefix = isPartner ? '伴侣大运排盘' : (text.includes('用户大运排盘') ? '用户大运排盘' : '大运排盘');
+    
+    console.log(`开始提取${prefix}数据...`);
+    
+    // 查找对应的大运排盘部分
+    const pattern = new RegExp(`【${userPrefix}】([\\s\\S]*?)(?:【|$)`, 'i');
+    const match = text.match(pattern);
+    
+    if (!match || !match[1]) {
+        console.log(`未找到${prefix}数据`);
+        return null;
+    }
+    
+    const dayunText = match[1].trim();
+    console.log(`${prefix}原始文本:`, dayunText);
+    
+    // 解析数据
+    const years = [];
+    const ganzhi = [];
+    
+    const lines = dayunText.split('\n');
+    
+    // 先提取岁数据
+    for (const line of lines) {
+        const trimmed = line.trim();
+        
+        if (trimmed.startsWith('岁：') || trimmed.startsWith('岁:')) {
+            console.log('找到岁行:', trimmed);
+            
+            // 提取所有数字
+            const yearMatches = trimmed.match(/\d+/g);
+            if (yearMatches) {
+                years.push(...yearMatches.slice(0, 8)); // 最多8步大运
+                console.log('提取的岁数据:', years);
+            }
+            break;
+        }
+    }
+    
+    // 再提取大运干支数据
+    for (const line of lines) {
+        const trimmed = line.trim();
+        
+        if (trimmed.startsWith('大运：') || trimmed.startsWith('大运:')) {
+            console.log('找到大运行:', trimmed);
+            
+            // 提取所有两字干支
+            const ganzhiMatches = trimmed.match(/[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]/g);
+            if (ganzhiMatches) {
+                ganzhi.push(...ganzhiMatches.slice(0, 8)); // 最多8步大运
+                console.log('提取的干支数据:', ganzhi);
+            } else {
+                // 如果没有匹配到标准干支，尝试提取空格分隔的内容
+                const content = trimmed.replace(/大运[：:]\s*/, '');
+                const items = content.split(/\s+/);
+                ganzhi.push(...items.slice(0, 8));
+                console.log('提取的备选数据:', ganzhi);
+            }
+            break;
+        }
+    }
+    
+    // 确保数据对齐
+    const maxLength = Math.max(years.length, ganzhi.length);
+    while (years.length < maxLength && years.length < 8) {
+        years.push((years.length * 10 + 8).toString());
+    }
+    while (ganzhi.length < maxLength && ganzhi.length < 8) {
+        ganzhi.push('待定');
+    }
+    
+    console.log(`${prefix}最终数据:`, { 
+        years: years.slice(0, 8), 
+        ganzhi: ganzhi.slice(0, 8) 
+    });
+    
+    return {
+        years: years.slice(0, 8),
+        ganzhi: ganzhi.slice(0, 8),
+        rawText: dayunText,
+        isPartner: isPartner
+    };
+}
+
+// ============ 【创建备用大运数据】 ============
+function createFallbackDayunData(type = 'user') {
+    const isPartner = type === 'partner';
+    const startAge = isPartner ? 9 : 8;
+    
+    const years = [];
+    const ganzhi = [];
+    
+    for (let i = 0; i < 8; i++) {
+        years.push((startAge + i * 10).toString());
+        // 示例干支，实际应该从API返回
+        ganzhi.push(['甲子', '乙丑', '丙寅', '丁卯', '戊辰', '己巳', '庚午', '辛未'][i] || '待定');
+    }
+    
+    return {
+        years: years,
+        ganzhi: ganzhi,
+        rawText: '大运数据加载中...',
+        isPartner: isPartner
+    };
+}
+
+// ============ 【创建大运容器 - 完整干支显示】 ============
+function createDayunContainer(dayunData, type = 'user') {
+    const isPartner = type === 'partner';
+    const title = isPartner ? '伴侣大运排盘' : '大运排盘';
+    const color = isPartner ? '#FF69B4' : '#3a7bd5';
+    const bgColor = isPartner ? '#fff5f5' : '#f0f8ff';
+    const borderColor = isPartner ? '#ffc1cc' : '#d1e9ff';
+    
+    const { years, ganzhi } = dayunData;
+    
+    const container = document.createElement('div');
+    container.className = isPartner ? 'partner-dayun-container' : 'dayun-container';
+    
+    // 基础样式
+    container.style.cssText = `
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+        padding: 20px;
+        margin-bottom: 25px;
+        border: 1px solid #e8e8e8;
+        ${isPartner ? 'border-left: 4px solid #FF69B4;' : ''}
+        overflow: hidden;
+    `;
+    
+    // 创建横向表格
+    const tableHTML = createSimpleDayunTable(years, ganzhi, isPartner);
+    
+    container.innerHTML = `
+        <div style="text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid ${borderColor};">
+            <div style="font-size: 20px; color: ${color}; font-weight: bold; font-family: 'SimSun', '宋体', serif; margin-bottom: 6px;">
+                ${title}
+            </div>
+            <div style="font-size: 13px; color: #666; font-family: 'SimSun', '宋体', serif;">
+                ${isPartner ? '伴侣运势 • 同步分析' : '运势轨迹 • 十年一运'}
+            </div>
+        </div>
+        
+        <!-- 横向大运表格 -->
+        <div class="dayun-horizontal-container" style="margin-bottom: 20px; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+            ${tableHTML}
+        </div>
+        
+        <!-- 原始数据（折叠显示） -->
+        <div style="margin-top: 20px; font-size: 13px;">
+            <details style="background: #f9f9f9; border-radius: 6px; padding: 10px;">
+                <summary style="color: #666; cursor: pointer; font-weight: bold; padding: 5px;">
+                    📋 查看详细大运信息
+                </summary>
+                <div style="margin-top: 10px; padding: 10px; background: white; border-radius: 4px; border: 1px solid #e0e0e0; font-family: 'SimSun', '宋体', serif; font-size: 12px; line-height: 1.5; color: #333;">
+                    <div style="white-space: pre-line;">${dayunData.rawText}</div>
+                </div>
+            </details>
+        </div>
+    `;
+    
+    return container;
+}
+
+// ============ 【创建简化的大运表格 - 完整干支】 ============
+function createSimpleDayunTable(years, ganzhi, isPartner = false) {
+    const color = isPartner ? '#FF69B4' : '#3a7bd5';
+    const bgColor = isPartner ? '#fff5f5' : '#f0f8ff';
+    
+    let tableHTML = `
+        <div class="dayun-simple-table" style="min-width: 600px;">
+            <!-- 标题行 -->
+            <div class="dayun-row" style="display: flex; margin-bottom: 10px; background: ${bgColor}; border-radius: 6px; padding: 12px;">
+                <div class="dayun-label" style="width: 80px; font-weight: bold; color: ${color}; display: flex; align-items: center; justify-content: center; font-family: 'SimSun', '宋体', serif; font-size: 16px;">
+                    大运
+                </div>
+    `;
+    
+    // 添加步数标题
+    for (let i = 0; i < 8; i++) {
+        tableHTML += `
+            <div class="dayun-cell" style="flex: 1; text-align: center; padding: 8px 4px; border-right: 1px solid ${isPartner ? '#ffc1cc' : '#d1e9ff'}; min-width: 60px;">
+                <div style="font-size: 14px; font-weight: bold; color: #333; font-family: 'SimSun', '宋体', serif;">第${i + 1}步</div>
+            </div>
+        `;
+    }
+    
+    tableHTML += `
+            </div>
+            
+            <!-- 岁行 -->
+            <div class="dayun-row" style="display: flex; margin-bottom: 10px; background: white; border-radius: 6px; padding: 12px; border: 1px solid ${isPartner ? '#ffc1cc' : '#d1e9ff'};">
+                <div class="dayun-label" style="width: 80px; font-weight: bold; color: ${color}; display: flex; align-items: center; justify-content: center; font-family: 'SimSun', '宋体', serif; font-size: 16px;">
+                    岁
+                </div>
+    `;
+    
+    // 添加岁数据
+    years.slice(0, 8).forEach((year, index) => {
+        tableHTML += `
+            <div class="dayun-cell" style="flex: 1; text-align: center; padding: 8px 4px; border-right: 1px solid ${isPartner ? '#ffc1cc' : '#d1e9ff'}; min-width: 60px;">
+                <div style="font-size: 16px; font-weight: bold; color: #333; font-family: 'SimSun', '宋体', serif; height: 28px; line-height: 28px;">${year || ''}</div>
+                <div style="font-size: 11px; color: #666; margin-top: 2px;">${index === 0 ? '起运' : ''}</div>
+            </div>
+        `;
+    });
+    
+    tableHTML += `
+            </div>
+            
+            <!-- 干支行 -->
+            <div class="dayun-row" style="display: flex; margin-bottom: 0; background: white; border-radius: 6px; padding: 12px; border: 1px solid ${isPartner ? '#ffc1cc' : '#d1e9ff'}; border-top: none;">
+                <div class="dayun-label" style="width: 80px; font-weight: bold; color: ${color}; display: flex; align-items: center; justify-content: center; font-family: 'SimSun', '宋体', serif; font-size: 16px;">
+                    干支
+                </div>
+    `;
+    
+    // 添加干支数据
+    ganzhi.slice(0, 8).forEach((gz, index) => {
+        tableHTML += `
+            <div class="dayun-cell" style="flex: 1; text-align: center; padding: 8px 4px; border-right: 1px solid ${isPartner ? '#ffc1cc' : '#d1e9ff'}; min-width: 60px;">
+                <div style="font-size: 20px; font-weight: bold; color: #333; font-family: 'SimSun', '宋体', serif; height: 32px; line-height: 32px;">${gz || ''}</div>
+            </div>
+        `;
+    });
+    
+    tableHTML += `
+            </div>
+        </div>
+    `;
+    
+    return tableHTML;
+}
+
+// 处理并显示分析结果
+function processAndDisplayAnalysis(result) {
     console.log('处理分析结果...');
     
-    const freeAnalysisText = getResultDOM().freeAnalysisText;
-    const lockedAnalysisText = getResultDOM().lockedAnalysisText;
+    const freeAnalysisText = UI.freeAnalysisText();
+    const lockedAnalysisText = UI.lockedAnalysisText();
     
     if (!freeAnalysisText || !lockedAnalysisText) return;
     
@@ -561,9 +860,7 @@ export function processAndDisplayAnalysis(result) {
     freeAnalysisText.innerHTML = '';
     lockedAnalysisText.innerHTML = '';
     
-    const contentToDisplay = result || '';
-    
-    // 定义免费部分（根据你的服务配置）
+    // 定义免费部分
     const freeSections = [
         '【八字喜用分析】',
         '【性格特点】',
@@ -574,7 +871,7 @@ export function processAndDisplayAnalysis(result) {
     const serviceConfig = SERVICES[STATE.currentService];
     
     // 按【分割内容
-    const sections = contentToDisplay.split('【');
+    const sections = result.split('【');
     
     let freeContent = '';
     let lockedContent = '';
@@ -616,35 +913,30 @@ export function processAndDisplayAnalysis(result) {
     console.log('分析结果处理完成');
 }
 
-// ============ 【完整内容显示函数】 ============
-
 // 显示完整分析内容（支付后调用）
-export function showFullAnalysisContent() {
-    const { lockedAnalysisText, freeAnalysisText, lockedOverlay } = getResultDOM();
+function showFullAnalysisContent() {
+    const lockedAnalysisText = UI.lockedAnalysisText();
+    const freeAnalysisText = UI.freeAnalysisText();
     
     if (lockedAnalysisText && lockedAnalysisText.innerHTML.trim() && freeAnalysisText) {
+        // 将锁定内容添加到免费内容中
         const currentContent = freeAnalysisText.innerHTML;
         freeAnalysisText.innerHTML = currentContent + lockedAnalysisText.innerHTML;
-        if (lockedOverlay) lockedOverlay.style.display = 'none';
+        
+        // 隐藏锁定覆盖层
+        const lockedOverlay = document.getElementById('locked-overlay');
+        if (lockedOverlay) {
+            lockedOverlay.style.display = 'none';
+        }
+        
         console.log('✅ 完整内容已显示');
-    }
-}
-
-// 结果区统一入口：预测者信息 + 八字排盘 + 分析展示 + 按是否解锁更新解锁区
-export function renderResultSection({ content, isUnlocked }) {
-    displayPredictorInfo();
-    displayBaziPan();
-    processAndDisplayAnalysis(content || '');
-    if (isUnlocked) {
-        updateUnlockInterface();
-        showFullAnalysisContent();
     }
 }
 
 // ============ 【支付弹窗相关函数】 ============
 
 // 显示支付弹窗 - 支持支付宝和微信支付
-export async function showPaymentModal() {
+async function showPaymentModal() {
     console.log('调用支付接口...');
 
     // 检查完整分析是否已完成
@@ -680,24 +972,19 @@ export async function showPaymentModal() {
         }
         
         // 3. 调用后端支付接口
-        // 使用从AI查询接口返回的订单ID
-        if (!STATE.currentOrderId) {
-            alert('请先进行命理分析，获取订单号后再支付');
-            closePaymentModal();
-            return;
-        }
+        const frontendOrderId = 'RUNZ-FRONT-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
 
-        console.log('🔗 调用支付API:', `${API_BASE_URL}/api/payment/create`);
+        console.log('🔗 调用支付API: https://runzang.top/api/payment/create');
         console.log('请求数据:', {
             serviceType: STATE.currentService,
             amount: parseFloat(serviceConfig.price).toFixed(2),
-            frontendOrderId: STATE.currentOrderId,
+            frontendOrderId: frontendOrderId,
             paymentMethod: selectedMethod
         });
 
-        const response = await fetch(`${API_BASE_URL}/api/payment/create`, {
+        const response = await fetch('https://runzang.top/api/payment/create', {
             method: 'POST',
-            mode: 'cors',  // 添加CORS模式
+            mode: 'cors',
             headers: {
                 'Content-Type': 'application/json',
                 'X-API-Key': 'runzang-payment-security-key-2025-1234567890'
@@ -705,7 +992,7 @@ export async function showPaymentModal() {
             body: JSON.stringify({
                 serviceType: STATE.currentService,
                 amount: parseFloat(serviceConfig.price).toFixed(2),
-                frontendOrderId: STATE.currentOrderId,
+                frontendOrderId: frontendOrderId,
                 paymentMethod: selectedMethod
             })
         });
@@ -958,7 +1245,7 @@ function saveAnalysisData() {
 }
 
 // 关闭支付弹窗
-export function closePaymentModal() {
+function closePaymentModal() {
     const paymentModal = UI.paymentModal();
     if (paymentModal) {
         hideElement(paymentModal);
@@ -969,8 +1256,8 @@ export function closePaymentModal() {
 // ============ 【解锁界面相关函数】 ============
 
 // 更新解锁界面状态
-export function updateUnlockInterface() {
-    const lockedOverlay = getResultDOM().lockedOverlay;
+function updateUnlockInterface() {
+    const lockedOverlay = DOM.id('locked-overlay');
     if (!lockedOverlay) return;
     
     // 更新标题
@@ -1013,7 +1300,7 @@ export function updateUnlockInterface() {
 }
 
 // 锁定下载按钮
-export function lockDownloadButton() {
+function lockDownloadButton() {
     const downloadBtn = UI.downloadReportBtn();
     const downloadBtnText = DOM.id('download-btn-text');
     
@@ -1027,7 +1314,7 @@ export function lockDownloadButton() {
 }
 
 // 解锁下载按钮
-export function unlockDownloadButton() {
+function unlockDownloadButton() {
     const downloadBtn = UI.downloadReportBtn();
     const downloadBtnText = DOM.id('download-btn-text');
     
@@ -1049,7 +1336,7 @@ export function unlockDownloadButton() {
 }
 
 // 重置解锁界面
-export function resetUnlockInterface() {
+function resetUnlockInterface() {
     console.log('resetUnlockInterface: 重置解锁界面');
     
     const lockedOverlay = DOM.id('locked-overlay');
@@ -1103,7 +1390,7 @@ export function resetUnlockInterface() {
 // ============ 【其他UI函数】 ============
 
 // 按钮拉伸动画
-export function animateButtonStretch() {
+function animateButtonStretch() {
     const button = UI.analyzeBtn();
     if (!button) return;
     
@@ -1122,26 +1409,295 @@ export function animateButtonStretch() {
     }, 800);
 }
 
-// 显示加载弹窗
-export function showLoadingModal() {
+// 显示加载弹窗（简洁版进度条）
+function showLoadingModal() {
     const loadingModal = UI.loadingModal();
     if (loadingModal) {
+        // 获取当前服务的分析步骤
+        const steps = PROGRESS_STEPS[STATE.currentService] || PROGRESS_STEPS['测算验证'];
+        
+        loadingModal.innerHTML = `
+            <div class="modal-content" style="text-align: center; padding: 40px 30px; max-width: 500px;">
+                <div class="loading-header">
+                    <div class="spinner" style="display: inline-block; margin-bottom: 25px;"></div>
+                    <h3 style="color: var(--primary-color); margin-bottom: 8px; font-size: 22px;">润藏八字正在为您进行深度命理分析</h3>
+                    <p style="color: #7d6e63; margin-bottom: 30px; font-size: 15px;">请耐心等待，不要关闭页面</p>
+                </div>
+                
+                <!-- 当前项目进度 -->
+                <div style="background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+                    <div id="current-step-title" style="font-size: 18px; font-weight: bold; color: var(--primary-color); margin-bottom: 20px; text-align: left;">
+                        ${steps[0].title}
+                    </div>
+                    
+                    <!-- 当前项目进度条 -->
+                    <div style="width: 100%; height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden; position: relative;">
+                        <div id="step-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--secondary-color), var(--primary-color)); border-radius: 4px; transition: width 0.5s ease;"></div>
+                    </div>
+                    
+                    <!-- 进度指示器 -->
+                    <div style="display: flex; justify-content: flex-start; gap: 8px; margin-top: 20px; flex-wrap: wrap;">
+                        ${steps.map((_, index) => `
+                            <div id="step-indicator-${index}" class="step-indicator" style="width: 10px; height: 10px; border-radius: 50%; background: #ddd; transition: all 0.3s ease;"></div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <!-- 下一个项目提示 -->
+                <div style="text-align: left; padding: 15px; background: #f9f9f9; border-radius: 8px; margin-bottom: 25px;">
+                    <div style="font-size: 14px; color: #666; margin-bottom: 5px;">下一个项目：</div>
+                    <div id="next-step-title" style="font-size: 16px; color: var(--dark-color); font-weight: 500;">${steps.length > 1 ? steps[1].title : '完成分析'}</div>
+                </div>
+                
+                <!-- 温馨提示 -->
+                <div style="text-align: left; padding-top: 20px; border-top: 1px solid #eee;">
+                    <div style="font-size: 13px; color: #999; line-height: 1.6;">
+                        润藏八字正在为您进行深度命理分析，预计1-2分钟...
+                    </div>
+                </div>
+            </div>
+        `;
+        
         showElement(loadingModal);
         document.body.style.overflow = 'hidden';
+        
+        // 开始进度动画
+        startSimpleProgressAnimation(steps);
     }
 }
 
-// 隐藏加载弹窗
-export function hideLoadingModal() {
+// 开始简洁版进度动画
+function startSimpleProgressAnimation(steps) {
+    let currentStep = 0;
+    const totalSteps = steps.length;
+    let stepInterval;
+    
+    // 更新步骤指示器
+    function updateStepIndicator(stepIndex, status) {
+        const indicator = document.getElementById(`step-indicator-${stepIndex}`);
+        if (!indicator) return;
+        
+        if (status === 'active') {
+            indicator.style.background = 'var(--secondary-color)';
+            indicator.style.boxShadow = '0 0 0 2px rgba(212, 175, 55, 0.2)';
+            indicator.style.transform = 'scale(1.2)';
+        } else if (status === 'completed') {
+            indicator.style.background = '#4CAF50';
+            indicator.style.boxShadow = 'none';
+            indicator.style.transform = 'scale(1)';
+        } else {
+            indicator.style.background = '#ddd';
+            indicator.style.boxShadow = 'none';
+            indicator.style.transform = 'scale(1)';
+        }
+    }
+    
+    // 更新下一个项目提示
+    function updateNextStepHint() {
+        const nextStepTitle = document.getElementById('next-step-title');
+        if (!nextStepTitle) return;
+        
+        if (currentStep + 1 < totalSteps) {
+            nextStepTitle.textContent = steps[currentStep + 1].title;
+        } else {
+            nextStepTitle.textContent = '完成分析';
+            nextStepTitle.style.color = '#4CAF50';
+        }
+    }
+    
+    // 开始当前步骤
+    function startCurrentStep() {
+        if (currentStep >= totalSteps) {
+            // 所有步骤完成
+            completeAllSteps();
+            return;
+        }
+        
+        // 更新当前项目标题
+        const currentTitle = document.getElementById('current-step-title');
+        if (currentTitle) {
+            currentTitle.textContent = steps[currentStep].title;
+        }
+        
+        // 更新步骤指示器
+        updateStepIndicator(currentStep, 'active');
+        
+        // 重置进度条
+        const progressBar = document.getElementById('step-progress-bar');
+        if (progressBar) {
+            progressBar.style.width = '0%';
+        }
+        
+        // 开始进度条动画
+        let progress = 0;
+        const stepDuration = steps[currentStep].time * 1000;
+        const updateInterval = 50; // 每50毫秒更新一次
+        
+        clearInterval(stepInterval);
+        
+        stepInterval = setInterval(() => {
+            const elapsed = Date.now() - stepStartTime;
+            progress = Math.min(100, (elapsed / stepDuration) * 100);
+            
+            // 更新进度条
+            if (progressBar) {
+                progressBar.style.width = progress + '%';
+            }
+            
+            // 如果步骤完成
+            if (progress >= 100) {
+                clearInterval(stepInterval);
+                
+                // 标记当前步骤为完成
+                updateStepIndicator(currentStep, 'completed');
+                
+                // 等待300毫秒后开始下一步
+                setTimeout(() => {
+                    currentStep++;
+                    updateNextStepHint();
+                    
+                    if (currentStep < totalSteps) {
+                        stepStartTime = Date.now();
+                        startCurrentStep();
+                    } else {
+                        completeAllSteps();
+                    }
+                }, 300);
+            }
+        }, updateInterval);
+    }
+    
+    // 完成所有步骤
+    function completeAllSteps() {
+        clearInterval(stepInterval);
+        
+        // 更新UI为完成状态
+        const currentTitle = document.getElementById('current-step-title');
+        const progressBar = document.getElementById('step-progress-bar');
+        const nextTitle = document.getElementById('next-step-title');
+        
+        if (currentTitle) {
+            currentTitle.textContent = '✓ 分析完成';
+            currentTitle.style.color = '#4CAF50';
+        }
+        
+        if (progressBar) {
+            progressBar.style.background = '#4CAF50';
+            progressBar.style.width = '100%';
+        }
+        
+        if (nextTitle) {
+            nextTitle.textContent = '正在生成报告...';
+            nextTitle.style.color = '#4CAF50';
+        }
+        
+        // 更新所有指示器为完成状态
+        for (let i = 0; i < totalSteps; i++) {
+            updateStepIndicator(i, 'completed');
+        }
+    }
+    
+    // 开始计时
+    let stepStartTime = Date.now();
+    
+    // 更新下一个项目提示
+    updateNextStepHint();
+    
+    // 开始第一个步骤
+    startCurrentStep();
+    
+    // 保存到全局，以便清理
+    window.simpleProgress = {
+        clear: () => clearInterval(stepInterval)
+    };
+}
+
+// 强制完成进度条（当分析结果提前返回时调用）
+function forceCompleteProgressBar() {
+    // 清理进度动画
+    if (window.simpleProgress) {
+        window.simpleProgress.clear();
+        delete window.simpleProgress;
+    }
+    
+    // 立即更新UI为完成状态
+    const currentTitle = document.getElementById('current-step-title');
+    const progressBar = document.getElementById('step-progress-bar');
+    const nextTitle = document.getElementById('next-step-title');
+    
+    if (currentTitle) {
+        currentTitle.textContent = '✓ 分析完成';
+        currentTitle.style.color = '#4CAF50';
+    }
+    
+    if (progressBar) {
+        progressBar.style.background = '#4CAF50';
+        progressBar.style.width = '100%';
+    }
+    
+    if (nextTitle) {
+        nextTitle.textContent = '正在显示报告...';
+        nextTitle.style.color = '#4CAF50';
+    }
+    
+    // 更新所有指示器为完成状态
+    const totalIndicators = document.querySelectorAll('.step-indicator').length;
+    for (let i = 0; i < totalIndicators; i++) {
+        const indicator = document.getElementById(`step-indicator-${i}`);
+        if (indicator) {
+            indicator.style.background = '#4CAF50';
+            indicator.style.boxShadow = 'none';
+            indicator.style.transform = 'scale(1)';
+        }
+    }
+    
+    // 等待500毫秒后自动关闭（给用户看到完成状态）
+    setTimeout(() => {
+        hideLoadingModal();
+    }, 500);
+}
+
+// 更新进度条
+function updateProgressBar(percentage) {
+    const progressFill = document.getElementById('progress-fill');
+    const progressPercentage = document.getElementById('progress-percentage');
+    
+    if (progressFill) {
+        progressFill.style.width = percentage + '%';
+    }
+    
+    if (progressPercentage) {
+        progressPercentage.textContent = percentage + '%';
+    }
+}
+
+// 隐藏加载弹窗（清理进度动画）
+function hideLoadingModal() {
     const loadingModal = UI.loadingModal();
     if (loadingModal) {
+        // 清理进度动画
+        if (window.simpleProgress) {
+            window.simpleProgress.clear();
+            delete window.simpleProgress;
+        }
+        
+        // 设置一个标记，防止重复调用
+        if (window.loadingModalHiding) return;
+        window.loadingModalHiding = true;
+        
+        // 立即隐藏（不需要等待，因为forceCompleteProgressBar已经给了延迟）
         hideElement(loadingModal);
         document.body.style.overflow = 'auto';
+        
+        // 清除标记
+        setTimeout(() => {
+            delete window.loadingModalHiding;
+        }, 100);
     }
 }
 
 // 显示分析结果区域
-export function showAnalysisResult() {
+function showAnalysisResult() {
     const analysisResultSection = UI.analysisResultSection();
     if (analysisResultSection) {
         showElement(analysisResultSection);
@@ -1155,7 +1711,7 @@ export function showAnalysisResult() {
 }
 
 // 隐藏分析结果区域
-export function hideAnalysisResult() {
+function hideAnalysisResult() {
     const analysisResultSection = UI.analysisResultSection();
     if (analysisResultSection) {
         hideElement(analysisResultSection);
@@ -1163,14 +1719,14 @@ export function hideAnalysisResult() {
 }
 
 // 重置表单错误状态
-export function resetFormErrors() {
+function resetFormErrors() {
     DOM.getAll('.error').forEach(error => {
         error.style.display = 'none';
     });
 }
 
 // 验证表单
-export function validateForm() {
+function validateForm() {
     console.log('验证表单...');
     let isValid = true;
     
@@ -1198,8 +1754,9 @@ export function validateForm() {
     if (!validateField('birth-year', 'birth-year-error')) isValid = false;
     if (!validateField('birth-month', 'birth-month-error')) isValid = false;
     if (!validateField('birth-day', 'birth-day-error')) isValid = false;
-    // 出生时辰和出生分钟改为非必填字段，不再验证
-    // 出生城市改为非必填字段，不再验证
+    if (!validateField('birth-hour', 'birth-hour-error')) isValid = false;
+    if (!validateField('birth-minute', 'birth-minute-error')) isValid = false;
+    if (!validateField('birth-city', 'birth-city-error')) isValid = false;
     
     // 如果是八字合婚，验证伴侣信息
     if (STATE.currentService === '八字合婚') {
@@ -1217,7 +1774,7 @@ export function validateForm() {
 }
 
 // 收集用户数据
-export function collectUserData() {
+function collectUserData() {
     STATE.userData = {
         name: UI.name().value,
         gender: UI.gender().value === 'male' ? '男' : '女',
@@ -1244,14 +1801,34 @@ export function collectUserData() {
     }
 }
 
-// ============ 【兼容性处理】 ============
+// ============ 【统一导出】 ============
+export {
+    UI,
+    initFormOptions,
+    setDefaultValues,
+    updateServiceDisplay,
+    updateUnlockInfo,
+    displayPredictorInfo,
+    displayBaziPan,
+    displayDayunPan,
+    processAndDisplayAnalysis,
+    showFullAnalysisContent,
+    showPaymentModal,
+    closePaymentModal,
+    updateUnlockInterface,
+    lockDownloadButton,
+    unlockDownloadButton,
+    resetUnlockInterface,
+    animateButtonStretch,
+    showLoadingModal,
+    hideLoadingModal,
+    showAnalysisResult,
+    hideAnalysisResult,
+    validateForm,
+    collectUserData,
+    resetFormErrors
+};
 
-// 空函数，用于兼容旧的 main.js 调用
-export function displayDayunPan() {
-    console.log('displayDayunPan: 大运排盘已合并到 displayBaziPan 中，无需单独调用');
-    // 不执行任何操作，因为大运已经在八字排盘中显示
-    return;
-}
 
 
 
