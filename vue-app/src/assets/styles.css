@@ -1,0 +1,385 @@
+/* 全局样式 - 从 sdev2 迁移 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
+}
+
+:root {
+  --primary-color: #8b4513;
+  --secondary-color: #d4af37;
+  --accent-color: #5c3d2e;
+  --dark-color: #3a2c1e;
+  --light-color: #f5f1e8;
+  --text-color: #333;
+  --border-color: #ddd;
+  --error-color: #dc3545;
+  --success-color: #28a745;
+}
+
+body {
+  background-color: var(--light-color);
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+/* 容器样式 */
+.seamless-container {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* 八字排盘样式 */
+.bazi-calendar {
+  background: linear-gradient(135deg, #fff9f0, #fff5e6);
+  border-radius: 12px;
+  border: 2px solid #e8d4b9;
+  padding: 30px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+}
+
+.calendar-header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.calendar-header h4 {
+  color: var(--primary-color);
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.calendar-header p {
+  font-size: 14px;
+  color: #7d6e63;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+}
+
+.calendar-item {
+  background: white;
+  border-radius: 10px;
+  padding: 20px 15px;
+  text-align: center;
+  border: 2px solid #f0e6d2;
+  transition: all 0.3s;
+}
+
+.calendar-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  border-color: var(--secondary-color);
+}
+
+.calendar-label {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.calendar-value {
+  font-family: 'SimSun', '宋体', serif;
+  font-size: 32px;
+  font-weight: bold;
+  color: var(--primary-color);
+  margin-bottom: 8px;
+  height: 40px;
+  line-height: 40px;
+}
+
+.calendar-element {
+  font-size: 16px;
+  color: #666;
+  font-style: italic;
+}
+
+.calendar-note {
+  font-size: 13px;
+  color: #999;
+  font-style: italic;
+}
+
+/* 大运排盘表格样式 */
+.dayun-calendar {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+  padding: 25px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+
+.dayun-table-container {
+  overflow-x: auto;
+  margin: 20px 0;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 10px;
+  background: #f9f9f9;
+}
+
+.dayun-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'SimSun', '宋体', serif;
+  font-size: 16px;
+  text-align: center;
+  min-width: 500px;
+}
+
+.dayun-table th {
+  background: linear-gradient(135deg, #f0f8ff, #e6f2ff);
+  color: #3a7bd5;
+  font-weight: bold;
+  font-size: 16px;
+  padding: 15px 10px;
+  border: 1px solid #d1e9ff;
+}
+
+.dayun-table td {
+  padding: 12px 10px;
+  border: 1px solid #e0e0e0;
+  min-width: 60px;
+  background: white;
+  transition: all 0.2s;
+}
+
+.dayun-table td:first-child {
+  background: linear-gradient(135deg, #f9f5f0, #f0e6d6);
+  font-weight: bold;
+  color: #8b4513;
+  border-color: #e8d4b9;
+}
+
+.dayun-table tbody tr:hover td {
+  background-color: #f0f8ff;
+  transform: scale(1.02);
+}
+
+/* 并列显示容器 */
+.parallel-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  margin-bottom: 30px;
+}
+
+.bazi-column,
+.dayun-column {
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 25px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.bazi-column:hover,
+.dayun-column:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  border-color: #d4af37;
+}
+
+/* 报告样式 - 与 sdev2 保持一致 */
+.report-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #8b4513;
+  margin-bottom: 20px;
+  padding: 10px 20px;
+  font-family: 'SimSun', '宋体', serif;
+  line-height: 1.4;
+  text-align: left;
+  background: linear-gradient(135deg, #f9f5f0, #f0e6d6);
+  border-left: 4px solid #8b4513;
+  border-radius: 0 8px 8px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.report-title::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(139, 69, 19, 0.05) 10px,
+    rgba(139, 69, 19, 0.05) 20px
+  );
+  z-index: 0;
+}
+
+.report-title span {
+  position: relative;
+  z-index: 1;
+}
+
+.report-content {
+  font-size: 16px;
+  color: #333;
+  line-height: 1.8;
+  text-align: justify;
+  font-family: 'SimSun', '宋体', serif;
+  padding: 0 20px;
+}
+
+.report-paragraph {
+  margin-bottom: 15px;
+  text-indent: 2em;
+}
+
+/* 喜忌神样式 */
+.xiji-element {
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin: 0 2px;
+}
+
+.xiji-xi {
+  background: linear-gradient(135deg, #e8f5e8, #d4f1d4);
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}
+
+.xiji-yong {
+  background: linear-gradient(135deg, #e8f4fd, #d4e9fa);
+  color: #1565c0;
+  border: 1px solid #bbdefb;
+}
+
+.xiji-ji {
+  background: linear-gradient(135deg, #ffeaea, #ffd4d4);
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+}
+
+.xiji-xiyong {
+  background: linear-gradient(135deg, #e8f4f8, #d4eaf2);
+  color: #20B2AA;
+  border: 1px solid #b2ebf2;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  /* 八字日历优化 */
+  .calendar-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+  
+  .calendar-item {
+    padding: 18px 12px !important;
+  }
+  
+  .calendar-value {
+    font-size: 26px !important;
+    height: 36px !important;
+    line-height: 36px !important;
+  }
+  
+  .calendar-label {
+    font-size: 15px !important;
+    margin-bottom: 10px !important;
+  }
+  
+  .calendar-element {
+    font-size: 15px !important;
+  }
+  
+  /* 大运表格优化 */
+  .parallel-container {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+  
+  .dayun-table {
+    font-size: 15px !important;
+    min-width: 100% !important;
+  }
+  
+  .dayun-table th {
+    font-size: 15px !important;
+    padding: 12px 8px !important;
+  }
+  
+  .dayun-table td {
+    font-size: 15px !important;
+    padding: 10px 8px !important;
+    min-width: 55px !important;
+  }
+  
+  .bazi-column,
+  .dayun-column {
+    padding: 20px 18px !important;
+  }
+  
+  /* 报告样式 */
+  .report-title {
+    font-size: 19px !important;
+    padding: 14px 20px !important;
+  }
+  
+  .report-content {
+    font-size: 17px !important;
+    line-height: 1.8 !important;
+    padding: 15px 20px !important;
+  }
+  
+  .report-paragraph {
+    margin-bottom: 18px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .calendar-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  
+  .calendar-value {
+    font-size: 24px !important;
+  }
+  
+  .calendar-item {
+    padding: 16px 10px !important;
+  }
+  
+  .dayun-table {
+    font-size: 14px !important;
+  }
+  
+  .dayun-table th,
+  .dayun-table td {
+    padding: 8px 6px !important;
+    min-width: 45px !important;
+  }
+  
+  .report-title {
+    font-size: 17px !important;
+    padding: 12px 18px !important;
+  }
+  
+  .report-content {
+    font-size: 16px !important;
+    line-height: 1.7 !important;
+    padding: 12px 18px !important;
+  }
+  
+  .report-paragraph {
+    margin-bottom: 15px !important;
+  }
+}
