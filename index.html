@@ -3,14 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 新增 Meta Description -->
-    <meta name="description" content="润藏八字提供专业的八字算命、八字排盘、命理分析服务，包括流年运程、人生详批、八字合婚等。免费测算验证，基于传统命理学说为您提供精准分析报告。">
+    <meta name="description" content="润藏八字提供八字排盘、命理分析娱乐参考，含流年运程、人生详批、八字合婚等。免费试读片段，解锁可看完整报告。">
+    <meta name="theme-color" content="#8b4513">
+    <link rel="canonical" href="https://xudq789.runzang.top/">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://xudq789.runzang.top/">
+    <meta property="og:title" content="润藏八字 · 命理分析娱乐参考">
+    <meta property="og:description" content="八字排盘、流年运程、人生详批、八字合婚。免费试读，理性看待，仅供娱乐参考。">
+    <meta property="og:image" content="https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/1-1.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="润藏八字 · 命理分析娱乐参考">
+    <meta name="twitter:description" content="八字排盘与流年分析，仅供娱乐参考。">
     <title>润藏八字、八字算命、八字排盘、八字命理、命理分析服务平台</title>
+    <link rel="preconnect" href="https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com" crossorigin>
+    <link rel="dns-prefetch" href="https://runzang.top">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="manifest" href="manifest.json">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+      {"@type":"Question","name":"测算结果能当作人生决策依据吗？","acceptedAnswer":{"@type":"Answer","text":"不能。本站内容为传统文化视角的娱乐参考，请理性对待，重大决策请咨询专业人士。"}},
+      {"@type":"Question","name":"支付后看不到完整报告怎么办？","acceptedAnswer":{"@type":"Answer","text":"请先在新开页面完成支付宝或微信支付，回到本页后点击「我已支付」同步状态。仍异常请凭订单号联系客服微信 runzang888。"}},
+      {"@type":"Question","name":"出生时辰不确定怎么办？","acceptedAnswer":{"@type":"Answer","text":"时辰对排盘有影响。若出生在两个时辰交界处，建议以医院记录或家人记忆为准，必要时可前后各测一次对比表述。"}},
+      {"@type":"Question","name":"历史报告保存在哪里？","acceptedAnswer":{"@type":"Answer","text":"已支付订单可在导航「历史记录」中查看；报告亦与订单号绑定，可通过分享链接再次打开。"}}
+    ]}
+    </script>
 </head>
 <body>
-    <!-- 新增 H1 标题（隐藏显示，仅用于SEO） -->
-    <h1 style="display: none;">润藏八字命理分析平台</h1>
+    <a href="#main-content" class="skip-link">跳到主要内容</a>
+    <h1 class="visually-hidden">润藏八字命理分析平台</h1>
     <!-- 免责声明滚动条 -->
     <div class="disclaimer-bar">
         <div class="disclaimer-wrapper">
@@ -31,12 +52,17 @@
         </ul>
     </header>
 
+    <main id="main-content" tabindex="-1">
+    <section class="daily-insight" aria-label="今日国学小语">
+        <p class="daily-insight-inner"><span class="daily-insight-label" aria-hidden="true">今日锦囊</span><span id="daily-insight-text"></span></p>
+    </section>
+
     <!-- 无缝长图容器 -->
     <div class="seamless-container">
         <!-- 英雄图部分 -->
         <section class="seamless-section hero-section">
             <div class="image-placeholder">正在加载图片...</div>
-            <img id="hero-image" src="https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/1-1.jpg" alt="测算验证英雄区" class="hero-image">
+            <img id="hero-image" src="https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/1-1.jpg" alt="测算验证英雄区" class="hero-image" fetchpriority="high" decoding="async" width="1200" height="800">
         </section>
 
         <!-- 信息填写区域 -->
@@ -192,7 +218,7 @@
         <!-- 明细图部分 -->
         <section class="seamless-section detail-section">
             <div class="image-placeholder">正在加载图片...</div>
-            <img id="detail-image" src="https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/1-2.jpg" alt="测算验证服务明细" class="detail-image">
+            <img id="detail-image" src="https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/1-2.jpg" alt="测算验证服务明细" class="detail-image" loading="lazy" decoding="async" width="1200" height="2400">
         </section>
     </div>
 
@@ -320,6 +346,32 @@
         </div>
     </section>
 
+    <section class="faq-compact" aria-labelledby="faq-heading">
+        <h2 id="faq-heading" class="faq-compact-title">常见问题</h2>
+        <details>
+            <summary>测算结果能当作人生决策依据吗？</summary>
+            <p>不能。本站内容为传统文化视角的娱乐参考，请理性对待，重大决策请咨询专业人士。</p>
+        </details>
+        <details>
+            <summary>支付后看不到完整报告怎么办？</summary>
+            <p>请先在新开页面完成支付宝或微信支付，回到本页后点击「我已支付」同步状态。仍异常请凭订单号联系客服微信 runzang888。</p>
+        </details>
+        <details>
+            <summary>出生时辰不确定怎么办？</summary>
+            <p>时辰对排盘有影响。若出生在两个时辰交界处，建议以医院记录或家人记忆为准，必要时可前后各测一次对比表述。</p>
+        </details>
+        <details>
+            <summary>历史报告保存在哪里？</summary>
+            <p>已支付订单可在导航「历史记录」中查看；报告亦与订单号绑定，可通过分享链接再次打开（以页面说明为准）。</p>
+        </details>
+    </section>
+
+    </main>
+
+    <div id="mobile-sticky-cta" class="mobile-sticky-cta" hidden>
+        <button type="button" id="mobile-sticky-cta-btn" class="mobile-sticky-cta-btn">开始测算</button>
+    </div>
+
     <!-- 支付弹窗 -->
 <div id="payment-modal" class="modal">
     <div class="modal-content">
@@ -332,7 +384,7 @@
             <p><strong>服务项目:</strong> <span id="payment-service-type" style="color: var(--primary-color); font-weight: 600;"></span></p>
             <p><strong>支付金额:</strong> <span id="payment-amount" style="color: var(--secondary-color); font-weight: bold; font-size: 16px;"></span></p>
             <p><strong>订单编号:</strong> <span id="payment-order-id" style="color: #7d6e63; font-family: monospace;"></span></p>
-            <p><strong>支付方式:</strong> <span style="color: #1677FF; font-weight: 600;">支付宝安全支付</span></p>
+            <p><strong>支付方式:</strong> <span id="payment-method-display" style="color: #7d6e63; font-weight: 600;">请选择</span></p>
         </div>
         
         <!-- 支付方式选择将动态生成 -->

@@ -8,8 +8,44 @@ import { UI } from './ui-elements.js';
 import { STATE, PAYMENT_CONFIG, SERVICES } from './config.js';
 import { PaymentStorage, AnalysisStorage } from './storage.js';
 
-// 显示支付弹窗 - 支持支付宝和微信支付
-export async function showPaymentModal() {
+/** 用户关闭弹窗时，结束「等待选择支付方式」的 Promise */
+let pendingPaymentMethodResolve = null;
+
+function setPaymentMethodDisplayLabel(method) {
+    const el = document.getElementById('payment-method-display');
+    if (!el) return;
+    if (method === 'alipay') {
+        el.textContent = '支付宝';
+        el.style.color = '#1677FF';
+    } else if (method === 'wechatpay') {
+        el.textContent = '微信支付';
+        el.style.color = '#07C160';
+    } else {
+        el.textContent = '请选择';
+        el.style.color = '#7d6e63';
+    }
+}
+
+function persistBeforeRedirect(paymentData) {
+    const aiOrderId = STATE.lastAiOrderId;
+    try {
+        PaymentStorage.setPaymentData({
+            orderId: paymentData.outTradeNo,
+            aiOrderId: aiOrderId,
+            serviceType: STATE.currentService,
+            timestamp: new Date().toISOString()
+        });
+    } catch (e) {}
+    STATE.lastAiOrderId = paymentData.outTradeNo;
+    saveAnalysisData();
+}
+
+// 显示支付弹窗 - 支持支付宝和微信支付（用户主动选择）
+export function showPaymentModal() {
+    void runPaymentModalAsync();
+}
+
+async function runPaymentModalAsync() {
     console.log('调用支付接口...');
 
     // 检查完整分析是否已完成
@@ -34,18 +70,28 @@ export async function showPaymentModal() {
             // 先显示基本信息
             UI.paymentServiceType().textContent = STATE.currentService;
             UI.paymentAmount().textContent = '¥' + serviceConfig.price;
-            UI.paymentOrderId().textContent = '生成中...';
+            UI.paymentOrderId().textContent = '请选择支付方式…';
+            setPaymentMethodDisplayLabel(null);
         }
         
-        // 2. 显示支付方式选择
+        // 2. 用户选择支付宝 / 微信
         const selectedMethod = await showPaymentMethodSelection();
         if (!selectedMethod) {
             closePaymentModal();
             return;
         }
+
+        if (!STATE.lastAiOrderId) {
+            alert('未找到测算订单号，请等待测算完成后再支付，否则无法到账。');
+            closePaymentModal();
+            return;
+        }
+
+        setPaymentMethodDisplayLabel(selectedMethod);
+        UI.paymentOrderId().textContent = '生成中...';
         
-        // 3. 调用后端支付接口
-        const frontendOrderId = STATE.lastAiOrderId || ('RUNZ-FRONT-' + Date.now() + '-' + Math.floor(Math.random() * 10000));
+        // 3. 调用后端支付接口（订单号必须与 AI 订单一致，支付宝/微信回调才能匹配数据库）
+        const frontendOrderId = STATE.lastAiOrderId;
 
         const createUrl = `${PAYMENT_CONFIG.GATEWAY_URL}/api/payment/create`;
         console.log('🔗 调用支付API:', createUrl);
@@ -106,84 +152,68 @@ export async function showPaymentModal() {
     }
 }
 
-// 支付方式选择弹窗
+async function fetchPaymentConfig() {
+    try {
+        const url = `${PAYMENT_CONFIG.GATEWAY_URL}/api/payment/config`;
+        const res = await fetch(url, {
+            headers: { 'X-API-Key': 'runzang-payment-security-key-2025-1234567890' }
+        });
+        const json = await res.json().catch(() => ({}));
+        if (json.success && json.data) return json.data;
+    } catch (e) {
+        console.warn('获取支付配置失败，将展示全部方式', e);
+    }
+    return { alipay: { enabled: true }, wechatpay: { enabled: true } };
+}
+
+// 支付方式选择：支付宝 / 微信（关闭弹窗或取消时 resolve null，见 closePaymentModal）
 function showPaymentMethodSelection() {
     return new Promise((resolve) => {
-        // 直接根据设备类型决定支付方式
-        const userAgent = navigator.userAgent.toLowerCase();
-        const isMobile = /mobile|iphone|android/i.test(userAgent);
-        
-        // 规则：电脑端用微信native，手机端用支付宝H5
-        const selectedMethod = isMobile ? 'alipay' : 'wechatpay';
-        
-        console.log('设备检测:', {
-            userAgent: userAgent.substring(0, 100),
-            isMobile: isMobile,
-            selectedMethod: selectedMethod
-        });
-        
-        // 显示支付方式提示
+        pendingPaymentMethodResolve = resolve;
+
         const paymentMethods = document.querySelector('.payment-methods');
-        if (paymentMethods) {
-            const paymentHint = isMobile ? 
-                '📱 检测到移动设备，将使用支付宝H5支付' :
-                '💻 检测到电脑设备，将使用微信扫码支付';
-            
-            paymentMethods.innerHTML = `
-                <div class="payment-auto-selection">
-                <div class="device-detect-result">
-                    <div class="device-icon">${isMobile ? '📱' : '💻'}</div>
-                    <div class="device-info">
-                    <div class="device-type">${isMobile ? '移动设备' : '电脑设备'}</div>
-                    <div class="payment-method">${isMobile ? '支付宝H5支付' : '微信扫码支付'}</div>
-                    </div>
-                </div>
-                <p style="text-align: center; color: #666; margin-top: 15px; font-size: 14px;">
-                    ${paymentHint}
-                </p>
-                </div>
-            `;
-            
-            // 添加样式
-            const style = document.createElement('style');
-            style.textContent = `
-                .payment-auto-selection {
-                padding: 20px;
-                text-align: center;
-                }
-                .device-detect-result {
-                display: inline-flex;
-                align-items: center;
-                background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-                padding: 20px 30px;
-                border-radius: 15px;
-                margin: 10px 0;
-                border: 2px solid ${isMobile ? '#1677FF' : '#07C160'};
-                }
-                .device-icon {
-                font-size: 40px;
-                margin-right: 20px;
-                }
-                .device-info {
-                text-align: left;
-                }
-                .device-type {
-                font-size: 16px;
-                font-weight: bold;
-                color: #333;
-                margin-bottom: 5px;
-                }
-                .payment-method {
-                font-size: 18px;
-                font-weight: bold;
-                color: ${isMobile ? '#1677FF' : '#07C160'};
-                }
-            `;
-            document.head.appendChild(style);
+        if (!paymentMethods) {
+            pendingPaymentMethodResolve = null;
+            resolve(null);
+            return;
         }
-        
-        // 直接返回检测结果
-        setTimeout(() => resolve(selectedMethod), 300);
+
+        const finish = (method) => {
+            if (pendingPaymentMethodResolve) {
+                pendingPaymentMethodResolve = null;
+                resolve(method);
+            }
+        };
+
+        paymentMethods.innerHTML = '<p class="payment-method-loading" style="color:#7d6e63;">加载支付方式…</p>';
+
+        fetchPaymentConfig().then((cfg) => {
+            const alipayOn = cfg.alipay && cfg.alipay.enabled !== false;
+            const wxOn = cfg.wechatpay && cfg.wechatpay.enabled !== false;
+            if (!alipayOn && !wxOn) {
+                paymentMethods.innerHTML = '<p style="color:#c00;">暂无可用的支付方式，请稍后再试。</p>';
+                finish(null);
+                return;
+            }
+            paymentMethods.innerHTML = `
+                <p style="color:#333;font-size:15px;margin-bottom:14px;font-weight:600;">请选择支付方式</p>
+                <div class="payment-method-pick" style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+                    ${alipayOn ? `
+                    <button type="button" class="dynamic-pulse-btn pay-pick-alipay" style="min-width:140px;padding:14px 22px;font-size:15px;background:linear-gradient(135deg,#1677FF,#4096ff);color:#fff;border:none;border-radius:12px;cursor:pointer;font-weight:bold;">
+                        支付宝支付
+                    </button>` : ''}
+                    ${wxOn ? `
+                    <button type="button" class="dynamic-pulse-btn pay-pick-wechat" style="min-width:140px;padding:14px 22px;font-size:15px;background:linear-gradient(135deg,#09BB07,#2DC100);color:#fff;border:none;border-radius:12px;cursor:pointer;font-weight:bold;">
+                        微信支付
+                    </button>` : ''}
+                </div>
+                <p style="color:#888;font-size:13px;margin-top:12px;">电脑端微信一般为扫码；手机端微信将跳转支付页</p>
+            `;
+            const bAli = paymentMethods.querySelector('.pay-pick-alipay');
+            const bWx = paymentMethods.querySelector('.pay-pick-wechat');
+            if (bAli) bAli.onclick = () => finish('alipay');
+            if (bWx) bWx.onclick = () => finish('wechatpay');
+        });
     });
 }
 
@@ -204,20 +234,30 @@ function displayPaymentInterface(paymentData, method) {
     // 更新支付状态文本
     const statusText = document.getElementById('payment-status-text');
     if (statusText) {
-        statusText.textContent = method === 'alipay' ? 
-            '请在新打开的支付宝页面完成支付' : 
-            '请使用微信扫码完成支付';
+        const isWxH5 = method === 'wechatpay' && paymentData.paymentType === 'h5';
+        if (method === 'alipay') {
+            statusText.textContent = '点击下方按钮将在新标签页打开支付宝，支付完成后请回到本页点击「我已支付」';
+        } else if (isWxH5) {
+            statusText.textContent = '点击下方按钮将在新标签页打开微信收银台，支付完成后请回到本页点击「我已支付」';
+        } else {
+            statusText.textContent = '请使用微信扫码完成支付';
+        }
     }
     
     if (method === 'alipay') {
-        // 支付宝支付 - 跳转按钮
-        const payBtn = document.createElement('button');
-        payBtn.id = 'alipay-redirect-btn';
-        payBtn.className = 'dynamic-pulse-btn';
-        payBtn.style.cssText = `
+        // 使用 <a target="_blank">，避免移动端拦截 window.open 导致当前页跳转、丢失弹窗
+        const payLink = document.createElement('a');
+        payLink.id = 'alipay-redirect-btn';
+        payLink.href = paymentData.paymentUrl || '#';
+        payLink.target = '_blank';
+        payLink.rel = 'noopener noreferrer';
+        payLink.className = 'dynamic-pulse-btn';
+        payLink.style.cssText = `
             margin: 20px auto;
             display: block;
             max-width: 250px;
+            text-align: center;
+            text-decoration: none;
             background: linear-gradient(135deg, #1677FF, #4096ff);
             color: white;
             border: none;
@@ -227,30 +267,16 @@ function displayPaymentInterface(paymentData, method) {
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
+            box-sizing: border-box;
         `;
-        payBtn.innerHTML = `
+        payLink.innerHTML = `
             <span style="display: flex; align-items: center; justify-content: center;">
                 <span style="margin-right: 8px;">💰</span>
                 前往支付宝支付
             </span>
         `;
-        
-        payBtn.onclick = () => {
-            const aiOrderId = STATE.lastAiOrderId;
-            try {
-                PaymentStorage.setPaymentData({
-                    orderId: paymentData.outTradeNo,
-                    aiOrderId: aiOrderId,
-                    serviceType: STATE.currentService,
-                    timestamp: new Date().toISOString()
-                });
-            } catch (e) {}
-            STATE.lastAiOrderId = paymentData.outTradeNo;
-            saveAnalysisData();
-            window.open(paymentData.paymentUrl, '_blank');
-        };
-        
-        paymentMethods.appendChild(payBtn);
+        payLink.addEventListener('click', () => persistBeforeRedirect(paymentData));
+        paymentMethods.appendChild(payLink);
         
     } else if (method === 'wechatpay') {
         // 微信支付 - 显示二维码
@@ -285,14 +311,18 @@ function displayPaymentInterface(paymentData, method) {
             
             paymentMethods.appendChild(qrContainer);
         } else if (paymentData.paymentUrl) {
-            // 如果有支付链接，显示跳转按钮（备用）
-            const payBtn = document.createElement('button');
-            payBtn.id = 'wechat-redirect-btn';
-            payBtn.className = 'dynamic-pulse-btn';
-            payBtn.style.cssText = `
+            const payLink = document.createElement('a');
+            payLink.id = 'wechat-redirect-btn';
+            payLink.href = paymentData.paymentUrl;
+            payLink.target = '_blank';
+            payLink.rel = 'noopener noreferrer';
+            payLink.className = 'dynamic-pulse-btn';
+            payLink.style.cssText = `
                 margin: 20px auto;
                 display: block;
                 max-width: 250px;
+                text-align: center;
+                text-decoration: none;
                 background: linear-gradient(135deg, #09BB07, #2DC100);
                 color: white;
                 border: none;
@@ -302,30 +332,16 @@ function displayPaymentInterface(paymentData, method) {
                 font-weight: bold;
                 cursor: pointer;
                 transition: all 0.3s;
+                box-sizing: border-box;
             `;
-            payBtn.innerHTML = `
+            payLink.innerHTML = `
                 <span style="display: flex; align-items: center; justify-content: center;">
                     <span style="margin-right: 8px;">💳</span>
                     前往微信支付
                 </span>
             `;
-            
-            payBtn.onclick = () => {
-                const aiOrderId = STATE.lastAiOrderId;
-                try {
-                    PaymentStorage.setPaymentData({
-                        orderId: paymentData.outTradeNo,
-                        aiOrderId: aiOrderId,
-                        serviceType: STATE.currentService,
-                        timestamp: new Date().toISOString()
-                    });
-                } catch (e) {}
-                STATE.lastAiOrderId = paymentData.outTradeNo;
-                saveAnalysisData();
-                window.open(paymentData.paymentUrl, '_blank');
-            };
-            
-            paymentMethods.appendChild(payBtn);
+            payLink.addEventListener('click', () => persistBeforeRedirect(paymentData));
+            paymentMethods.appendChild(payLink);
         }
     }
 }
@@ -357,6 +373,11 @@ function saveAnalysisData() {
 
 // 关闭支付弹窗
 export function closePaymentModal() {
+    if (pendingPaymentMethodResolve) {
+        const r = pendingPaymentMethodResolve;
+        pendingPaymentMethodResolve = null;
+        r(null);
+    }
     const paymentModal = UI.paymentModal();
     if (paymentModal) {
         hideElement(paymentModal);

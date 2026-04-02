@@ -1,0 +1,11 @@
+{
+  "name": "润藏八字 · 命理分析娱乐参考",
+  "short_name": "润藏八字",
+  "description": "八字排盘、流年运程、人生详批、八字合婚，仅供娱乐参考。",
+  "start_url": "/",
+  "scope": "/",
+  "display": "browser",
+  "background_color": "#f5f1e8",
+  "theme_color": "#8b4513",
+  "lang": "zh-CN"
+}

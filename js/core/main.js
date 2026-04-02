@@ -267,6 +267,7 @@ import {
     validateForm,
     collectUserData
 } from './ui.js';
+import { initPageEnhancements } from './ui-enhancements.js';
 
 const SERVICE_NAMES = ['测算验证', '流年运程', '人生详批', '八字合婚'];
 
@@ -315,7 +316,7 @@ function handlePaymentSuccess() {
 }
 
 function confirmPayment() {
-    const confirmed = confirm('如果您已完成支付宝支付，请点击"确定"解锁内容。\n如支付遇到问题，请联系客服微信：runzang888');
+    const confirmed = confirm('如果您已在支付宝或微信中完成支付，请点击「确定」由系统核对订单并解锁内容。\n如支付遇到问题，请联系客服微信：runzang888');
     
     if (confirmed) {
         console.log('检查支付状态，订单:', STATE.lastAiOrderId);
@@ -410,12 +411,12 @@ async function initApp() {
         setupEventListeners();
         preloadImages();
         applyHashView();
+        initPageEnhancements();
         
         // ✅ 优先检查URL中是否有订单号参数（分享链接访问）
         const orderLoaded = await checkAndLoadOrderFromURL();
         if (orderLoaded) {
             console.log('✅ 已从URL加载订单详情');
-            // 如果成功加载了订单，跳过其他初始化
             return;
         }
         
