@@ -2,6 +2,11 @@
 import { RunzangStorage, PaymentStorage } from './storage.js';
 import { createPaymentManager, isCurrentOrderPaid, applyStatusContent } from './payment.js';
 import { createHistoryManager, getLastSelectedService, setLastSelectedService } from './history.js';
+import { initFeedbackForm, showFeedbackModal } from './ui-feedback.js';
+import { API_KEY } from './api.js';
+
+// 将API_KEY暴露到window供其他模块使用
+window.API_KEY = API_KEY;
 
 // ============ 【创建支付管理器实例】 ============
 // PaymentManager 和 HistoryManager 将在导入 UI 函数后创建（避免循环依赖）
@@ -396,11 +401,11 @@ function confirmPayment() {
 // ============ 【主要应用函数】 ============
 async function initApp() {
     console.log('🚀 应用初始化开始...');
-    
+
     try {
         initFormOptions();
         setDefaultValues();
-        
+
         // 刷新后不恢复订单详情，只展示上次选中的 tab（变量失效）
         RunzangStorage.clearCurrentOrder();
         const serviceToShow = getLastSelectedService(SERVICES);
@@ -412,6 +417,8 @@ async function initApp() {
         preloadImages();
         applyHashView();
         initPageEnhancements();
+        initTheme();
+        initFeedbackForm();
         
         // ✅ 优先检查URL中是否有订单号参数（分享链接访问）
         const orderLoaded = await checkAndLoadOrderFromURL();
@@ -501,6 +508,12 @@ function setupEventListeners() {
     UI.confirmPaymentBtn().addEventListener('click', confirmPayment);
     UI.cancelPaymentBtn().addEventListener('click', closePaymentModal);
     UI.closePaymentBtn().addEventListener('click', closePaymentModal);
+
+    // 反馈按钮事件
+    const feedbackBtn = document.getElementById('feedback-btn');
+    if (feedbackBtn) {
+        feedbackBtn.addEventListener('click', showFeedbackModal);
+    }
     
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
@@ -532,6 +545,43 @@ function setupEventListeners() {
             const placeholder = this.previousElementSibling;
             if (placeholder) placeholder.style.display = 'none';
         });
+    }
+
+    // 主题切换按钮事件
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', toggleTheme);
+    }
+}
+
+// ============ 【主题切换功能】 ============
+function initTheme() {
+    // 从localStorage读取保存的主题
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.body.classList.add('dark-theme');
+        updateThemeIcon(true);
+    } else if (savedTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+        updateThemeIcon(true);
+    } else {
+        updateThemeIcon(false);
+    }
+}
+
+function toggleTheme() {
+    const isDark = document.body.classList.toggle('dark-theme');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    updateThemeIcon(isDark);
+    console.log(isDark ? '🌙 深色模式已启用' : '☀️ 浅色模式已启用');
+}
+
+function updateThemeIcon(isDark) {
+    const themeIcon = document.getElementById('theme-icon');
+    if (themeIcon) {
+        themeIcon.textContent = isDark ? '☀️' : '🌙';
     }
 }
 

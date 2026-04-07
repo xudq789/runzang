@@ -69,18 +69,24 @@ export function lockDownloadButton() {
 export function unlockDownloadButton() {
     const downloadBtn = UI.downloadReportBtn();
     const downloadBtnText = DOM.id('download-btn-text');
-    
+
     if (downloadBtn && downloadBtnText) {
         console.log('🔓 开始解锁下载按钮...');
         downloadBtn.disabled = false;
         downloadBtn.classList.remove('download-btn-locked');
         downloadBtnText.textContent = '下载报告';
         STATE.isDownloadLocked = false;
-        
+
         // 添加视觉反馈
         downloadBtn.style.background = 'linear-gradient(135deg, var(--primary-color), #3a7bd5)';
         downloadBtn.style.boxShadow = '0 4px 15px rgba(58, 123, 213, 0.4)';
-        
+
+        // 显示反馈按钮
+        const feedbackBtn = DOM.id('feedback-btn');
+        if (feedbackBtn) {
+            feedbackBtn.style.display = 'inline-block';
+        }
+
         console.log('✅ 下载按钮已解锁');
     } else {
         console.error('❌ 找不到下载按钮元素');
@@ -125,16 +131,22 @@ export function resetUnlockInterface() {
     if (unlockBtnContainer) {
         const unlockBtn = unlockBtnContainer.querySelector('.unlock-btn');
         const unlockPrice = unlockBtnContainer.querySelector('.unlock-price');
-        
+
         const serviceConfig = SERVICES[STATE.currentService];
         if (serviceConfig && unlockBtn && unlockPrice) {
             unlockBtn.innerHTML = `解锁完整报告 (¥<span id="unlock-price">${serviceConfig.price}</span>)`;
             unlockBtn.style.background = 'linear-gradient(135deg, var(--secondary-color), #e6b800)';
             unlockBtn.style.cursor = 'pointer';
             unlockBtn.disabled = false;
-            
+
             const itemCount = serviceConfig.lockedItems.length;
             unlockPrice.innerHTML = `共包含 <span id="unlock-count">${itemCount}</span> 项详细分析`;
         }
+    }
+
+    // 隐藏反馈按钮
+    const feedbackBtn = DOM.id('feedback-btn');
+    if (feedbackBtn) {
+        feedbackBtn.style.display = 'none';
     }
 }

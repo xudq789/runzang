@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="index, follow">
     <meta name="description" content="润藏八字提供八字排盘、命理分析娱乐参考，含流年运程、人生详批、八字合婚等。免费试读片段，解锁可看完整报告。">
+    <meta name="keywords" content="八字算命,八字排盘,命理分析,流年运程,人生详批,八字合婚,八字喜用,大运排盘,命理学,娱乐算命">
+    <meta name="author" content="润藏八字">
     <meta name="theme-color" content="#8b4513">
     <link rel="canonical" href="https://xudq789.runzang.top/">
     <meta property="og:type" content="website">
@@ -12,14 +15,82 @@
     <meta property="og:title" content="润藏八字 · 命理分析娱乐参考">
     <meta property="og:description" content="八字排盘、流年运程、人生详批、八字合婚。免费试读，理性看待，仅供娱乐参考。">
     <meta property="og:image" content="https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/1-1.jpg">
+    <meta property="og:site_name" content="润藏八字">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="润藏八字 · 命理分析娱乐参考">
     <meta name="twitter:description" content="八字排盘与流年分析，仅供娱乐参考。">
+    <meta name="twitter:image" content="https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/1-1.jpg">
     <title>润藏八字、八字算命、八字排盘、八字命理、命理分析服务平台</title>
     <link rel="preconnect" href="https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com" crossorigin>
     <link rel="dns-prefetch" href="https://runzang.top">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="manifest" href="manifest.json">
+    <link rel="alternate" type="application/rss+xml" title="润藏八字" href="/sitemap.xml">
+    <!-- 网站结构化数据 -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "润藏八字",
+      "url": "https://xudq789.runzang.top/",
+      "description": "润藏八字提供八字排盘、命理分析娱乐参考，含流年运程、人生详批、八字合婚等。",
+      "keywords": "八字算命,八字排盘,命理分析,流年运程,人生详批,八字合婚",
+      "inLanguage": "zh-CN",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://xudq789.runzang.top/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <!-- 组织结构化数据 -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "润藏八字",
+      "url": "https://xudq789.runzang.top/",
+      "logo": "https://runzang-1388534671.cos.ap-guangzhou.myqcloud.com/images/1-1.jpg",
+      "description": "提供八字排盘、命理分析娱乐参考服务的平台",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "_WEIBO": "runzang888",
+        "description": "客服微信号"
+      }
+    }
+    </script>
+    <!-- 服务结构化数据 -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "serviceType": "命理分析服务",
+      "name": "润藏八字命理分析",
+      "description": "提供测算验证、流年运程、人生详批、八字合婚等命理分析服务",
+      "url": "https://xudq789.runzang.top/",
+      "provider": {
+        "@type": "Organization",
+        "name": "润藏八字",
+        "url": "https://xudq789.runzang.top/"
+      },
+      "areaServed": {
+        "@type": "Country",
+        "name": "中国"
+      },
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "命理分析服务",
+        "itemListElement": [
+          {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "测算验证"}},
+          {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "流年运程"}},
+          {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "人生详批"}},
+          {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "八字合婚"}}
+        ]
+      }
+    }
+    </script>
+    <!-- FAQ结构化数据 -->
     <script type="application/ld+json">
     {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
       {"@type":"Question","name":"测算结果能当作人生决策依据吗？","acceptedAnswer":{"@type":"Answer","text":"不能。本站内容为传统文化视角的娱乐参考，请理性对待，重大决策请咨询专业人士。"}},
@@ -49,6 +120,11 @@
             <li><a href="#" data-service="人生详批">人生详批</a></li>
             <li><a href="#" data-service="八字合婚">八字合婚</a></li>
             <li id="nav-history-wrap" style="display: none;"><a href="#history" id="nav-history">历史记录</a></li>
+            <li>
+                <button id="theme-toggle-btn" class="theme-toggle-btn" title="切换深色/浅色模式" aria-label="切换主题">
+                    <span id="theme-icon">🌙</span>
+                </button>
+            </li>
         </ul>
     </header>
 
@@ -311,6 +387,10 @@
                     <span id="download-btn-text">下载报告</span>
                 </button>
                 <button id="recalculate-btn" class="dynamic-pulse-btn" style="max-width: 200px; background: linear-gradient(135deg, #5c3d2e, #7d6e63);"><span>重新测算</span></button>
+                <!-- 反馈按钮 - 报告解锁后显示 -->
+                <button id="feedback-btn" class="dynamic-pulse-btn" style="max-width: 150px; background: linear-gradient(135deg, #28a745, #5cb85c); display: none;">
+                    <span>📝 反馈</span>
+                </button>
             </div>
         </div>
     </section>

@@ -10,6 +10,7 @@ const AI_QUERY_ENDPOINTS = {
 };
 
 const API_KEY = 'runzang-payment-security-key-2025-1234567890';
+export { API_KEY };
 
 const DOM = {
     id: (id) => document.getElementById(id),
