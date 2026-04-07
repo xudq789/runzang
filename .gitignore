@@ -32,3 +32,4 @@ Thumbs.db
 .cache/
 coverage/
 *.tsbuildinfo
+.claude/settings.local.json
