@@ -215,6 +215,10 @@ header {
     position: sticky;
     top: 0;
     z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
 }
 
 .service-nav {
@@ -223,6 +227,9 @@ header {
     justify-content: center;
     gap: 10px;
     flex-wrap: wrap;
+    flex: 1;
+    margin: 0;
+    padding: 0;
 }
 
 .service-nav a {
@@ -282,6 +289,113 @@ body.dark-theme .theme-toggle-btn {
 
 body.dark-theme .theme-toggle-btn:hover {
     background: var(--primary-color);
+}
+
+/* 导航栏右侧更多下拉（历史记录 / 切换主题） */
+.nav-more-inline {
+    position: relative; /* 让菜单相对按钮定位 */
+    flex: 0 0 auto;
+}
+
+.nav-more-btn {
+    display: inline-flex;
+    align-items: center;
+    background: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease;
+    justify-content: center;
+}
+
+.nav-more-btn:hover {
+    transform: translateY(-1px);
+    border-color: var(--primary-color);
+}
+
+.nav-more-dots {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.nav-more-dots span {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.9;
+}
+
+.nav-more-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 180px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.18);
+    padding: 8px;
+    display: none;
+    z-index: 1200;
+}
+
+.nav-more-menu.open {
+    display: block;
+}
+
+.nav-more-item {
+    display: block;
+}
+
+.nav-more-item a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-decoration: none;
+    color: var(--text-color);
+    font-weight: 700;
+    padding: 10px 12px;
+    border-radius: 10px;
+}
+
+.nav-more-item a:hover {
+    background: rgba(212, 175, 55, 0.15);
+}
+
+.nav-more-item a.active {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+}
+
+.nav-more-theme-btn {
+    width: 100%;
+    justify-content: space-between;
+    border-radius: 10px;
+    height: auto;
+    min-width: unset;
+    padding: 10px 12px;
+}
+
+.nav-more-label {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.nav-more-theme-icon {
+    font-size: 16px;
+}
+
+@media (max-width: 768px) {
+    header {
+        padding: 10px 12px;
+    }
 }
 
 /* 主容器 */

@@ -119,13 +119,35 @@
             <li><a href="#" data-service="流年运程">流年运程</a></li>
             <li><a href="#" data-service="人生详批">人生详批</a></li>
             <li><a href="#" data-service="八字合婚">八字合婚</a></li>
-            <li id="nav-history-wrap" style="display: none;"><a href="#history" id="nav-history">历史记录</a></li>
-            <li>
-                <button id="theme-toggle-btn" class="theme-toggle-btn" title="切换深色/浅色模式" aria-label="切换主题">
-                    <span id="theme-icon">🌙</span>
-                </button>
-            </li>
         </ul>
+        <!-- 同一行最右侧下拉菜单：历史记录 / 切换主题 -->
+        <div class="nav-more-inline" role="navigation" aria-label="更多功能">
+            <button
+                id="nav-more-btn"
+                class="nav-more-btn"
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded="false"
+                aria-controls="nav-more-menu"
+                title="更多功能"
+                aria-label="更多功能"
+            >
+                <span class="nav-more-dots" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                </span>
+            </button>
+            <div id="nav-more-menu" class="nav-more-menu" role="menu" aria-hidden="true">
+                <div id="nav-history-wrap" class="nav-more-item" role="none">
+                    <a href="#history" id="nav-history" role="menuitem">历史记录</a>
+                </div>
+                <div class="nav-more-item" role="none">
+                    <button id="theme-toggle-btn" class="theme-toggle-btn nav-more-theme-btn" type="button" title="切换深色/浅色模式" aria-label="切换主题" role="menuitem">
+                        <span class="nav-more-label">切换主题</span>
+                        <span id="theme-icon" class="nav-more-theme-icon" aria-hidden="true">🌙</span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </header>
 
     <main id="main-content" tabindex="-1">

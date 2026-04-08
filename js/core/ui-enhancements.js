@@ -77,8 +77,50 @@ function initFaqDetails() {
     });
 }
 
+function initNavMoreMenu() {
+    const btn = document.getElementById('nav-more-btn');
+    const menu = document.getElementById('nav-more-menu');
+    if (!btn || !menu) return;
+
+    function setOpen(open) {
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        menu.setAttribute('aria-hidden', open ? 'false' : 'true');
+        menu.classList.toggle('open', open);
+    }
+
+    function isOpen() {
+        return btn.getAttribute('aria-expanded') === 'true';
+    }
+
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        setOpen(!isOpen());
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!isOpen()) return;
+        const target = e.target;
+        if (!(target instanceof Element)) return;
+        if (btn.contains(target) || menu.contains(target)) return;
+        setOpen(false);
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') setOpen(false);
+    });
+
+    // 点击菜单项后自动收起（a / button）
+    menu.addEventListener('click', (e) => {
+        const target = e.target;
+        if (!(target instanceof Element)) return;
+        const isAction = !!target.closest('a,button');
+        if (isAction) setOpen(false);
+    });
+}
+
 export function initPageEnhancements() {
     initDailyInsight();
     initMobileStickyCta();
     initFaqDetails();
+    initNavMoreMenu();
 }

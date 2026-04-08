@@ -425,3 +425,6 @@ async function submitFeedback(e) {
 // 导出
 window.initFeedbackForm = initFeedbackForm;
 window.showFeedbackModal = showFeedbackModal;
+
+// ES module exports (used by js/core/main.js)
+export { initFeedbackForm, showFeedbackModal };

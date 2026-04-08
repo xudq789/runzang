@@ -392,8 +392,8 @@ export function createHistoryManager(uiFunctions) {
             if (isHistory) renderHistoryLists();
         }
         
-        // 更新导航状态
-        document.querySelectorAll('.service-nav a').forEach(link => {
+        // 更新导航状态（历史记录入口可能在右侧菜单，不一定在 .service-nav 内）
+        document.querySelectorAll('.service-nav a, #nav-history').forEach(link => {
             if (isHistory) {
                 // 在历史记录页面，清除所有服务导航的 active，只保留历史记录的 active
                 if (link.id === 'nav-history') {
@@ -418,8 +418,8 @@ export function createHistoryManager(uiFunctions) {
     function updateHistoryNavVisibility() {
         const wrap = document.getElementById('nav-history-wrap');
         if (!wrap) return;
-        const hasRecords = RunzangStorage.getPaidOrders().length > 0;
-        wrap.style.display = hasRecords ? '' : 'none';
+        // 用户需求：历史记录入口始终展示
+        wrap.style.display = '';
     }
 
     return {
