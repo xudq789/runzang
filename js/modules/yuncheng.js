@@ -29,7 +29,7 @@ export class YunchengModule {
 出生时间：${userData.birthYear}年${userData.birthMonth}月${userData.birthDay}日${userData.birthHour}时${userData.birthMinute}分
 出生城市：${userData.birthCity}
 
-请先进行八字排盘，再进行大运排盘，起运岁数务必精准，然后用以下格式输出结果：
+请先进行八字排盘，再进行大运排盘，起运岁数务必精准取整保留整数岁数，然后用以下格式输出结果：
 
 【八字排盘】
 年柱：[年柱干支] ([纳音])
