@@ -18,7 +18,7 @@ export const SERVICES = {
 出生时间：{birthYear}年{birthMonth}月{birthDay}日{birthHour}时{birthMinute}分
 出生城市：{birthCity}
 
-请先进行八字排盘，再进行大运排盘，起运岁数务必精准，然后用以下格式输出结果：
+请先进行八字排盘，再进行大运排盘，起运岁数务必精准取整保留整数岁数，然后用以下格式输出结果：
 
 【八字排盘】
 年柱：[年柱干支] ([纳音])
@@ -80,7 +80,7 @@ export const SERVICES = {
 出生时间：{birthYear}年{birthMonth}月{birthDay}日{birthHour}时{birthMinute}分
 出生城市：{birthCity}
 
-请先进行八字排盘，再进行大运排盘，起运岁数务必精准，然后用以下格式输出结果：
+请先进行八字排盘，再进行大运排盘，起运岁数务必精准取整保留整数岁数，然后用以下格式输出结果：
 
 【八字排盘】
 年柱：[年柱干支] ([纳音])
@@ -149,7 +149,7 @@ export const SERVICES = {
 出生时间：{birthYear}年{birthMonth}月{birthDay}日{birthHour}时{birthMinute}分
 出生城市：{birthCity}
 
-请先进行八字排盘，再进行大运排盘，起运岁数务必精准，然后用以下格式输出结果：
+请先进行八字排盘，再进行大运排盘，起运岁数务必精准取整保留整数岁数，然后用以下格式输出结果：
 
 【八字排盘】
 年柱：[年柱干支] ([纳音])
@@ -224,7 +224,7 @@ export const SERVICES = {
 出生时间：{partnerBirthYear}年{partnerBirthMonth}月{partnerBirthDay}日{partnerBirthHour}时{partnerBirthMinute}分
 出生城市：{partnerBirthCity}
 
-请先进行八字排盘，再进行大运排盘，起运岁数务必精准，然后用以下格式输出结果：
+请先进行八字排盘，再进行大运排盘，起运岁数务必精准取整保留整数岁数，然后用以下格式输出结果：
 
 【八字排盘】
 年柱：[年柱干支] ([纳音])
