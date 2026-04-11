@@ -80,7 +80,7 @@ async function checkAndLoadOrderFromURL() {
             return false;
         }
         
-        const { serviceType, content, status, paymentStatus } = result.data;
+        const { serviceType, content, status, paymentStatus, serviceAmount } = result.data;
         
         if (!serviceType || !content) {
             console.error('❌ 订单数据不完整');
@@ -92,6 +92,9 @@ async function checkAndLoadOrderFromURL() {
         // 切换到对应的服务类型
         STATE.currentService = serviceType;
         STATE.lastAiOrderId = orderId;
+        if (serviceAmount != null && serviceAmount !== '' && !Number.isNaN(Number(serviceAmount))) {
+            STATE.queryPaymentAmount = Number(serviceAmount);
+        }
         
         // 如果已支付，设置解锁状态
         if (paymentStatus === 'paid') {
@@ -604,6 +607,7 @@ function switchService(serviceName) {
         STATE.baziData = null;
         STATE.partnerBaziData = null;
         STATE.lastAiOrderId = null;
+        STATE.queryPaymentAmount = null;
         STATE.userData = null;
         STATE.partnerData = null;
         
@@ -700,6 +704,7 @@ async function startAnalysis() {
     STATE.baziData = null;
     STATE.partnerBaziData = null;
     STATE.lastAiOrderId = null;
+    STATE.queryPaymentAmount = null;
     
     STATE.isPaymentUnlocked = false;
     STATE.isDownloadLocked = true;
@@ -761,6 +766,8 @@ async function startAnalysis() {
         
         const content = result.content;
         if (result.orderId) STATE.lastAiOrderId = result.orderId;
+        if (result.amount != null) STATE.queryPaymentAmount = result.amount;
+        else STATE.queryPaymentAmount = null;
         
         // 保存完整结果
         STATE.fullAnalysisResult = content;
@@ -952,6 +959,7 @@ function newAnalysis() {
     STATE.isPaymentUnlocked = false;
     STATE.isDownloadLocked = true;
     STATE.lastAiOrderId = null;
+    STATE.queryPaymentAmount = null;
     STATE.fullAnalysisResult = '';
     STATE.baziData = null;
     STATE.partnerBaziData = null;

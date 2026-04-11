@@ -59,6 +59,11 @@ async function runPaymentModalAsync() {
 
     const serviceConfig = SERVICES[STATE.currentService];
     if (!serviceConfig) return;
+
+    const payAmountNum = (STATE.queryPaymentAmount != null && !Number.isNaN(Number(STATE.queryPaymentAmount)))
+        ? Number(STATE.queryPaymentAmount)
+        : parseFloat(serviceConfig.price);
+    const payAmountStr = payAmountNum.toFixed(2);
     
     try {
         // 1. 先显示支付弹窗
@@ -69,7 +74,7 @@ async function runPaymentModalAsync() {
             
             // 先显示基本信息
             UI.paymentServiceType().textContent = STATE.currentService;
-            UI.paymentAmount().textContent = '¥' + serviceConfig.price;
+            UI.paymentAmount().textContent = '¥' + payAmountStr;
             UI.paymentOrderId().textContent = '请选择支付方式…';
             setPaymentMethodDisplayLabel(null);
         }
@@ -97,7 +102,7 @@ async function runPaymentModalAsync() {
         console.log('🔗 调用支付API:', createUrl);
         console.log('请求数据:', {
             serviceType: STATE.currentService,
-            amount: parseFloat(serviceConfig.price).toFixed(2),
+            amount: payAmountStr,
             frontendOrderId: frontendOrderId,
             paymentMethod: selectedMethod
         });
@@ -111,7 +116,7 @@ async function runPaymentModalAsync() {
             },
             body: JSON.stringify({
                 serviceType: STATE.currentService,
-                amount: parseFloat(serviceConfig.price).toFixed(2),
+                amount: payAmountStr,
                 frontendOrderId: frontendOrderId,
                 paymentMethod: selectedMethod
             })

@@ -56,7 +56,7 @@ function buildAiRequestBody(serviceKey, userData, partnerData) {
  * @param {string} serviceKey - 服务名称：人生详批、测算验证、流年运程、八字合婚
  * @param {object} userData - 用户数据
  * @param {object} [partnerData] - 伴侣数据（八字合婚必填）
- * @returns {Promise<{ content: string, orderId: string }>} 分析内容与订单号（订单号用于创建支付时作为 frontendOrderId）
+ * @returns {Promise<{ content: string, orderId: string, status: string|null, amount: number|null }>} 分析内容、订单号、状态与应付金额（金额来自后端写死配置）
  */
 export async function callAiQuery(serviceKey, userData, partnerData) {
     const path = AI_QUERY_ENDPOINTS[serviceKey];
@@ -79,7 +79,11 @@ export async function callAiQuery(serviceKey, userData, partnerData) {
     if (content == null) throw new Error('接口未返回分析内容');
     const orderId = data.data?.outTradeNo || data.data?.orderId || '';
     const status = data.data?.status || null;
-    return { content, orderId, status };
+    const rawAmount = data.data?.amount;
+    const amount = rawAmount != null && rawAmount !== '' && !Number.isNaN(Number(rawAmount))
+        ? Number(rawAmount)
+        : null;
+    return { content, orderId, status, amount };
 }
 
 /**

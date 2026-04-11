@@ -285,6 +285,7 @@ export const STATE = {
     baziData: null,
     currentOrder: null,
     lastAiOrderId: null,  // AI 查询返回的订单号，创建支付时作为 frontendOrderId，支付后为支付单号
+    queryPaymentAmount: null,
     userData: null,
     partnerData: null,
     isPaymentUnlocked: false,
