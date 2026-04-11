@@ -134,7 +134,11 @@ export function resetUnlockInterface() {
 
         const serviceConfig = SERVICES[STATE.currentService];
         if (serviceConfig && unlockBtn && unlockPrice) {
-            unlockBtn.innerHTML = `解锁完整报告 (¥<span id="unlock-price">${serviceConfig.price}</span>)`;
+            const payAmountNum = (STATE.queryPaymentAmount != null && !Number.isNaN(Number(STATE.queryPaymentAmount)))
+                ? Number(STATE.queryPaymentAmount)
+                : parseFloat(serviceConfig.price);
+            const priceLabel = Number.isFinite(payAmountNum) ? payAmountNum.toFixed(2) : String(serviceConfig.price);
+            unlockBtn.innerHTML = `解锁完整报告 (¥<span id="unlock-price">${priceLabel}</span>)`;
             unlockBtn.style.background = 'linear-gradient(135deg, var(--secondary-color), #e6b800)';
             unlockBtn.style.cursor = 'pointer';
             unlockBtn.disabled = false;
