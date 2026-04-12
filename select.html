@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>润藏 · 选择入口</title>
+  <meta name="description" content="进入润藏官网或网上商城">
+  <style>
+    :root {
+      --bg: #f6f3ef;
+      --card: #fff;
+      --text: #2c2419;
+      --muted: #6b5d4d;
+      --accent: #8b4513;
+      --blue: #0056b3;
+      --border: #e5ddd4;
+      --shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+      --shadow-hover: 0 14px 40px rgba(0, 0, 0, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px 40px;
+    }
+    .brand {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .brand h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.35rem, 4vw, 1.6rem);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+    .brand p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .grid {
+      width: 100%;
+      max-width: 520px;
+      display: grid;
+      gap: 16px;
+    }
+    @media (min-width: 520px) {
+      .grid { grid-template-columns: 1fr 1fr; gap: 20px; }
+    }
+    .choice {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 22px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .choice:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-hover);
+    }
+    .choice:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+    .choice.site { border-top: 4px solid var(--blue); }
+    .choice.site:hover { border-color: rgba(0, 86, 179, 0.35); }
+    .choice.store { border-top: 4px solid var(--accent); }
+    .choice.store:hover { border-color: rgba(139, 69, 19, 0.35); }
+    .choice .icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+      line-height: 1;
+    }
+    .choice.site .icon { color: var(--blue); }
+    .choice.store .icon { color: var(--accent); }
+    .choice h2 {
+      margin: 0 0 8px;
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+    .choice p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <div class="brand">
+    <h1>润藏</h1>
+    <p>请选择要访问的页面</p>
+  </div>
+  <div class="grid">
+    <a class="choice site" href="website.html">
+      <div class="icon" aria-hidden="true">&#127760;</div>
+      <h2>官网</h2>
+      <p>企业命名、财税服务与咨询介绍</p>
+    </a>
+    <a class="choice store" href="store.html">
+      <div class="icon" aria-hidden="true">&#128722;</div>
+      <h2>网上商城</h2>
+      <p>浏览商品、下单与支付</p>
+    </a>
+  </div>
+</body>
+</html>
