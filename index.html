@@ -84,6 +84,7 @@
       flex-direction: column;
       transition: transform .15s, box-shadow .15s;
     }
+    .card { cursor: pointer; }
     .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.08); }
     .card img {
       width: 100%;
@@ -91,6 +92,9 @@
       object-fit: cover;
       background: #eee;
     }
+    .detail-img { width: 100%; max-height: 300px; object-fit: contain; border-radius: 12px; background: #f0ebe4; margin-bottom: 12px; }
+    .detail-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; font-size: 13px; color: var(--muted); }
+    .detail-desc { font-size: 14px; line-height: 1.6; color: var(--text); white-space: pre-wrap; }
     .card-body { padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
     .card h3 { margin: 0; font-size: 15px; line-height: 1.3; }
     .card .desc { font-size: 12px; color: var(--muted); line-height: 1.4; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
@@ -340,6 +344,19 @@
       <div id="qrBox"></div>
       <p class="msg" id="payMsg"></p>
       <div class="row-btns">
+        <button type="button" class="secondary" data-close>关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="modalDetail">
+    <div class="sheet">
+      <h2 id="detailTitle">商品详情</h2>
+      <img class="detail-img" id="detailImg" src="" alt="">
+      <div class="detail-meta" id="detailMeta"></div>
+      <p class="detail-desc" id="detailDesc"></p>
+      <div class="row-btns">
+        <button type="button" id="detailAddCart" style="background:var(--accent);color:#fff">加入购物车</button>
         <button type="button" class="secondary" data-close>关闭</button>
       </div>
     </div>
@@ -618,8 +635,8 @@
     const grid = document.getElementById('productGrid');
     grid.innerHTML = products.map(function (p) {
       return (
-        '<article class="card">' +
- '<img src="' + p.image + '" alt="" loading="lazy">' +
+        '<article class="card" data-detail="' + p._id + '">' +
+          '<img src="' + p.image + '" alt="" loading="lazy">' +
           '<div class="card-body">' +
             '<h3>' + escapeHtml(p.name) + '</h3>' +
             '<p class="desc">' + escapeHtml(p.description || '') + '</p>' +
@@ -632,9 +649,31 @@
       );
     }).join('');
     grid.querySelectorAll('[data-add]').forEach(function (btn) {
-      btn.addEventListener('click', function () { addToCart(btn.getAttribute('data-add')); });
+      btn.addEventListener('click', function (e) { e.stopPropagation(); addToCart(btn.getAttribute('data-add')); });
+    });
+    grid.querySelectorAll('[data-detail]').forEach(function (card) {
+      card.addEventListener('click', function () { showDetail(card.getAttribute('data-detail')); });
     });
   }
+
+  function showDetail(id) {
+    const p = products.find(function (x) { return x._id === id; });
+    if (!p) return;
+    document.getElementById('detailTitle').textContent = p.name;
+    document.getElementById('detailImg').src = p.image;
+    document.getElementById('detailImg').alt = p.name;
+    document.getElementById('detailMeta').innerHTML =
+      '<span style="color:var(--danger);font-weight:800;font-size:18px">¥' + p.price + '</span>' +
+      '<span>库存 ' + (p.stock != null ? p.stock : '充足') + '</span>';
+    document.getElementById('detailDesc').textContent = p.description || '暂无商品描述';
+    document.getElementById('detailAddCart').setAttribute('data-add', id);
+    openModal('modalDetail');
+  }
+
+  document.getElementById('detailAddCart').addEventListener('click', function (e) {
+    e.stopPropagation();
+    addToCart(this.getAttribute('data-add'));
+  });
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
